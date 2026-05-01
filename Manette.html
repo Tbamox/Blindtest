@@ -1,0 +1,61 @@
+<div class="controller">
+  <div id="login">
+    <h2>Entre ton pseudo :</h2>
+    <input type="text" id="username" placeholder="Ton nom...">
+    <button onclick="joinGame()">Rejoindre</button>
+  </div>
+
+  <div id="game-controls" class="hidden">
+    <h3 id="welcome">Prêt ?</h3>
+    <input type="text" id="answer-input" placeholder="Tape ta réponse ici !">
+    <button onclick="sendAnswer()" id="send-btn">ENVOYER 🚀</button>
+    <div id="feedback"></div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+
+<script>
+  // MÊME CONFIGURATION FIREBASE
+  const firebaseConfig = {
+    apiKey: "AIzaSyC18xshyF3ShbjesR5NsjdmBfAiBaP36BE",
+    authDomain: "blindtestfamille.firebaseapp.com",
+    databaseURL: "https://blindtestfamille-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "blindtestfamille",
+    storageBucket: "blindtestfamille.firebasestorage.app",
+    messagingSenderId: "319100843512",
+    appId: "1:319100843512:web:5fb89272cd2131f350920d"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  let myId = null;
+
+  function joinGame() {
+    const name = document.getElementById('username').value;
+    if(!name) return alert("Choisis un nom !");
+    
+    const newPlayer = db.ref('players').push();
+    myId = newPlayer.key;
+    newPlayer.set({ name: name, score: 0 });
+
+    document.getElementById('login').classList.add('hidden');
+    document.getElementById('game-controls').classList.remove('hidden');
+    document.getElementById('welcome').innerText = "Bonne chance " + name + " !";
+  }
+
+  function sendAnswer() {
+    const ans = document.getElementById('answer-input').value;
+    db.ref('answers/' + myId).set({ text: ans, time: Date.now() });
+    document.getElementById('answer-input').value = "";
+    document.getElementById('feedback').innerText = "Réponse envoyée ! Attends le résultat...";
+  }
+</script>
+
+<style>
+  body { background: #161b22; color: white; text-align: center; font-family: sans-serif; padding-top: 50px; }
+  input { padding: 15px; border-radius: 10px; border: none; width: 80%; font-size: 1.2em; margin-bottom: 20px; }
+  button { background: #238636; color: white; border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; font-size: 1.2em; }
+  .hidden { display: none; }
+</style>

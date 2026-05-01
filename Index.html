@@ -1,0 +1,79 @@
+<!-- Écran Principal (PC) -->
+<div class="container">
+  <h1 id="game-title">🏠 Salon Blind Test</h1>
+  
+  <div id="setup-area">
+    <p>Scanner pour rejoindre :</p>
+    <div id="qrcode"></div>
+    <div class="lobby-list">
+      <h3>Joueurs connectés :</h3>
+      <ul id="player-list"></ul>
+    </div>
+    <button onclick="startMultplayerGame()" id="start-btn" style="display:none">Lancer la partie !</button>
+  </div>
+
+  <div id="game-area" class="hidden">
+    <div id="yt-player"></div>
+    <h2 id="question-num">Question</h2>
+    <div id="visualizer">🔊 Musique en cours...</div>
+    <div id="answers-feed"></div>
+    <button onclick="revealResult()" id="reveal-btn">Révéler la réponse</button>
+    <button onclick="nextRound()" id="next-btn" class="hidden">Suivant</button>
+  </div>
+</div>
+
+<!-- SCRIPTS : Firebase + QR Code -->
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+  // CONFIGURATION FIREBASE (TES CLÉS)
+  const firebaseConfig = {
+    apiKey: "AIzaSyC18xshyF3ShbjesR5NsjdmBfAiBaP36BE",
+    authDomain: "blindtestfamille.firebaseapp.com",
+    databaseURL: "https://blindtestfamille-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "blindtestfamille",
+    storageBucket: "blindtestfamille.firebasestorage.app",
+    messagingSenderId: "319100843512",
+    appId: "1:319100843512:web:5fb89272cd2131f350920d"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // Générer le QR Code (Lien vers ton futur Pen "Manette")
+  // REMPLACE L'URL CI-DESSOUS PAR LE LIEN DE TON DEUXIEME CODEPEN UNE FOIS CRÉÉ
+  const manetteUrl = "https://codepen.io/ton-pseudo/debug/ID-DE-TA-MANETTE"; 
+  new QRCode(document.getElementById("qrcode"), manetteUrl);
+
+  // Écouter les nouveaux joueurs
+  db.ref('players').on('value', (snap) => {
+    const players = snap.val();
+    const list = document.getElementById('player-list');
+    list.innerHTML = "";
+    if(players) {
+      Object.keys(players).forEach(id => {
+        list.innerHTML += `<li>🌟 ${players[id].name}</li>`;
+      });
+      document.getElementById('start-btn').style.display = "block";
+    }
+  });
+
+  // Logique du jeu (simplifiée pour l'exemple)
+  function startMultplayerGame() {
+    db.ref('gameState').set({ status: 'playing', currentTrack: 0 });
+    document.getElementById('setup-area').classList.add('hidden');
+    document.getElementById('game-area').classList.remove('hidden');
+    // Ici on ajouterait la lecture YouTube comme avant
+  }
+</script>
+
+<style>
+  body { background: #0d1117; color: white; font-family: sans-serif; text-align: center; }
+  .container { max-width: 800px; margin: auto; padding: 20px; }
+  #qrcode { background: white; padding: 10px; display: inline-block; border-radius: 10px; margin: 20px; }
+  .hidden { display: none; }
+  .lobby-list { background: #161b22; border-radius: 10px; padding: 10px; }
+  li { list-style: none; font-size: 1.5em; color: #58a6ff; }
+</style>
