@@ -1,3 +1,28 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manette Blind Test</title>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+  <style>
+    body { background: #161b22; color: white; text-align: center; font-family: 'Segoe UI', sans-serif; padding: 20px; margin: 0; }
+    .avatar-selector { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
+    .avatar-opt { font-size: 2.2em; cursor: pointer; padding: 8px; border: 2px solid transparent; border-radius: 50%; background: #0d1117; }
+    .avatar-opt.selected { border-color: #238636; transform: scale(1.1); }
+    
+    input { padding: 15px; border-radius: 10px; border: none; width: 90%; font-size: 1.2em; margin-bottom: 20px; box-sizing: border-box; background: #0d1117; color: white; border: 1px solid #30363d; }
+    button { background: #238636; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 1.1em; width: 90%; cursor: pointer; }
+    
+    .qcm-btn { background: #1f6feb !important; margin: 8px !important; width: 80% !important; font-size: 1.1em !important; display: block; margin-left: auto !important; margin-right: auto !important; }
+    
+    .hidden { display: none !important; }
+    #feedback { margin-top: 20px; font-weight: bold; font-size: 1.2em; color: #39d353; }
+  </style>
+</head>
+<body>
+
 <div class="controller">
   <!-- ÉCRAN DE CONNEXION -->
   <div id="login">
@@ -21,26 +46,23 @@
     <div id="free-answer-zone">
         <input type="text" id="answer-input" placeholder="Tape ta réponse...">
         <button onclick="sendAnswer()" id="send-btn">VALIDER 🚀</button>
-        <p style="margin: 15px 0; color: #8b949e; font-weight: bold;">— OU —</p>
+        <p style="margin: 25px 0; color: #8b949e; font-weight: bold;">— OU —</p>
         <button onclick="showQCM()" style="background: #8957e5;">Je ne sais pas... 🤔</button>
     </div>
 
     <!-- Zone QCM (Cachée par défaut) -->
     <div id="qcm-zone" class="hidden">
-        <p>Choisis une option :</p>
+        <p style="font-size: 1.2em; font-weight: bold;">Choisis une option :</p>
         <div id="qcm-buttons"></div>
-        <button onclick="hideQCM()" style="background: #484f58; margin-top: 15px; font-size: 0.8em; width: 50%;">Retour</button>
+        <button onclick="hideQCM()" style="background: #484f58; margin-top: 25px; font-size: 0.9em; width: 50%;">Retour</button>
     </div>
 
     <div id="feedback"></div>
   </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-
 <script>
-  // TA CONFIGURATION FIREBASE
+  // CONFIGURATION FIREBASE
   const firebaseConfig = {
     apiKey: "AIzaSyC18xshyF3ShbjesR5NsjdmBfAiBaP36BE",
     authDomain: "blindtestfamille.firebaseapp.com",
@@ -58,14 +80,14 @@
   let myName = "";
   let selectedAvatar = "🐱";
 
-  // Gestion des avatars
+  // SÉLECTION DE L'AVATAR
   function selectAvatar(el) {
     document.querySelectorAll('.avatar-opt').forEach(opt => opt.classList.remove('selected'));
     el.classList.add('selected');
     selectedAvatar = el.innerText;
   }
 
-  // Rejoindre la partie
+  // REJOINDRE LE JEU
   function joinGame() {
     myName = document.getElementById('username').value;
     if(!myName) return alert("Choisis un pseudo !");
@@ -79,25 +101,25 @@
     document.getElementById('welcome').innerText = selectedAvatar + " " + myName;
   }
 
-  // Afficher le QCM
+  // GESTION DE L'AFFICHAGE DU QCM
   function showQCM() {
-    db.ref('gameState/choix').once('value', (snap) => {
-      const choix = snap.val();
+    db.ref('gameState').once('value', (snap) => {
+      const state = snap.val();
       const container = document.getElementById('qcm-buttons');
       container.innerHTML = "";
       
-      if(!choix) {
+      if(!state || !state.choix) {
         alert("Attends que la musique commence !");
         return;
       }
       
-      choix.forEach(option => {
+      state.choix.forEach(option => {
         const btn = document.createElement('button');
         btn.innerText = option;
         btn.className = "qcm-btn";
         btn.onclick = () => {
           document.getElementById('answer-input').value = option;
-          sendAnswer(true); // Envoi en mode QCM
+          sendAnswer(true); // Indique que ça vient du QCM
         };
         container.appendChild(btn);
       });
@@ -112,16 +134,35 @@
     document.getElementById('free-answer-zone').classList.remove('hidden');
   }
 
-  // Envoyer la réponse (Vérifie le Timer)
+  // ENVOI DE LA RÉPONSE ET AUTO-CORRECTION
   function sendAnswer(isQcm = false) {
     const ans = document.getElementById('answer-input').value;
     if(!ans) return;
     
-    db.ref('gameState/accepting').once('value', (snap) => {
-      if(snap.val() === true) {
-        // On ajoute un marqueur si c'est du QCM pour le salon
+    // Vérification de l'état du jeu (Timer & Solution)
+    db.ref('gameState').once('value', (snap) => {
+      const state = snap.val();
+      
+      if(state && state.accepting === true) {
         const finalAns = isQcm ? ans + " (QCM)" : ans;
         
+        // AUTO-CORRECTION POUR LE QCM (+1 Point)
+        if(isQcm) {
+          if(ans === state.solution) {
+            db.ref('players/' + myId + '/score').transaction(s => (s || 0) + 1);
+            document.getElementById('feedback').style.color = "#39d353";
+            document.getElementById('feedback').innerText = "🎯 Bonne réponse ! (+1 pt)";
+          } else {
+            document.getElementById('feedback').style.color = "#ff7b72";
+            document.getElementById('feedback').innerText = "❌ Faux ! C'était " + state.solution;
+          }
+        } else {
+            // Message classique pour la réponse libre
+            document.getElementById('feedback').style.color = "#39d353";
+            document.getElementById('feedback').innerText = "✅ Réponse envoyée !";
+        }
+
+        // On envoie la réponse au PC pour affichage
         db.ref('answers/' + myId).set({ 
           text: finalAns, 
           name: myName, 
@@ -130,26 +171,15 @@
         
         document.getElementById('answer-input').value = "";
         hideQCM();
-        document.getElementById('feedback').innerText = "✅ Réponse enregistrée !";
-        setTimeout(() => { document.getElementById('feedback').innerText = ""; }, 3000);
+        
+        // Efface le message après 4 secondes
+        setTimeout(() => { document.getElementById('feedback').innerText = ""; }, 4000);
       } else {
-        document.getElementById('feedback').innerText = "❌ Trop tard ! Le temps est écoulé.";
+        document.getElementById('feedback').style.color = "#ff7b72";
+        document.getElementById('feedback').innerText = "⏳ Trop tard ! Temps écoulé.";
       }
     });
   }
 </script>
-
-<style>
-  body { background: #161b22; color: white; text-align: center; font-family: 'Segoe UI', sans-serif; padding: 20px; }
-  .avatar-selector { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
-  .avatar-opt { font-size: 2.2em; cursor: pointer; padding: 8px; border: 2px solid transparent; border-radius: 50%; background: #0d1117; }
-  .avatar-opt.selected { border-color: #238636; transform: scale(1.1); }
-  
-  input { padding: 15px; border-radius: 10px; border: none; width: 90%; font-size: 1.2em; margin-bottom: 20px; box-sizing: border-box; background: #0d1117; color: white; border: 1px solid #30363d; }
-  button { background: #238636; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 1.1em; width: 90%; cursor: pointer; }
-  
-  .qcm-btn { background: #1f6feb !important; margin: 5px !important; width: 45% !important; font-size: 0.9em !important; display: inline-block; }
-  
-  .hidden { display: none !important; }
-  #feedback { margin-top: 20px; font-weight: bold; font-size: 1.1em; color: #39d353; }
-</style>
+</body>
+</html>
