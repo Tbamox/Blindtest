@@ -17,7 +17,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
 <script>
-  // MÊME CONFIGURATION FIREBASE
   const firebaseConfig = {
     apiKey: "AIzaSyC18xshyF3ShbjesR5NsjdmBfAiBaP36BE",
     authDomain: "blindtestfamille.firebaseapp.com",
@@ -31,31 +30,46 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   let myId = null;
+  let myName = "";
 
   function joinGame() {
-    const name = document.getElementById('username').value;
-    if(!name) return alert("Choisis un nom !");
+    myName = document.getElementById('username').value;
+    if(!myName) return alert("Choisis un nom !");
     
     const newPlayer = db.ref('players').push();
     myId = newPlayer.key;
-    newPlayer.set({ name: name, score: 0 });
+    newPlayer.set({ name: myName, score: 0 });
 
     document.getElementById('login').classList.add('hidden');
     document.getElementById('game-controls').classList.remove('hidden');
-    document.getElementById('welcome').innerText = "Bonne chance " + name + " !";
+    document.getElementById('welcome').innerText = "Bonne chance " + myName + " !";
   }
 
   function sendAnswer() {
     const ans = document.getElementById('answer-input').value;
-    db.ref('answers/' + myId).set({ text: ans, time: Date.now() });
+    if(!ans) return; // Ne rien envoyer si c'est vide
+    
+    // On envoie la réponse ET le nom du joueur
+    db.ref('answers/' + myId).set({ 
+      text: ans, 
+      name: myName, 
+      time: Date.now() 
+    });
+    
     document.getElementById('answer-input').value = "";
-    document.getElementById('feedback').innerText = "Réponse envoyée ! Attends le résultat...";
+    document.getElementById('feedback').innerText = "✅ Réponse envoyée !";
+    
+    // Effacer le message après 3 secondes
+    setTimeout(() => {
+        document.getElementById('feedback').innerText = "";
+    }, 3000);
   }
 </script>
 
 <style>
-  body { background: #161b22; color: white; text-align: center; font-family: sans-serif; padding-top: 50px; }
-  input { padding: 15px; border-radius: 10px; border: none; width: 80%; font-size: 1.2em; margin-bottom: 20px; }
-  button { background: #238636; color: white; border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; font-size: 1.2em; }
+  body { background: #161b22; color: white; text-align: center; font-family: 'Segoe UI', sans-serif; padding-top: 50px; }
+  input { padding: 15px; border-radius: 10px; border: none; width: 80%; font-size: 1.2em; margin-bottom: 20px; box-sizing: border-box;}
+  button { background: #238636; color: white; border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; font-size: 1.2em; cursor: pointer; width: 80%;}
   .hidden { display: none; }
+  #feedback { margin-top: 20px; font-size: 1.2em; color: #39d353; font-weight: bold; }
 </style>
