@@ -1,3 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Salon Blind Test</title>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    body { background: #0d1117; color: white; font-family: sans-serif; text-align: center; padding: 20px;}
+    .container { max-width: 800px; margin: auto; }
+    #qrcode { background: white; padding: 15px; display: inline-block; border-radius: 10px; margin: 10px;}
+    .hidden { display: none !important; }
+    .lobby-list, .leaderboard-box { background: #161b22; border-radius: 10px; padding: 20px; border: 1px solid #30363d; margin-top:20px;}
+    li { list-style: none; font-size: 1.3em; color: #58a6ff; margin: 5px; }
+    #yt-player-container { height: 1px; width: 1px; overflow: hidden; position: absolute; left: -9999px; }
+    #answer-display { font-size: 2em; color: #f2cc60; margin: 20px; font-weight: bold; }
+    .num-input { font-size:1.2em; width:60px; border-radius: 5px; background: #0d1117; color: white; border: 1px solid #30363d; padding: 5px;}
+    button { background: #1f6feb; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; margin: 5px;}
+    .danger-btn { background: #da3633; }
+    #reveal-btn { background: #238636; }
+    #next-btn { background: #8957e5; }
+    .answer-card { background: #21262d; padding: 15px; margin: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #58a6ff;}
+    .point-btn { background: #238636; font-size: 0.9em; padding: 8px 15px;}
+  </style>
+</head>
+<body>
+
 <div class="container">
   <h1 id="game-title">🏠 Salon Blind Test PRO</h1>
   
@@ -37,11 +65,8 @@
   </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
 <script>
+  // CONFIGURATION FIREBASE
   const firebaseConfig = {
     apiKey: "AIzaSyC18xshyF3ShbjesR5NsjdmBfAiBaP36BE",
     authDomain: "blindtestfamille.firebaseapp.com",
@@ -54,9 +79,11 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
+  // QR CODE
   const manetteUrl = "https://tbamox.github.io/Blindtest/manette.html"; 
   new QRCode(document.getElementById("qrcode"), manetteUrl);
 
+  // PLAYLIST
   let basePlaylist = [
     { titre: "Le Roi Lion", id: "08pZpY_mPto", start: 10, choix: ["Le Roi Lion", "Aladdin", "Mulan", "Tarzan"] },
     { titre: "Pokémon", id: "5y-wGgXMeo0", start: 0, choix: ["Pokémon", "Digimon", "Yu-Gi-Oh", "Beyblade"] },
@@ -69,7 +96,9 @@
   let player;
   let timeLeft = 10;
   let timerInterval;
+  let currentAnswers = {};
 
+  // YOUTUBE API
   var tag = document.createElement('script');
   tag.src = "https://www.youtube.com/iframe_api";
   var firstScriptTag = document.getElementsByTagName('script')[0];
@@ -79,6 +108,7 @@
     player = new YT.Player('yt-player', { height: '0', width: '0' });
   }
 
+  // GESTION DES JOUEURS
   db.ref('players').on('value', (snap) => {
     const players = snap.val();
     const list = document.getElementById('player-list');
@@ -104,25 +134,53 @@
     }
   }
 
+  // GESTION DES RÉPONSES ET DE L'AFFICHAGE (Anti-Triche)
   db.ref('answers').on('value', (snap) => {
-    const answers = snap.val();
-    const feed = document.getElementById('answers-feed');
-    if(answers) {
-      feed.innerHTML = "<h3>Réponses :</h3>";
-      Object.keys(answers).forEach(id => {
-        const ans = answers[id];
-        const av = ans.avatar || "👤";
-        feed.innerHTML += `<div class="answer-card"><strong>${av} ${ans.name} :</strong> <span>"${ans.text}"</span><button class="point-btn" onclick="givePoints('${id}')">+3 Pts ✅</button></div>`;
-      });
-    }
+    currentAnswers = snap.val() || {};
+    renderAnswers();
   });
 
-  function givePoints(playerId) {
+  function renderAnswers() {
+    const feed = document.getElementById('answers-feed');
+    const isTimeUp = (timeLeft <= 0);
+    
+    if(Object.keys(currentAnswers).length > 0) {
+      feed.innerHTML = "<h3>Statut des joueurs :</h3>";
+      Object.keys(currentAnswers).forEach(id => {
+        const ans = currentAnswers[id];
+        const av = ans.avatar || "👤";
+        
+        // Cache le texte tant que le timer tourne
+        let displayTexte = isTimeUp ? `"${ans.text}"` : "📩 Réponse envoyée...";
+        let actionBtn = "";
+
+        // Si le temps est écoulé, on affiche les boutons de points (sauf si c'est un QCM déjà auto-corrigé)
+        if (isTimeUp) {
+            if (ans.text.includes("(QCM)")) {
+                actionBtn = `<span style="color:#8b949e; font-size:0.9em; font-style:italic;">(QCM Auto-corrigé)</span>`;
+            } else {
+                actionBtn = `<button class="point-btn" onclick="givePoints('${id}', 3)">+3 Pts ✅</button>`;
+            }
+        }
+        
+        feed.innerHTML += `
+          <div class="answer-card">
+            <div><strong>${av} ${ans.name} :</strong> <span style="margin-left: 10px;">${displayTexte}</span></div>
+            ${actionBtn}
+          </div>`;
+      });
+    } else {
+      feed.innerHTML = "";
+    }
+  }
+
+  function givePoints(playerId, points) {
     db.ref('players/' + playerId).once('value', s => {
-      if(s.val()) db.ref('players/' + playerId).update({ score: s.val().score + 3 });
+      if(s.val()) db.ref('players/' + playerId).update({ score: s.val().score + points });
     });
   }
 
+  // LOGIQUE DU JEU
   function startMultiplayerGame() {
     let nb = document.getElementById('nb-questions').value;
     gamePlaylist = basePlaylist.sort(() => 0.5 - Math.random()).slice(0, nb);
@@ -140,10 +198,12 @@
     document.getElementById('reveal-btn').classList.add('hidden');
     
     db.ref('answers').remove();
-    // On active les réponses ET on envoie les choix QCM
+    
+    // On envoie toutes les infos aux manettes
     db.ref('gameState').set({ 
         accepting: true, 
-        choix: gamePlaylist[currentIndex].choix 
+        choix: gamePlaylist[currentIndex].choix,
+        solution: gamePlaylist[currentIndex].titre
     });
     
     player.loadVideoById({ videoId: gamePlaylist[currentIndex].id, startSeconds: gamePlaylist[currentIndex].start });
@@ -163,6 +223,7 @@
     db.ref('gameState').update({ accepting: false }); 
     document.getElementById('timer-display').innerText = "TEMPS ÉCOULÉ !";
     document.getElementById('reveal-btn').classList.remove('hidden');
+    renderAnswers(); // Force l'affichage des réponses cachées
   }
 
   function revealResult() {
@@ -178,20 +239,5 @@
     else { alert("Fin du jeu !"); location.reload(); }
   }
 </script>
-
-<style>
-  body { background: #0d1117; color: white; font-family: sans-serif; text-align: center; padding: 20px;}
-  .container { max-width: 800px; margin: auto; }
-  #qrcode { background: white; padding: 15px; display: inline-block; border-radius: 10px; margin: 10px;}
-  .hidden { display: none !important; }
-  .lobby-list, .leaderboard-box { background: #161b22; border-radius: 10px; padding: 20px; border: 1px solid #30363d; margin-top:20px;}
-  li { list-style: none; font-size: 1.3em; color: #58a6ff; margin: 5px; }
-  #yt-player-container { height: 1px; width: 1px; overflow: hidden; position: absolute; left: -9999px; }
-  #answer-display { font-size: 2em; color: #f2cc60; margin: 20px; font-weight: bold; }
-  .num-input { font-size:1.2em; width:60px; border-radius: 5px; background: #0d1117; color: white; border: 1px solid #30363d; padding: 5px;}
-  button { background: #1f6feb; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; margin: 5px;}
-  .danger-btn { background: #da3633; }
-  #reveal-btn { background: #238636; }
-  #next-btn { background: #8957e5; }
-  .answer-card { background: #21262d; padding: 10px; margin: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #58a6ff;}
-</style>
+</body>
+</html>
