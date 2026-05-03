@@ -2,71 +2,454 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Salon Blind Test</title>
+  <title>Blind Test — Salon</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
-    body { background: #0d1117; color: white; font-family: sans-serif; text-align: center; padding: 20px;}
-    .container { max-width: 800px; margin: auto; }
-    #qrcode { background: white; padding: 15px; display: inline-block; border-radius: 10px; margin: 10px;}
+    :root {
+      --bg:        #070b14;
+      --surface:   #0f1624;
+      --border:    #1e2d4a;
+      --accent:    #00d4ff;
+      --accent2:   #ff6b6b;
+      --accent3:   #ffd93d;
+      --purple:    #a855f7;
+      --green:     #22c55e;
+      --text:      #e2e8f0;
+      --muted:     #64748b;
+      --radius:    14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Nunito', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Background animated grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Header ── */
+    .site-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .site-header h1 {
+      font-family: 'Bangers', cursive;
+      font-size: clamp(2.4rem, 6vw, 3.8rem);
+      letter-spacing: 3px;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+    }
+    .site-header p {
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 0.95rem;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    /* ── QR Code ── */
+    .qr-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    #qrcode {
+      background: white;
+      padding: 14px;
+      border-radius: 10px;
+      display: inline-block;
+    }
+    .qr-url {
+      font-size: 0.8rem;
+      color: var(--muted);
+      word-break: break-all;
+    }
+
+    /* ── Player list ── */
+    #player-list {
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    #player-list li {
+      background: rgba(0,212,255,0.07);
+      border: 1px solid rgba(0,212,255,0.2);
+      border-radius: 50px;
+      padding: 8px 18px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--accent);
+      animation: popIn .3s ease;
+    }
+    @keyframes popIn {
+      from { transform: scale(0.7); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+    .no-players {
+      color: var(--muted);
+      font-style: italic;
+      font-size: 0.95rem;
+    }
+
+    /* ── Game options ── */
+    .options-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 14px;
+    }
+    .options-row label {
+      font-weight: 700;
+      color: var(--text);
+    }
+    .num-input {
+      font-size: 1.1rem;
+      width: 70px;
+      border-radius: 8px;
+      background: var(--bg);
+      color: white;
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1rem;
+      font-weight: 800;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 24px;
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s, filter .15s;
+    }
+    .btn:hover  { transform: translateY(-2px); filter: brightness(1.1); }
+    .btn:active { transform: translateY(0); }
+
+    .btn-primary  { background: linear-gradient(135deg, var(--accent), #0099cc); color: #000; }
+    .btn-danger   { background: linear-gradient(135deg, var(--accent2), #cc2200); color: #fff; }
+    .btn-reveal   { background: linear-gradient(135deg, var(--green), #16a34a); color: #fff; }
+    .btn-next     { background: linear-gradient(135deg, var(--purple), #7c3aed); color: #fff; }
+    .btn-point    { background: var(--green); color: #fff; font-size: 0.85rem; padding: 8px 14px; border-radius: 8px; }
+    .btn-launch   {
+      background: linear-gradient(135deg, #ffd93d, #ff6b6b);
+      color: #000;
+      font-size: 1.2rem;
+      padding: 16px 36px;
+      border-radius: 12px;
+      box-shadow: 0 0 24px rgba(255,217,61,0.3);
+    }
+
+    /* ── Hidden YouTube player ── */
+    #yt-player-container { position: absolute; left: -9999px; height: 1px; width: 1px; overflow: hidden; }
+
+    /* ── Timer bar ── */
+    .timer-wrap {
+      text-align: center;
+      margin: 20px 0;
+    }
+    #timer-display {
+      font-family: 'Bangers', cursive;
+      font-size: 5rem;
+      letter-spacing: 4px;
+      color: var(--accent);
+      transition: color .5s;
+      line-height: 1;
+    }
+    #timer-display.danger { color: var(--accent2); animation: pulse 0.5s infinite alternate; }
+    @keyframes pulse { to { transform: scale(1.06); } }
+
+    .timer-bar-bg {
+      background: var(--border);
+      border-radius: 99px;
+      height: 10px;
+      margin: 10px 0;
+      overflow: hidden;
+    }
+    #timer-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), var(--accent));
+      border-radius: 99px;
+      transition: width 1s linear, background .5s;
+    }
+    #timer-bar.danger { background: linear-gradient(90deg, #ff4444, var(--accent2)); }
+
+    /* ── Question num ── */
+    #question-num {
+      font-family: 'Bangers', cursive;
+      font-size: 2rem;
+      letter-spacing: 2px;
+      text-align: center;
+      color: var(--accent3);
+    }
+
+    /* ── Answer feed ── */
+    .section-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .answer-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 10px;
+      animation: slideIn .25s ease;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(-14px); opacity: 0; }
+      to   { transform: translateX(0);     opacity: 1; }
+    }
+    .answer-card .player-name { font-weight: 800; font-size: 1rem; }
+    .answer-card .answer-text { color: var(--accent3); font-style: italic; margin-top: 2px; font-size: 0.95rem; }
+    .answer-card .pending     { color: var(--muted); font-style: italic; font-size: 0.9rem; }
+    .badge-qcm { font-size: 0.8rem; color: var(--muted); font-style: italic; }
+
+    /* ── Answer reveal ── */
+    #answer-display {
+      text-align: center;
+      padding: 20px;
+      border-radius: var(--radius);
+      background: rgba(34,197,94,0.1);
+      border: 2px solid var(--green);
+      margin: 16px 0;
+      animation: popIn .4s ease;
+    }
+    #answer-display .reveal-label { font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    #answer-display .reveal-answer { font-family: 'Bangers', cursive; font-size: 2.6rem; color: var(--green); letter-spacing: 2px; line-height: 1.1; }
+
+    /* ── Controls bar ── */
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+
+    /* ── Leaderboard ── */
+    #leaderboard-list { list-style: none; }
+    .lb-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      transition: background .3s;
+    }
+    .lb-item.rank-1 { border-color: gold;   background: rgba(255,215,0,0.06); }
+    .lb-item.rank-2 { border-color: silver; background: rgba(192,192,192,0.06); }
+    .lb-item.rank-3 { border-color: #cd7f32; background: rgba(205,127,50,0.06); }
+    .lb-rank   { font-family: 'Bangers', cursive; font-size: 1.4rem; width: 32px; text-align: center; }
+    .lb-name   { flex: 1; font-weight: 800; font-size: 1rem; }
+    .lb-score  { font-family: 'Bangers', cursive; font-size: 1.4rem; color: var(--accent3); letter-spacing: 1px; }
+
+    /* ── Podium (fin de jeu) ── */
+    #podium-area {
+      text-align: center;
+      animation: popIn .5s ease;
+    }
+    #podium-area h2 {
+      font-family: 'Bangers', cursive;
+      font-size: 3.5rem;
+      letter-spacing: 3px;
+      background: linear-gradient(135deg, gold, var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .podium-grid {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 12px;
+      margin: 30px 0;
+    }
+    .podium-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .podium-avatar { font-size: 2.5rem; }
+    .podium-pname  { font-weight: 800; font-size: 0.95rem; }
+    .podium-pscore { font-family: 'Bangers', cursive; font-size: 1.4rem; color: var(--accent3); }
+    .podium-block  {
+      width: 90px;
+      border-radius: 8px 8px 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Bangers', cursive;
+      font-size: 2.2rem;
+      letter-spacing: 1px;
+    }
+    .podium-block.p1 { height: 130px; background: linear-gradient(180deg, gold, #b8860b); color: #000; }
+    .podium-block.p2 { height: 95px;  background: linear-gradient(180deg, silver, #808080); color: #000; }
+    .podium-block.p3 { height: 70px;  background: linear-gradient(180deg, #cd7f32, #8b4513); color: #fff; }
+
+    /* ── Hidden ── */
     .hidden { display: none !important; }
-    .lobby-list, .leaderboard-box { background: #161b22; border-radius: 10px; padding: 20px; border: 1px solid #30363d; margin-top:20px;}
-    li { list-style: none; font-size: 1.3em; color: #58a6ff; margin: 5px; }
-    #yt-player-container { height: 1px; width: 1px; overflow: hidden; position: absolute; left: -9999px; }
-    #answer-display { font-size: 2em; color: #f2cc60; margin: 20px; font-weight: bold; }
-    .num-input { font-size:1.2em; width:60px; border-radius: 5px; background: #0d1117; color: white; border: 1px solid #30363d; padding: 5px;}
-    button { background: #1f6feb; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; margin: 5px;}
-    .danger-btn { background: #da3633; }
-    #reveal-btn { background: #238636; }
-    #next-btn { background: #8957e5; }
-    .answer-card { background: #21262d; padding: 15px; margin: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #58a6ff;}
-    .point-btn { background: #238636; font-size: 0.9em; padding: 8px 15px;}
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      #timer-display { font-size: 3.5rem; }
+      .btn-launch { font-size: 1rem; padding: 14px 24px; }
+    }
   </style>
 </head>
 <body>
 
+<div id="yt-player-container"><div id="yt-player"></div></div>
+
 <div class="container">
-  <h1 id="game-title">🏠 Salon Blind Test PRO</h1>
-  
+
+  <header class="site-header">
+    <h1>🎵 BLIND TEST</h1>
+    <p>Écran du salon — PC hôte</p>
+  </header>
+
+  <!-- ══ SETUP ══ -->
   <div id="setup-area">
-    <p>Scanner pour rejoindre :</p>
-    <div id="qrcode"></div>
-    <div class="lobby-list">
-      <h3>Joueurs connectés :</h3>
-      <ul id="player-list"></ul>
+    <div class="card">
+      <div class="card-title">📱 Scanner pour rejoindre</div>
+      <div class="qr-wrap">
+        <div id="qrcode"></div>
+        <span class="qr-url" id="qr-url-text"></span>
+      </div>
     </div>
-    <div id="game-options" class="hidden">
-      <button onclick="resetLobby()" class="danger-btn">Vider le salon 🗑️</button><br><br>
-      <label>Nombre de questions :</label>
-      <input type="number" id="nb-questions" value="3" min="1" max="10" class="num-input"><br><br>
-      <button onclick="startMultiplayerGame()">Lancer la partie ! 🚀</button>
+
+    <div class="card">
+      <div class="card-title">👥 Joueurs connectés (<span id="player-count">0</span>)</div>
+      <ul id="player-list"><li class="no-players">En attente de joueurs…</li></ul>
+    </div>
+
+    <div id="game-options" class="card hidden">
+      <div class="options-row" style="margin-bottom:20px;">
+        <label for="nb-questions">Nombre de questions :</label>
+        <input type="number" id="nb-questions" value="3" min="1" max="10" class="num-input">
+      </div>
+      <div class="controls">
+        <button class="btn btn-danger" onclick="resetLobby()">🗑️ Vider le salon</button>
+        <button class="btn btn-launch" onclick="startMultiplayerGame()">🚀 Lancer la partie !</button>
+      </div>
     </div>
   </div>
 
+  <!-- ══ GAME ══ -->
   <div id="game-area" class="hidden">
-    <div id="yt-player-container"><div id="yt-player"></div></div>
-    <h2 id="question-num">Question</h2>
-    
-    <div id="timer-display" style="font-size: 4em; color: #ff7b72; font-weight: bold; margin: 10px;">10</div>
-    
-    <div id="answers-feed"></div>
-    <div id="answer-display" class="hidden"></div>
-    
-    <div class="controls">
-        <button onclick="revealResult()" id="reveal-btn" class="hidden">Révéler la réponse 👁️</button>
-        <button onclick="nextRound()" id="next-btn" class="hidden">Suivant ➡️</button>
+
+    <div class="card" style="text-align:center;">
+      <div id="question-num">Question</div>
+      <div class="timer-wrap">
+        <div id="timer-display">10</div>
+        <div class="timer-bar-bg">
+          <div id="timer-bar" style="width:100%"></div>
+        </div>
+      </div>
     </div>
-    
-    <div class="leaderboard-box">
-      <h3>🏆 Classement en direct</h3>
+
+    <div class="card">
+      <div class="section-title" id="answers-title">⏳ Attente des réponses</div>
+      <div id="answers-feed"></div>
+    </div>
+
+    <div id="answer-display" class="hidden">
+      <div class="reveal-label">La réponse était…</div>
+      <div class="reveal-answer" id="reveal-answer-text"></div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-reveal hidden" id="reveal-btn" onclick="revealResult()">👁️ Révéler la réponse</button>
+      <button class="btn btn-next  hidden" id="next-btn"   onclick="nextRound()">Suivant ➡️</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🏆 Classement en direct</div>
       <ul id="leaderboard-list"></ul>
     </div>
   </div>
+
+  <!-- ══ PODIUM ══ -->
+  <div id="podium-area" class="hidden">
+    <h2>🏆 FIN DU JEU !</h2>
+    <div class="podium-grid" id="podium-grid"></div>
+    <div class="card" style="margin-top:20px;">
+      <div class="card-title">Classement final</div>
+      <ul id="final-leaderboard"></ul>
+    </div>
+    <div class="controls" style="margin-top:24px;">
+      <button class="btn btn-launch" onclick="location.reload()">🔄 Rejouer</button>
+    </div>
+  </div>
+
 </div>
 
 <script>
-  // CONFIGURATION FIREBASE
+  /* ── FIREBASE ── */
   const firebaseConfig = {
     apiKey: "AIzaSyC18xshyF3ShbjesR5NsjdmBfAiBaP36BE",
     authDomain: "blindtestfamille.firebaseapp.com",
@@ -79,62 +462,96 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // QR CODE
-  const manetteUrl = "https://tbamox.github.io/Blindtest/manette.html"; 
-  new QRCode(document.getElementById("qrcode"), manetteUrl);
+  /* ── QR CODE ── */
+  const manetteUrl = "https://tbamox.github.io/Blindtest/manette.html";
+  new QRCode(document.getElementById("qrcode"), { text: manetteUrl, width: 180, height: 180 });
+  document.getElementById("qr-url-text").textContent = manetteUrl;
 
-  // PLAYLIST
+  /* ── PLAYLIST ── */
   let basePlaylist = [
-    { titre: "Le Roi Lion", id: "08pZpY_mPto", start: 10, choix: ["Le Roi Lion", "Aladdin", "Mulan", "Tarzan"] },
-    { titre: "Pokémon", id: "5y-wGgXMeo0", start: 0, choix: ["Pokémon", "Digimon", "Yu-Gi-Oh", "Beyblade"] },
-    { titre: "Star Wars", id: "EjMNNpIksaI", start: 8, choix: ["Star Wars", "Star Trek", "Interstellar", "Dune"] },
-    { titre: "Pirates des Caraïbes", id: "K3pOUvO8qTM", start: 0, choix: ["Pirates des Caraïbes", "Vaiana", "Peter Pan", "Sinbad"] },
-    { titre: "Harry Potter", id: "Htaj3o3JD8I", start: 0, choix: ["Harry Potter", "Narnia", "Eragon", "Willow"] }
+    { titre: "Le Roi Lion",        id: "08pZpY_mPto", start: 10, choix: ["Le Roi Lion", "Aladdin", "Mulan", "Tarzan"] },
+    { titre: "Pokémon",            id: "5y-wGgXMeo0", start: 0,  choix: ["Pokémon", "Digimon", "Yu-Gi-Oh", "Beyblade"] },
+    { titre: "Star Wars",          id: "EjMNNpIksaI", start: 8,  choix: ["Star Wars", "Star Trek", "Interstellar", "Dune"] },
+    { titre: "Pirates des Caraïbes",id:"K3pOUvO8qTM", start: 0,  choix: ["Pirates des Caraïbes", "Vaiana", "Peter Pan", "Sinbad"] },
+    { titre: "Harry Potter",       id: "Htaj3o3JD8I", start: 0,  choix: ["Harry Potter", "Narnia", "Eragon", "Willow"] }
   ];
+
   let gamePlaylist = [];
   let currentIndex = 0;
-  let player;
-  let timeLeft = 10;
+  let player, playerReady = false;
+  let timeLeft = 10, totalTime = 10;
   let timerInterval;
   let currentAnswers = {};
+  let playersCache = {};
 
-  // YOUTUBE API
-  var tag = document.createElement('script');
-  tag.src = "https://www.youtube.com/iframe_api";
-  var firstScriptTag = document.getElementsByTagName('script')[0];
-  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+  /* ── YOUTUBE ── */
+  var ytTag = document.createElement('script');
+  ytTag.src = "https://www.youtube.com/iframe_api";
+  document.head.appendChild(ytTag);
 
   function onYouTubeIframeAPIReady() {
-    player = new YT.Player('yt-player', { height: '0', width: '0' });
+    player = new YT.Player('yt-player', {
+      height: '1', width: '1',
+      events: { onReady: () => { playerReady = true; } }
+    });
   }
 
-  // GESTION DES JOUEURS 
+  function safeLoadVideo(videoId, startSeconds) {
+    const tryLoad = () => {
+      if (playerReady && player && player.loadVideoById) {
+        player.loadVideoById({ videoId, startSeconds });
+      } else {
+        setTimeout(tryLoad, 300);
+      }
+    };
+    tryLoad();
+  }
+
+  /* ── JOUEURS ── */
   db.ref('players').on('value', (snap) => {
-    const players = snap.val();
+    playersCache = snap.val() || {};
+    const keys = Object.keys(playersCache);
+    document.getElementById('player-count').textContent = keys.length;
+
     const list = document.getElementById('player-list');
-    const leaderboard = document.getElementById('leaderboard-list');
-    list.innerHTML = ""; leaderboard.innerHTML = "";
-    if(players) {
+    if (keys.length === 0) {
+      list.innerHTML = '<li class="no-players">En attente de joueurs…</li>';
+      document.getElementById('game-options').classList.add('hidden');
+    } else {
       document.getElementById('game-options').classList.remove('hidden');
-      let arr = Object.keys(players).map(id => ({ id, ...players[id] }));
-      arr.sort((a, b) => b.score - a.score);
-      arr.forEach(p => {
-        const av = p.avatar || "👤";
-        list.innerHTML += `<li>${av} ${p.name}</li>`;
-        leaderboard.innerHTML += `<li><strong>${av} ${p.name}</strong> : ${p.score} pts</li>`;
-      });
+      list.innerHTML = keys.map(id => {
+        const p = playersCache[id];
+        return `<li>${p.avatar || "👤"} ${p.name}</li>`;
+      }).join('');
     }
+
+    updateLeaderboard();
   });
 
-  function resetLobby() {
-    if(confirm("Tout vider ?")) { 
-        db.ref('players').remove(); 
-        db.ref('answers').remove(); 
-        db.ref('gameState').set({accepting: false}); 
-    }
+  function updateLeaderboard() {
+    const arr = Object.keys(playersCache).map(id => ({ id, ...playersCache[id] }));
+    arr.sort((a, b) => (b.score || 0) - (a.score || 0));
+
+    const medals = ["🥇", "🥈", "🥉"];
+    const rankClasses = ["rank-1", "rank-2", "rank-3"];
+
+    document.getElementById('leaderboard-list').innerHTML = arr.map((p, i) => `
+      <li class="lb-item ${rankClasses[i] || ''}">
+        <span class="lb-rank">${medals[i] || (i + 1)}</span>
+        <span class="lb-name">${p.avatar || "👤"} ${p.name}</span>
+        <span class="lb-score">${p.score || 0} pts</span>
+      </li>
+    `).join('');
   }
 
-  // GESTION DES RÉPONSES ET DE L'AFFICHAGE (Anti-Triche)
+  function resetLobby() {
+    if (!confirm("Vider le salon et remettre à zéro ?")) return;
+    db.ref('players').remove();
+    db.ref('answers').remove();
+    db.ref('gameState').set({ accepting: false });
+  }
+
+  /* ── RÉPONSES ── */
   db.ref('answers').on('value', (snap) => {
     currentAnswers = snap.val() || {};
     renderAnswers();
@@ -142,76 +559,100 @@
 
   function renderAnswers() {
     const feed = document.getElementById('answers-feed');
+    const title = document.getElementById('answers-title');
     const isTimeUp = (timeLeft <= 0);
-    
-    if(Object.keys(currentAnswers).length > 0) {
-      feed.innerHTML = "<h3>Statut des joueurs :</h3>";
-      Object.keys(currentAnswers).forEach(id => {
-        const ans = currentAnswers[id];
-        const av = ans.avatar || "👤";
-        
-        // Cache le texte tant que le timer tourne
-        let displayTexte = isTimeUp ? `"${ans.text}"` : "📩 Réponse envoyée...";
-        let actionBtn = "";
+    const entries = Object.entries(currentAnswers);
 
-        // Si le temps est écoulé, on affiche les boutons de points (sauf si c'est un QCM déjà auto-corrigé)
-        if (isTimeUp) {
-            if (ans.text.includes("(QCM)")) {
-                actionBtn = `<span style="color:#8b949e; font-size:0.9em; font-style:italic;">(QCM Auto-corrigé)</span>`;
-            } else {
-                actionBtn = `<button class="point-btn" onclick="givePoints('${id}', 3)">+3 Pts ✅</button>`;
-            }
-        }
-        
-        feed.innerHTML += `
-          <div class="answer-card">
-            <div><strong>${av} ${ans.name} :</strong> <span style="margin-left: 10px;">${displayTexte}</span></div>
-            ${actionBtn}
-          </div>`;
-      });
-    } else {
-      feed.innerHTML = "";
-    }
+    const nbPlayers = Object.keys(playersCache).length;
+    const nbAnswered = entries.length;
+
+    title.textContent = isTimeUp
+      ? `✅ ${nbAnswered} réponse(s) reçue(s)`
+      : `⏳ ${nbAnswered} / ${nbPlayers} joueur(s) ont répondu`;
+
+    if (entries.length === 0) { feed.innerHTML = ''; return; }
+
+    feed.innerHTML = entries.map(([id, ans]) => {
+      const av = ans.avatar || "👤";
+      const isQCM = ans.text && ans.text.includes("(QCM)");
+      const displayText = isTimeUp
+        ? `<span class="answer-text">"${ans.text}"</span>`
+        : `<span class="pending">📩 Réponse envoyée…</span>`;
+
+      const action = isTimeUp
+        ? (isQCM
+          ? `<span class="badge-qcm">Auto-corrigé ✔</span>`
+          : `<button class="btn btn-point" onclick="givePoints('${id}', 3)">+3 ✅</button>`)
+        : '';
+
+      return `
+        <div class="answer-card">
+          <div>
+            <div class="player-name">${av} ${ans.name}</div>
+            ${displayText}
+          </div>
+          ${action}
+        </div>`;
+    }).join('');
   }
 
+  /* ── POINTS — transaction Firebase pour éviter les race conditions ── */
   function givePoints(playerId, points) {
-    db.ref('players/' + playerId).once('value', s => {
-      if(s.val()) db.ref('players/' + playerId).update({ score: s.val().score + points });
+    db.ref('players/' + playerId + '/score').transaction(currentScore => {
+      return (currentScore || 0) + points;
     });
   }
 
-  // LOGIQUE DU JEU
+  /* ── JEU ── */
   function startMultiplayerGame() {
-    let nb = document.getElementById('nb-questions').value;
-    gamePlaylist = basePlaylist.sort(() => 0.5 - Math.random()).slice(0, nb);
+    const nb = parseInt(document.getElementById('nb-questions').value) || 3;
+    const shuffled = [...basePlaylist].sort(() => 0.5 - Math.random());
+    gamePlaylist = shuffled.slice(0, nb);
+    currentIndex = 0;
+
     document.getElementById('setup-area').classList.add('hidden');
     document.getElementById('game-area').classList.remove('hidden');
     loadTrack();
   }
 
   function loadTrack() {
-    timeLeft = 10;
-    document.getElementById('timer-display').innerText = timeLeft;
-    document.getElementById('question-num').innerText = `Question ${currentIndex + 1} / ${gamePlaylist.length}`;
+    const track = gamePlaylist[currentIndex];
+    totalTime = 10;
+    timeLeft = totalTime;
+
+    const timerEl  = document.getElementById('timer-display');
+    const barEl    = document.getElementById('timer-bar');
+    timerEl.textContent = timeLeft;
+    timerEl.classList.remove('danger');
+    barEl.style.width = '100%';
+    barEl.classList.remove('danger');
+
+    document.getElementById('question-num').textContent =
+      `Question ${currentIndex + 1} / ${gamePlaylist.length}`;
     document.getElementById('answer-display').classList.add('hidden');
     document.getElementById('next-btn').classList.add('hidden');
     document.getElementById('reveal-btn').classList.add('hidden');
-    
-    db.ref('answers').remove();
-    
-    // On envoie toutes les infos aux manettes
-    db.ref('gameState').set({ 
-        accepting: true, 
-        choix: gamePlaylist[currentIndex].choix,
-        solution: gamePlaylist[currentIndex].titre
-    });
-    
-    player.loadVideoById({ videoId: gamePlaylist[currentIndex].id, startSeconds: gamePlaylist[currentIndex].start });
 
+    db.ref('answers').remove();
+    db.ref('gameState').set({
+      accepting: true,
+      choix: track.choix,
+      solution: track.titre
+    });
+
+    safeLoadVideo(track.id, track.start);
+
+    clearInterval(timerInterval);
     timerInterval = setInterval(() => {
       timeLeft--;
-      document.getElementById('timer-display').innerText = timeLeft;
-      if(timeLeft <= 0) {
+      timerEl.textContent = timeLeft;
+      barEl.style.width = ((timeLeft / totalTime) * 100) + '%';
+
+      if (timeLeft <= 3) {
+        timerEl.classList.add('danger');
+        barEl.classList.add('danger');
+      }
+      if (timeLeft <= 0) {
         clearInterval(timerInterval);
         stopAnswering();
       }
@@ -219,15 +660,16 @@
   }
 
   function stopAnswering() {
-    player.stopVideo();
-    db.ref('gameState').update({ accepting: false }); 
-    document.getElementById('timer-display').innerText = "TEMPS ÉCOULÉ !";
+    if (playerReady && player) player.stopVideo();
+    db.ref('gameState').update({ accepting: false });
+    document.getElementById('timer-display').textContent = "⏰";
     document.getElementById('reveal-btn').classList.remove('hidden');
-    renderAnswers(); // Force l'affichage des réponses cachées
+    renderAnswers();
   }
 
   function revealResult() {
-    document.getElementById('answer-display').innerText = "Réponse : " + gamePlaylist[currentIndex].titre;
+    const titre = gamePlaylist[currentIndex].titre;
+    document.getElementById('reveal-answer-text').textContent = titre;
     document.getElementById('answer-display').classList.remove('hidden');
     document.getElementById('reveal-btn').classList.add('hidden');
     document.getElementById('next-btn').classList.remove('hidden');
@@ -235,8 +677,52 @@
 
   function nextRound() {
     currentIndex++;
-    if(currentIndex < gamePlaylist.length) { loadTrack(); } 
-    else { alert("Fin du jeu !"); location.reload(); }
+    if (currentIndex < gamePlaylist.length) {
+      loadTrack();
+    } else {
+      showPodium();
+    }
+  }
+
+  /* ── PODIUM FINAL ── */
+  function showPodium() {
+    document.getElementById('game-area').classList.add('hidden');
+    document.getElementById('podium-area').classList.remove('hidden');
+    db.ref('gameState').set({ accepting: false, gameOver: true });
+
+    const arr = Object.keys(playersCache)
+      .map(id => ({ id, ...playersCache[id] }))
+      .sort((a, b) => (b.score || 0) - (a.score || 0));
+
+    /* Podium visuel (top 3) */
+    const podiumOrder = [1, 0, 2]; // affichage : 2ème, 1er, 3ème
+    const blockClasses = ['p2', 'p1', 'p3'];
+    const medals = ['🥈', '🥇', '🥉'];
+
+    const podiumHtml = podiumOrder.map((rank, pos) => {
+      const p = arr[rank];
+      if (!p) return '';
+      return `
+        <div class="podium-step">
+          <div class="podium-avatar">${p.avatar || "👤"}</div>
+          <div class="podium-pname">${p.name}</div>
+          <div class="podium-pscore">${p.score || 0} pts</div>
+          <div class="podium-block ${blockClasses[pos]}">${medals[pos]}</div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('podium-grid').innerHTML = podiumHtml;
+
+    /* Classement complet */
+    const finalMedals = ["🥇", "🥈", "🥉"];
+    const rankClasses = ["rank-1", "rank-2", "rank-3"];
+    document.getElementById('final-leaderboard').innerHTML = arr.map((p, i) => `
+      <li class="lb-item ${rankClasses[i] || ''}">
+        <span class="lb-rank">${finalMedals[i] || (i + 1)}</span>
+        <span class="lb-name">${p.avatar || "👤"} ${p.name}</span>
+        <span class="lb-score">${p.score || 0} pts</span>
+      </li>
+    `).join('');
   }
 </script>
 </body>
