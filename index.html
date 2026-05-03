@@ -108,7 +108,7 @@
     player = new YT.Player('yt-player', { height: '0', width: '0' });
   }
 
-  // GESTION DES JOUEURS
+  // GESTION DES JOUEURS 
   db.ref('players').on('value', (snap) => {
     const players = snap.val();
     const list = document.getElementById('player-list');
