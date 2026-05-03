@@ -1,5 +1,5 @@
 <div class="container">
-  <h1 id="game-title">🏠 Salon Blind Test</h1>
+  <h1 id="game-title">🏠 Salon Blind Test PRO</h1>
   
   <div id="setup-area">
     <p>Scanner pour rejoindre :</p>
@@ -9,11 +9,9 @@
       <ul id="player-list"></ul>
     </div>
     <div id="game-options" class="hidden">
-      <button onclick="resetLobby()" class="danger-btn">Vider le salon 🗑️</button>
-      <br><br>
-      <label>Questions ?</label>
-      <input type="number" id="nb-questions" value="3" min="1" max="4" class="num-input">
-      <br><br>
+      <button onclick="resetLobby()" class="danger-btn">Vider le salon 🗑️</button><br><br>
+      <label>Nombre de questions :</label>
+      <input type="number" id="nb-questions" value="3" min="1" max="10" class="num-input"><br><br>
       <button onclick="startMultiplayerGame()">Lancer la partie ! 🚀</button>
     </div>
   </div>
@@ -21,15 +19,19 @@
   <div id="game-area" class="hidden">
     <div id="yt-player-container"><div id="yt-player"></div></div>
     <h2 id="question-num">Question</h2>
-    <div id="visualizer">🔊 Musique en cours...</div>
+    
+    <div id="timer-display" style="font-size: 4em; color: #ff7b72; font-weight: bold; margin: 10px;">10</div>
+    
     <div id="answers-feed"></div>
     <div id="answer-display" class="hidden"></div>
+    
     <div class="controls">
-        <button onclick="revealResult()" id="reveal-btn">Révéler la réponse 👁️</button>
+        <button onclick="revealResult()" id="reveal-btn" class="hidden">Révéler la réponse 👁️</button>
         <button onclick="nextRound()" id="next-btn" class="hidden">Suivant ➡️</button>
     </div>
+    
     <div class="leaderboard-box">
-      <h3>🏆 Classement</h3>
+      <h3>🏆 Classement en direct</h3>
       <ul id="leaderboard-list"></ul>
     </div>
   </div>
@@ -56,14 +58,17 @@
   new QRCode(document.getElementById("qrcode"), manetteUrl);
 
   let basePlaylist = [
-    { titre: "Le Roi Lion (Cover)", id: "p0Z1yLg6G1I", start: 30 },
-    { titre: "Pokémon (Générique)", id: "JuYeHPFR3f0", start: 0 },
-    { titre: "Star Wars", id: "EjMNNpIksaI", start: 8 },
-    { titre: "Pirates des Caraïbes", id: "27mB8verT60", start: 30 }
+    { titre: "Le Roi Lion", id: "08pZpY_mPto", start: 10, choix: ["Le Roi Lion", "Aladdin", "Mulan", "Tarzan"] },
+    { titre: "Pokémon", id: "5y-wGgXMeo0", start: 0, choix: ["Pokémon", "Digimon", "Yu-Gi-Oh", "Beyblade"] },
+    { titre: "Star Wars", id: "EjMNNpIksaI", start: 8, choix: ["Star Wars", "Star Trek", "Interstellar", "Dune"] },
+    { titre: "Pirates des Caraïbes", id: "K3pOUvO8qTM", start: 0, choix: ["Pirates des Caraïbes", "Vaiana", "Peter Pan", "Sinbad"] },
+    { titre: "Harry Potter", id: "Htaj3o3JD8I", start: 0, choix: ["Harry Potter", "Narnia", "Eragon", "Willow"] }
   ];
   let gamePlaylist = [];
   let currentIndex = 0;
   let player;
+  let timeLeft = 10;
+  let timerInterval;
 
   var tag = document.createElement('script');
   tag.src = "https://www.youtube.com/iframe_api";
@@ -92,7 +97,11 @@
   });
 
   function resetLobby() {
-    if(confirm("Tout vider ?")) { db.ref('players').remove(); db.ref('answers').remove(); }
+    if(confirm("Tout vider ?")) { 
+        db.ref('players').remove(); 
+        db.ref('answers').remove(); 
+        db.ref('gameState').set({accepting: false}); 
+    }
   }
 
   db.ref('answers').on('value', (snap) => {
@@ -123,16 +132,40 @@
   }
 
   function loadTrack() {
+    timeLeft = 10;
+    document.getElementById('timer-display').innerText = timeLeft;
     document.getElementById('question-num').innerText = `Question ${currentIndex + 1} / ${gamePlaylist.length}`;
     document.getElementById('answer-display').classList.add('hidden');
     document.getElementById('next-btn').classList.add('hidden');
-    document.getElementById('reveal-btn').classList.remove('hidden');
+    document.getElementById('reveal-btn').classList.add('hidden');
+    
     db.ref('answers').remove();
+    // On active les réponses ET on envoie les choix QCM
+    db.ref('gameState').set({ 
+        accepting: true, 
+        choix: gamePlaylist[currentIndex].choix 
+    });
+    
     player.loadVideoById({ videoId: gamePlaylist[currentIndex].id, startSeconds: gamePlaylist[currentIndex].start });
+
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      document.getElementById('timer-display').innerText = timeLeft;
+      if(timeLeft <= 0) {
+        clearInterval(timerInterval);
+        stopAnswering();
+      }
+    }, 1000);
+  }
+
+  function stopAnswering() {
+    player.stopVideo();
+    db.ref('gameState').update({ accepting: false }); 
+    document.getElementById('timer-display').innerText = "TEMPS ÉCOULÉ !";
+    document.getElementById('reveal-btn').classList.remove('hidden');
   }
 
   function revealResult() {
-    player.stopVideo();
     document.getElementById('answer-display').innerText = "Réponse : " + gamePlaylist[currentIndex].titre;
     document.getElementById('answer-display').classList.remove('hidden');
     document.getElementById('reveal-btn').classList.add('hidden');
@@ -142,23 +175,23 @@
   function nextRound() {
     currentIndex++;
     if(currentIndex < gamePlaylist.length) { loadTrack(); } 
-    else { alert("Fin !"); location.reload(); }
+    else { alert("Fin du jeu !"); location.reload(); }
   }
 </script>
 
 <style>
   body { background: #0d1117; color: white; font-family: sans-serif; text-align: center; padding: 20px;}
   .container { max-width: 800px; margin: auto; }
-  #qrcode { background: white; padding: 15px; display: inline-block; border-radius: 10px; }
+  #qrcode { background: white; padding: 15px; display: inline-block; border-radius: 10px; margin: 10px;}
   .hidden { display: none !important; }
   .lobby-list, .leaderboard-box { background: #161b22; border-radius: 10px; padding: 20px; border: 1px solid #30363d; margin-top:20px;}
   li { list-style: none; font-size: 1.3em; color: #58a6ff; margin: 5px; }
   #yt-player-container { height: 1px; width: 1px; overflow: hidden; position: absolute; left: -9999px; }
   #answer-display { font-size: 2em; color: #f2cc60; margin: 20px; font-weight: bold; }
+  .num-input { font-size:1.2em; width:60px; border-radius: 5px; background: #0d1117; color: white; border: 1px solid #30363d; padding: 5px;}
   button { background: #1f6feb; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; margin: 5px;}
   .danger-btn { background: #da3633; }
   #reveal-btn { background: #238636; }
   #next-btn { background: #8957e5; }
   .answer-card { background: #21262d; padding: 10px; margin: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #58a6ff;}
-  .point-btn { background: #2ea043; padding: 5px 10px; font-size: 0.8em;}
 </style>
