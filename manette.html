@@ -1,13 +1,21 @@
 <div class="controller">
   <div id="login">
-    <h2>Entre ton pseudo :</h2>
-    <input type="text" id="username" placeholder="Ton nom...">
-    <button onclick="joinGame()">Rejoindre</button>
+    <h2>Choisis ton style :</h2>
+    <div class="avatar-selector">
+      <span class="avatar-opt selected" onclick="selectAvatar(this)">🐱</span>
+      <span class="avatar-opt" onclick="selectAvatar(this)">🐶</span>
+      <span class="avatar-opt" onclick="selectAvatar(this)">🦊</span>
+      <span class="avatar-opt" onclick="selectAvatar(this)">🦁</span>
+      <span class="avatar-opt" onclick="selectAvatar(this)">🐸</span>
+      <span class="avatar-opt" onclick="selectAvatar(this)">🦄</span>
+    </div>
+    <input type="text" id="username" placeholder="Ton pseudo...">
+    <button onclick="joinGame()">Rejoindre la partie 🎮</button>
   </div>
 
   <div id="game-controls" class="hidden">
     <h3 id="welcome">Prêt ?</h3>
-    <input type="text" id="answer-input" placeholder="Tape ta réponse ici !">
+    <input type="text" id="answer-input" placeholder="Tape ta réponse...">
     <button onclick="sendAnswer()" id="send-btn">ENVOYER 🚀</button>
     <div id="feedback"></div>
   </div>
@@ -31,6 +39,13 @@
   const db = firebase.database();
   let myId = null;
   let myName = "";
+  let selectedAvatar = "🐱";
+
+  function selectAvatar(el) {
+    document.querySelectorAll('.avatar-opt').forEach(opt => opt.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedAvatar = el.innerText;
+  }
 
   function joinGame() {
     myName = document.getElementById('username').value;
@@ -38,38 +53,31 @@
     
     const newPlayer = db.ref('players').push();
     myId = newPlayer.key;
-    newPlayer.set({ name: myName, score: 0 });
+    // ON ENREGISTRE L'AVATAR ICI
+    newPlayer.set({ name: myName, score: 0, avatar: selectedAvatar });
 
     document.getElementById('login').classList.add('hidden');
     document.getElementById('game-controls').classList.remove('hidden');
-    document.getElementById('welcome').innerText = "Bonne chance " + myName + " !";
+    document.getElementById('welcome').innerText = selectedAvatar + " Bonne chance " + myName + " !";
   }
 
   function sendAnswer() {
     const ans = document.getElementById('answer-input').value;
-    if(!ans) return; // Ne rien envoyer si c'est vide
-    
-    // On envoie la réponse ET le nom du joueur
-    db.ref('answers/' + myId).set({ 
-      text: ans, 
-      name: myName, 
-      time: Date.now() 
-    });
-    
+    if(!ans) return;
+    db.ref('answers/' + myId).set({ text: ans, name: myName, avatar: selectedAvatar });
     document.getElementById('answer-input').value = "";
-    document.getElementById('feedback').innerText = "✅ Réponse envoyée !";
-    
-    // Effacer le message après 3 secondes
-    setTimeout(() => {
-        document.getElementById('feedback').innerText = "";
-    }, 3000);
+    document.getElementById('feedback').innerText = "✅ Envoyé !";
+    setTimeout(() => { document.getElementById('feedback').innerText = ""; }, 2000);
   }
 </script>
 
 <style>
-  body { background: #161b22; color: white; text-align: center; font-family: 'Segoe UI', sans-serif; padding-top: 50px; }
-  input { padding: 15px; border-radius: 10px; border: none; width: 80%; font-size: 1.2em; margin-bottom: 20px; box-sizing: border-box;}
-  button { background: #238636; color: white; border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; font-size: 1.2em; cursor: pointer; width: 80%;}
+  body { background: #161b22; color: white; text-align: center; font-family: sans-serif; padding: 20px; }
+  .avatar-selector { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .avatar-opt { font-size: 2.5em; cursor: pointer; padding: 10px; border: 2px solid transparent; border-radius: 50%; background: #0d1117; }
+  .avatar-opt.selected { border-color: #238636; background: #21262d; transform: scale(1.1); }
+  input { padding: 15px; border-radius: 10px; border: none; width: 90%; font-size: 1.2em; margin-bottom: 20px; }
+  button { background: #238636; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 1.2em; width: 90%; cursor: pointer; }
   .hidden { display: none; }
-  #feedback { margin-top: 20px; font-size: 1.2em; color: #39d353; font-weight: bold; }
+  #feedback { margin-top: 15px; color: #39d353; font-weight: bold; }
 </style>
