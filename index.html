@@ -1,47 +1,35 @@
 <div class="container">
   <h1 id="game-title">🏠 Salon Blind Test</h1>
   
-  <!-- ÉCRAN D'ACCUEIL (LOBBY) -->
   <div id="setup-area">
     <p>Scanner pour rejoindre :</p>
     <div id="qrcode"></div>
-    
     <div class="lobby-list">
       <h3>Joueurs connectés :</h3>
       <ul id="player-list"></ul>
     </div>
-    
     <div id="game-options" class="hidden">
-      <button onclick="resetLobby()" id="reset-btn" class="danger-btn">Vider le salon 🗑️</button>
+      <button onclick="resetLobby()" class="danger-btn">Vider le salon 🗑️</button>
       <br><br>
-      <label for="nb-questions">Combien de questions ?</label>
+      <label>Questions ?</label>
       <input type="number" id="nb-questions" value="3" min="1" max="4" class="num-input">
       <br><br>
-      <button onclick="startMultiplayerGame()" id="start-btn">Lancer la partie ! 🚀</button>
+      <button onclick="startMultiplayerGame()">Lancer la partie ! 🚀</button>
     </div>
   </div>
 
-  <!-- ÉCRAN DE JEU -->
   <div id="game-area" class="hidden">
     <div id="yt-player-container"><div id="yt-player"></div></div>
-    
     <h2 id="question-num">Question</h2>
     <div id="visualizer">🔊 Musique en cours...</div>
-    
-    <div id="answers-feed">
-       <p>En attente des réponses sur les téléphones...</p>
-    </div>
-    
+    <div id="answers-feed"></div>
     <div id="answer-display" class="hidden"></div>
-    
     <div class="controls">
         <button onclick="revealResult()" id="reveal-btn">Révéler la réponse 👁️</button>
-        <button onclick="nextRound()" id="next-btn" class="hidden">Question Suivante ➡️</button>
+        <button onclick="nextRound()" id="next-btn" class="hidden">Suivant ➡️</button>
     </div>
-
-    <!-- CLASSEMENT EN DIRECT -->
     <div class="leaderboard-box">
-      <h3>🏆 Classement en direct</h3>
+      <h3>🏆 Classement</h3>
       <ul id="leaderboard-list"></ul>
     </div>
   </div>
@@ -52,7 +40,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <script>
-  // TA CONFIGURATION FIREBASE
   const firebaseConfig = {
     apiKey: "AIzaSyC18xshyF3ShbjesR5NsjdmBfAiBaP36BE",
     authDomain: "blindtestfamille.firebaseapp.com",
@@ -65,22 +52,19 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // TON LIEN GITHUB POUR LE QR CODE
   const manetteUrl = "https://tbamox.github.io/Blindtest/manette.html"; 
   new QRCode(document.getElementById("qrcode"), manetteUrl);
 
-  // PLAYLIST (Vidéos autorisant l'intégration)
   let basePlaylist = [
     { titre: "Le Roi Lion (Cover)", id: "p0Z1yLg6G1I", start: 30 },
     { titre: "Pokémon (Générique)", id: "JuYeHPFR3f0", start: 0 },
     { titre: "Star Wars", id: "EjMNNpIksaI", start: 8 },
-    { titre: "Pirates des Caraïbes (Orchestre)", id: "27mB8verT60", start: 30 }
+    { titre: "Pirates des Caraïbes", id: "27mB8verT60", start: 30 }
   ];
   let gamePlaylist = [];
   let currentIndex = 0;
   let player;
 
-  // YouTube API
   var tag = document.createElement('script');
   tag.src = "https://www.youtube.com/iframe_api";
   var firstScriptTag = document.getElementsByTagName('script')[0];
@@ -90,66 +74,49 @@
     player = new YT.Player('yt-player', { height: '0', width: '0' });
   }
 
-  // ÉCOUTER LES JOUEURS ET LE CLASSEMENT
   db.ref('players').on('value', (snap) => {
     const players = snap.val();
     const list = document.getElementById('player-list');
     const leaderboard = document.getElementById('leaderboard-list');
-    list.innerHTML = "";
-    leaderboard.innerHTML = "";
-    
+    list.innerHTML = ""; leaderboard.innerHTML = "";
     if(players) {
       document.getElementById('game-options').classList.remove('hidden');
-      let playersArray = Object.keys(players).map(id => ({ id, ...players[id] }));
-      playersArray.sort((a, b) => b.score - a.score);
-      playersArray.forEach(p => {
-        list.innerHTML += `<li>🌟 ${p.name}</li>`;
-        leaderboard.innerHTML += `<li><strong>${p.name}</strong> : ${p.score} pts</li>`;
+      let arr = Object.keys(players).map(id => ({ id, ...players[id] }));
+      arr.sort((a, b) => b.score - a.score);
+      arr.forEach(p => {
+        const av = p.avatar || "👤";
+        list.innerHTML += `<li>${av} ${p.name}</li>`;
+        leaderboard.innerHTML += `<li><strong>${av} ${p.name}</strong> : ${p.score} pts</li>`;
       });
-    } else {
-        document.getElementById('game-options').classList.add('hidden');
-        list.innerHTML = "<li>En attente des joueurs...</li>";
     }
   });
 
-  // RÉINITIALISER LE SALON
   function resetLobby() {
-    if(confirm("Voulez-vous vider le salon et supprimer tous les joueurs ?")) {
-      db.ref('players').remove();
-      db.ref('answers').remove();
-      alert("Salon vidé !");
-    }
+    if(confirm("Tout vider ?")) { db.ref('players').remove(); db.ref('answers').remove(); }
   }
 
-  // ÉCOUTER LES RÉPONSES
   db.ref('answers').on('value', (snap) => {
     const answers = snap.val();
     const feed = document.getElementById('answers-feed');
     if(answers) {
-      feed.innerHTML = "<h3>Réponses reçues :</h3>";
+      feed.innerHTML = "<h3>Réponses :</h3>";
       Object.keys(answers).forEach(id => {
         const ans = answers[id];
-        feed.innerHTML += `
-          <div class="answer-card" id="card-${id}">
-            <strong>${ans.name} :</strong> <span>"${ans.text}"</span>
-            <button class="point-btn" onclick="givePoints('${id}')">+3 Pts ✅</button>
-          </div>`;
+        const av = ans.avatar || "👤";
+        feed.innerHTML += `<div class="answer-card"><strong>${av} ${ans.name} :</strong> <span>"${ans.text}"</span><button class="point-btn" onclick="givePoints('${id}')">+3 Pts ✅</button></div>`;
       });
     }
   });
 
   function givePoints(playerId) {
-    const playerRef = db.ref('players/' + playerId);
-    playerRef.once('value', (snap) => {
-      const p = snap.val();
-      if(p) playerRef.update({ score: p.score + 3 });
+    db.ref('players/' + playerId).once('value', s => {
+      if(s.val()) db.ref('players/' + playerId).update({ score: s.val().score + 3 });
     });
-    document.querySelector(`#card-${playerId} .point-btn`).style.display = "none";
   }
 
   function startMultiplayerGame() {
-    let nbWanted = document.getElementById('nb-questions').value;
-    gamePlaylist = basePlaylist.sort(() => 0.5 - Math.random()).slice(0, nbWanted);
+    let nb = document.getElementById('nb-questions').value;
+    gamePlaylist = basePlaylist.sort(() => 0.5 - Math.random()).slice(0, nb);
     document.getElementById('setup-area').classList.add('hidden');
     document.getElementById('game-area').classList.remove('hidden');
     loadTrack();
@@ -166,9 +133,8 @@
 
   function revealResult() {
     player.stopVideo();
-    const answerDiv = document.getElementById('answer-display');
-    answerDiv.innerText = "Réponse : " + gamePlaylist[currentIndex].titre;
-    answerDiv.classList.remove('hidden');
+    document.getElementById('answer-display').innerText = "Réponse : " + gamePlaylist[currentIndex].titre;
+    document.getElementById('answer-display').classList.remove('hidden');
     document.getElementById('reveal-btn').classList.add('hidden');
     document.getElementById('next-btn').classList.remove('hidden');
   }
@@ -176,25 +142,23 @@
   function nextRound() {
     currentIndex++;
     if(currentIndex < gamePlaylist.length) { loadTrack(); } 
-    else { alert("Fin du jeu ! Bravo à tous !"); location.reload(); }
+    else { alert("Fin !"); location.reload(); }
   }
 </script>
 
 <style>
-  body { background: #0d1117; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; padding: 20px;}
+  body { background: #0d1117; color: white; font-family: sans-serif; text-align: center; padding: 20px;}
   .container { max-width: 800px; margin: auto; }
-  #qrcode { background: white; padding: 15px; display: inline-block; border-radius: 10px; margin: 10px; }
+  #qrcode { background: white; padding: 15px; display: inline-block; border-radius: 10px; }
   .hidden { display: none !important; }
   .lobby-list, .leaderboard-box { background: #161b22; border-radius: 10px; padding: 20px; border: 1px solid #30363d; margin-top:20px;}
   li { list-style: none; font-size: 1.3em; color: #58a6ff; margin: 5px; }
   #yt-player-container { height: 1px; width: 1px; overflow: hidden; position: absolute; left: -9999px; }
-  #answer-display { font-size: 2.2em; color: #f2cc60; margin: 20px; font-weight: bold; }
-  .num-input { font-size:1.2em; width:60px; border-radius: 5px; border: 1px solid #30363d; background: #0d1117; color: white; padding: 5px; }
-  button { background: #1f6feb; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.1em; margin: 5px;}
+  #answer-display { font-size: 2em; color: #f2cc60; margin: 20px; font-weight: bold; }
+  button { background: #1f6feb; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; margin: 5px;}
   .danger-btn { background: #da3633; }
   #reveal-btn { background: #238636; }
   #next-btn { background: #8957e5; }
-  .answer-card { background: #21262d; padding: 15px; margin: 10px; border-radius: 8px; text-align: left; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #58a6ff;}
-  .point-btn { background: #2ea043; padding: 8px 15px; font-size: 0.9em; margin: 0;}
-</style>
+  .answer-card { background: #21262d; padding: 10px; margin: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #58a6ff;}
+  .point-btn { background: #2ea043; padding: 5px 10px; font-size: 0.8em;}
 </style>
