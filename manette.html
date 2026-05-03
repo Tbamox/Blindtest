@@ -521,6 +521,48 @@
     document.getElementById('free-zone').style.display = 'flex';
   }
 
+  /* ══════════════════════════════════════════
+     AUTO-CORRECTION — Algorithme de similarité
+     ══════════════════════════════════════════ */
+
+  // Normalise une chaîne : minuscules, sans accents, sans articles, sans ponctuation
+  function normalize(str) {
+    return str
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")   // accents → base (é→e)
+      .replace(/[''´`]/g, "")                              // apostrophes
+      .replace(/\b(le|la|les|l|un|une|des|the|a|an)\b/g, "") // articles
+      .replace(/[^a-z0-9 ]/g, "")                          // ponctuation
+      .replace(/\s+/g, " ").trim();
+  }
+
+  // Distance de Levenshtein (nombre de modifications pour passer de a à b)
+  function levenshtein(a, b) {
+    const m = a.length, n = b.length;
+    const dp = Array.from({ length: m + 1 }, (_, i) =>
+      Array.from({ length: n + 1 }, (_, j) => j === 0 ? i : 0)
+    );
+    for (let j = 1; j <= n; j++) dp[0][j] = j;
+    for (let i = 1; i <= m; i++)
+      for (let j = 1; j <= n; j++)
+        dp[i][j] = a[i-1] === b[j-1]
+          ? dp[i-1][j-1]
+          : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+    return dp[m][n];
+  }
+
+  // Retourne true si la réponse est "assez proche" de la solution
+  // Tolérance : jusqu'à 25 % d'erreur sur la longueur max
+  function isSimilarEnough(answer, solution) {
+    const a = normalize(answer);
+    const s = normalize(solution);
+    if (!a || !s) return false;
+    if (a === s) return true;
+    const maxLen = Math.max(a.length, s.length);
+    const dist   = levenshtein(a, s);
+    return dist / maxLen <= 0.25;
+  }
+
   /* ── ENVOI DE LA RÉPONSE ── */
   function sendAnswer(isQcm, qcmText, qcmBtn, solution) {
     if (hasAnswered) return;
@@ -536,32 +578,50 @@
       }
 
       hasAnswered = true;
-
-      // Désactiver l'envoi
       document.getElementById('send-btn').disabled = true;
-
-      const finalText = isQcm ? text + " (QCM)" : text;
-      db.ref('answers/' + myId).set({ text: finalText, name: myName, avatar: myAvatar });
       document.getElementById('answer-input').value = '';
 
       if (isQcm) {
+        /* ── QCM : correction exacte ── */
         const isCorrect = text === state.solution;
-
-        // Feedback visuel sur le bouton
-        if (qcmBtn) {
-          qcmBtn.classList.add(isCorrect ? 'correct' : 'wrong');
-        }
-        // Désactive tous les boutons QCM
+        if (qcmBtn) qcmBtn.classList.add(isCorrect ? 'correct' : 'wrong');
         document.querySelectorAll('.btn-choice').forEach(b => b.disabled = true);
+
+        db.ref('answers/' + myId).set({
+          text: text + " (QCM)",
+          name: myName, avatar: myAvatar,
+          autoChecked: true
+        });
 
         if (isCorrect) {
           db.ref('players/' + myId + '/score').transaction(s => (s || 0) + 1);
           setFeedback("🎯 Bonne réponse ! +1 pt", 'ok');
         } else {
-          setFeedback(`❌ Faux ! La bonne réponse : ${state.solution}`, 'err');
+          setFeedback(`❌ Faux ! C'était : ${state.solution}`, 'err');
         }
+
       } else {
-        setFeedback("✅ Réponse envoyée !", 'sent');
+        /* ── Réponse libre : auto-correction floue ── */
+        const correct = isSimilarEnough(text, state.solution);
+
+        if (correct) {
+          // Bonne réponse (exacte ou proche) → +3 pts, marqué AUTO
+          db.ref('players/' + myId + '/score').transaction(s => (s || 0) + 3);
+          db.ref('answers/' + myId).set({
+            text: text + " (AUTO ✅)",
+            name: myName, avatar: myAvatar,
+            autoChecked: true
+          });
+          setFeedback("🎯 Bonne réponse ! +3 pts", 'ok');
+        } else {
+          // Trop éloigné → envoyé à l'hôte pour correction manuelle
+          db.ref('answers/' + myId).set({
+            text: text,
+            name: myName, avatar: myAvatar,
+            autoChecked: false
+          });
+          setFeedback("✅ Réponse envoyée !", 'sent');
+        }
         hideQCM();
       }
     });
