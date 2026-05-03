@@ -1,6 +1,7 @@
 <div class="container">
   <h1 id="game-title">🏠 Salon Blind Test</h1>
   
+  <!-- ÉCRAN D'ACCUEIL -->
   <div id="setup-area">
     <p>Scanner pour rejoindre :</p>
     <div id="qrcode"></div>
@@ -8,19 +9,35 @@
       <h3>Joueurs connectés :</h3>
       <ul id="player-list"></ul>
     </div>
-    <button onclick="startMultiplayerGame()" id="start-btn" style="display:none">Lancer la partie !</button>
+    
+    <div id="game-options" class="hidden">
+      <label for="nb-questions">Combien de questions ?</label>
+      <input type="number" id="nb-questions" value="3" min="1" max="4" style="font-size:1.2em; width:60px; margin-left:10px;">
+      <br><br>
+      <button onclick="startMultiplayerGame()" id="start-btn">Lancer la partie !</button>
+    </div>
   </div>
 
+  <!-- ÉCRAN DE JEU -->
   <div id="game-area" class="hidden">
     <div id="yt-player-container"><div id="yt-player"></div></div>
+    
     <h2 id="question-num">Question</h2>
     <div id="visualizer">🔊 Musique en cours...</div>
+    
     <div id="answers-feed">
        <p>En attente des réponses sur les téléphones...</p>
     </div>
+    
     <div id="answer-display" class="hidden"></div>
     <button onclick="revealResult()" id="reveal-btn">Révéler la réponse 👁️</button>
     <button onclick="nextRound()" id="next-btn" class="hidden">Question Suivante ➡️</button>
+
+    <!-- CLASSEMENT EN DIRECT -->
+    <div class="leaderboard-box">
+      <h3>🏆 Classement en direct</h3>
+      <ul id="leaderboard-list"></ul>
+    </div>
   </div>
 </div>
 
@@ -39,23 +56,23 @@
     messagingSenderId: "319100843512",
     appId: "1:319100843512:web:5fb89272cd2131f350920d"
   };
-
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // Liste des musiques
-  const playlist = [
-    { titre: "Le Roi Lion", id: "F4scQ13uB0U", start: 10 },
-    { titre: "Pokémon", id: "5y-wGgXMeo0", start: 0 },
-    { titre: "Star Wars", id: "EjMNNpIksaI", start: 8 },
-    { titre: "Pirates des Caraïbes", id: "K3pOUvO8qTM", start: 0 }
-  ];
-  let currentIndex = 0;
-  let player;
-
-  // Générer le QR Code
+  // REMETTRE TON LIEN GITHUB ICI POUR LE QR CODE !
   const manetteUrl = "https://tbamox.github.io/Blindtest/manette.html"; 
   new QRCode(document.getElementById("qrcode"), manetteUrl);
+
+  // NOUVELLE PLAYLIST (Vidéos qui autorisent la lecture externe)
+  let basePlaylist = [
+    { titre: "Le Roi Lion (Cover)", id: "p0Z1yLg6G1I", start: 30 },
+    { titre: "Pokémon (Générique)", id: "JuYeHPFR3f0", start: 0 },
+    { titre: "Star Wars", id: "EjMNNpIksaI", start: 8 },
+    { titre: "Pirates des Caraïbes (Orchestre)", id: "27mB8verT60", start: 30 }
+  ];
+  let gamePlaylist = [];
+  let currentIndex = 0;
+  let player;
 
   // YouTube API
   var tag = document.createElement('script');
@@ -64,63 +81,97 @@
   firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
   function onYouTubeIframeAPIReady() {
-    player = new YT.Player('yt-player', {
-      height: '0', width: '0',
-      events: { 'onReady': () => console.log("YT Prêt") }
-    });
+    player = new YT.Player('yt-player', { height: '0', width: '0' });
   }
 
-  // Écouter les joueurs
+  // ÉCOUTER LES JOUEURS ET AFFICHER LE CLASSEMENT
   db.ref('players').on('value', (snap) => {
     const players = snap.val();
     const list = document.getElementById('player-list');
+    const leaderboard = document.getElementById('leaderboard-list');
     list.innerHTML = "";
+    leaderboard.innerHTML = "";
+    
     if(players) {
-      Object.keys(players).forEach(id => {
-        list.innerHTML += `<li>🌟 ${players[id].name}</li>`;
+      document.getElementById('game-options').classList.remove('hidden');
+      
+      // Trier les joueurs par score (du plus grand au plus petit)
+      let playersArray = Object.keys(players).map(id => ({ id, ...players[id] }));
+      playersArray.sort((a, b) => b.score - a.score);
+
+      playersArray.forEach(p => {
+        list.innerHTML += `<li>🌟 ${p.name}</li>`;
+        leaderboard.innerHTML += `<li><strong>${p.name}</strong> : ${p.score} pts</li>`;
       });
-      document.getElementById('start-btn').style.display = "block";
     }
   });
 
-  // Écouter les réponses en direct
+  // ÉCOUTER LES RÉPONSES
   db.ref('answers').on('value', (snap) => {
     const answers = snap.val();
     const feed = document.getElementById('answers-feed');
     if(answers) {
       feed.innerHTML = "<h3>Réponses reçues :</h3>";
       Object.keys(answers).forEach(id => {
-        feed.innerHTML += `<p>✅ Quelqu'un a répondu !</p>`;
+        const ans = answers[id];
+        // On affiche le nom, la réponse, et un bouton pour donner 3 points
+        feed.innerHTML += `
+          <div class="answer-card" id="card-${id}">
+            <strong>${ans.name} :</strong> <span style="font-size:1.2em;">"${ans.text}"</span>
+            <button class="point-btn" onclick="givePoints('${id}')">+3 Pts ✅</button>
+          </div>`;
       });
+    } else {
+      feed.innerHTML = "<p>En attente des réponses...</p>";
     }
   });
 
+  // FONCTION POUR DONNER LES POINTS
+  function givePoints(playerId) {
+    const playerRef = db.ref('players/' + playerId);
+    playerRef.once('value', (snap) => {
+      const p = snap.val();
+      playerRef.update({ score: p.score + 3 });
+    });
+    // On cache le bouton pour éviter de donner les points 2 fois par erreur
+    document.querySelector(`#card-${playerId} .point-btn`).style.display = "none";
+  }
+
+  // LANCER LA PARTIE
   function startMultiplayerGame() {
+    let nbWanted = document.getElementById('nb-questions').value;
+    // On mélange et on garde le nombre demandé
+    gamePlaylist = basePlaylist.sort(() => 0.5 - Math.random()).slice(0, nbWanted);
+    
+    // Remise à zéro des scores pour tout le monde
+    db.ref('players').once('value', snap => {
+      snap.forEach(child => child.ref.update({ score: 0 }));
+    });
+
     document.getElementById('setup-area').classList.add('hidden');
     document.getElementById('game-area').classList.remove('hidden');
     loadTrack();
   }
 
   function loadTrack() {
-    document.getElementById('question-num').innerText = "Question " + (currentIndex + 1);
+    document.getElementById('question-num').innerText = `Question ${currentIndex + 1} / ${gamePlaylist.length}`;
     document.getElementById('answer-display').classList.add('hidden');
     document.getElementById('next-btn').classList.add('hidden');
     document.getElementById('reveal-btn').classList.remove('hidden');
-    document.getElementById('answers-feed').innerHTML = "<p>En attente des réponses...</p>";
     
-    // Reset les réponses dans Firebase pour la nouvelle question
+    // Vider les anciennes réponses dans Firebase
     db.ref('answers').remove();
     
     player.loadVideoById({
-      videoId: playlist[currentIndex].id,
-      startSeconds: playlist[currentIndex].start
+      videoId: gamePlaylist[currentIndex].id,
+      startSeconds: gamePlaylist[currentIndex].start
     });
   }
 
   function revealResult() {
     player.stopVideo();
     const answerDiv = document.getElementById('answer-display');
-    answerDiv.innerText = "La réponse était : " + playlist[currentIndex].titre;
+    answerDiv.innerText = "La réponse était : " + gamePlaylist[currentIndex].titre;
     answerDiv.classList.remove('hidden');
     document.getElementById('reveal-btn').classList.add('hidden');
     document.getElementById('next-btn').classList.remove('hidden');
@@ -128,10 +179,10 @@
 
   function nextRound() {
     currentIndex++;
-    if(currentIndex < playlist.length) {
+    if(currentIndex < gamePlaylist.length) {
       loadTrack();
     } else {
-      alert("Fin de la partie !");
+      alert("Fin de la partie ! Regardez le classement final !");
       location.reload();
     }
   }
@@ -140,13 +191,17 @@
 <style>
   body { background: #0d1117; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; }
   .container { max-width: 800px; margin: auto; padding: 20px; }
-  #qrcode { background: white; padding: 15px; display: inline-block; border-radius: 10px; margin: 20px; }
-  .hidden { display: none; }
-  .lobby-list { background: #161b22; border-radius: 10px; padding: 20px; border: 1px solid #30363d; }
-  li { list-style: none; font-size: 1.5em; color: #58a6ff; margin: 5px; }
+  #qrcode { background: white; padding: 15px; display: inline-block; border-radius: 10px; margin: 10px; }
+  .hidden { display: none !important; }
+  .lobby-list, .leaderboard-box { background: #161b22; border-radius: 10px; padding: 20px; border: 1px solid #30363d; margin-top:20px;}
+  li { list-style: none; font-size: 1.3em; color: #58a6ff; margin: 5px; }
   #yt-player-container { height: 1px; width: 1px; overflow: hidden; position: absolute; left: -9999px; }
   #answer-display { font-size: 2em; color: #f2cc60; margin: 20px; font-weight: bold; }
-  button { background: #1f6feb; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.2em; }
+  
+  button { background: #1f6feb; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.1em; margin: 5px;}
   #reveal-btn { background: #238636; }
   #next-btn { background: #8957e5; }
+  
+  .answer-card { background: #21262d; padding: 15px; margin: 10px; border-radius: 8px; text-align: left; display: flex; justify-content: space-between; align-items: center;}
+  .point-btn { background: #2ea043; padding: 8px 15px; font-size: 1em;}
 </style>
