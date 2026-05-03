@@ -1,20 +1,23 @@
 <div class="container">
   <h1 id="game-title">🏠 Salon Blind Test</h1>
   
-  <!-- ÉCRAN D'ACCUEIL -->
+  <!-- ÉCRAN D'ACCUEIL (LOBBY) -->
   <div id="setup-area">
     <p>Scanner pour rejoindre :</p>
     <div id="qrcode"></div>
+    
     <div class="lobby-list">
       <h3>Joueurs connectés :</h3>
       <ul id="player-list"></ul>
     </div>
     
     <div id="game-options" class="hidden">
-      <label for="nb-questions">Combien de questions ?</label>
-      <input type="number" id="nb-questions" value="3" min="1" max="4" style="font-size:1.2em; width:60px; margin-left:10px;">
+      <button onclick="resetLobby()" id="reset-btn" class="danger-btn">Vider le salon 🗑️</button>
       <br><br>
-      <button onclick="startMultiplayerGame()" id="start-btn">Lancer la partie !</button>
+      <label for="nb-questions">Combien de questions ?</label>
+      <input type="number" id="nb-questions" value="3" min="1" max="4" class="num-input">
+      <br><br>
+      <button onclick="startMultiplayerGame()" id="start-btn">Lancer la partie ! 🚀</button>
     </div>
   </div>
 
@@ -30,8 +33,11 @@
     </div>
     
     <div id="answer-display" class="hidden"></div>
-    <button onclick="revealResult()" id="reveal-btn">Révéler la réponse 👁️</button>
-    <button onclick="nextRound()" id="next-btn" class="hidden">Question Suivante ➡️</button>
+    
+    <div class="controls">
+        <button onclick="revealResult()" id="reveal-btn">Révéler la réponse 👁️</button>
+        <button onclick="nextRound()" id="next-btn" class="hidden">Question Suivante ➡️</button>
+    </div>
 
     <!-- CLASSEMENT EN DIRECT -->
     <div class="leaderboard-box">
@@ -46,7 +52,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <script>
-  // CONFIGURATION FIREBASE
+  // TA CONFIGURATION FIREBASE
   const firebaseConfig = {
     apiKey: "AIzaSyC18xshyF3ShbjesR5NsjdmBfAiBaP36BE",
     authDomain: "blindtestfamille.firebaseapp.com",
@@ -59,11 +65,11 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // REMETTRE TON LIEN GITHUB ICI POUR LE QR CODE !
+  // TON LIEN GITHUB POUR LE QR CODE
   const manetteUrl = "https://tbamox.github.io/Blindtest/manette.html"; 
   new QRCode(document.getElementById("qrcode"), manetteUrl);
 
-  // NOUVELLE PLAYLIST (Vidéos qui autorisent la lecture externe)
+  // PLAYLIST (Vidéos autorisant l'intégration)
   let basePlaylist = [
     { titre: "Le Roi Lion (Cover)", id: "p0Z1yLg6G1I", start: 30 },
     { titre: "Pokémon (Générique)", id: "JuYeHPFR3f0", start: 0 },
@@ -84,7 +90,7 @@
     player = new YT.Player('yt-player', { height: '0', width: '0' });
   }
 
-  // ÉCOUTER LES JOUEURS ET AFFICHER LE CLASSEMENT
+  // ÉCOUTER LES JOUEURS ET LE CLASSEMENT
   db.ref('players').on('value', (snap) => {
     const players = snap.val();
     const list = document.getElementById('player-list');
@@ -94,17 +100,26 @@
     
     if(players) {
       document.getElementById('game-options').classList.remove('hidden');
-      
-      // Trier les joueurs par score (du plus grand au plus petit)
       let playersArray = Object.keys(players).map(id => ({ id, ...players[id] }));
       playersArray.sort((a, b) => b.score - a.score);
-
       playersArray.forEach(p => {
         list.innerHTML += `<li>🌟 ${p.name}</li>`;
         leaderboard.innerHTML += `<li><strong>${p.name}</strong> : ${p.score} pts</li>`;
       });
+    } else {
+        document.getElementById('game-options').classList.add('hidden');
+        list.innerHTML = "<li>En attente des joueurs...</li>";
     }
   });
+
+  // RÉINITIALISER LE SALON
+  function resetLobby() {
+    if(confirm("Voulez-vous vider le salon et supprimer tous les joueurs ?")) {
+      db.ref('players').remove();
+      db.ref('answers').remove();
+      alert("Salon vidé !");
+    }
+  }
 
   // ÉCOUTER LES RÉPONSES
   db.ref('answers').on('value', (snap) => {
@@ -114,40 +129,27 @@
       feed.innerHTML = "<h3>Réponses reçues :</h3>";
       Object.keys(answers).forEach(id => {
         const ans = answers[id];
-        // On affiche le nom, la réponse, et un bouton pour donner 3 points
         feed.innerHTML += `
           <div class="answer-card" id="card-${id}">
-            <strong>${ans.name} :</strong> <span style="font-size:1.2em;">"${ans.text}"</span>
+            <strong>${ans.name} :</strong> <span>"${ans.text}"</span>
             <button class="point-btn" onclick="givePoints('${id}')">+3 Pts ✅</button>
           </div>`;
       });
-    } else {
-      feed.innerHTML = "<p>En attente des réponses...</p>";
     }
   });
 
-  // FONCTION POUR DONNER LES POINTS
   function givePoints(playerId) {
     const playerRef = db.ref('players/' + playerId);
     playerRef.once('value', (snap) => {
       const p = snap.val();
-      playerRef.update({ score: p.score + 3 });
+      if(p) playerRef.update({ score: p.score + 3 });
     });
-    // On cache le bouton pour éviter de donner les points 2 fois par erreur
     document.querySelector(`#card-${playerId} .point-btn`).style.display = "none";
   }
 
-  // LANCER LA PARTIE
   function startMultiplayerGame() {
     let nbWanted = document.getElementById('nb-questions').value;
-    // On mélange et on garde le nombre demandé
     gamePlaylist = basePlaylist.sort(() => 0.5 - Math.random()).slice(0, nbWanted);
-    
-    // Remise à zéro des scores pour tout le monde
-    db.ref('players').once('value', snap => {
-      snap.forEach(child => child.ref.update({ score: 0 }));
-    });
-
     document.getElementById('setup-area').classList.add('hidden');
     document.getElementById('game-area').classList.remove('hidden');
     loadTrack();
@@ -158,20 +160,14 @@
     document.getElementById('answer-display').classList.add('hidden');
     document.getElementById('next-btn').classList.add('hidden');
     document.getElementById('reveal-btn').classList.remove('hidden');
-    
-    // Vider les anciennes réponses dans Firebase
     db.ref('answers').remove();
-    
-    player.loadVideoById({
-      videoId: gamePlaylist[currentIndex].id,
-      startSeconds: gamePlaylist[currentIndex].start
-    });
+    player.loadVideoById({ videoId: gamePlaylist[currentIndex].id, startSeconds: gamePlaylist[currentIndex].start });
   }
 
   function revealResult() {
     player.stopVideo();
     const answerDiv = document.getElementById('answer-display');
-    answerDiv.innerText = "La réponse était : " + gamePlaylist[currentIndex].titre;
+    answerDiv.innerText = "Réponse : " + gamePlaylist[currentIndex].titre;
     answerDiv.classList.remove('hidden');
     document.getElementById('reveal-btn').classList.add('hidden');
     document.getElementById('next-btn').classList.remove('hidden');
@@ -179,30 +175,26 @@
 
   function nextRound() {
     currentIndex++;
-    if(currentIndex < gamePlaylist.length) {
-      loadTrack();
-    } else {
-      alert("Fin de la partie ! Regardez le classement final !");
-      location.reload();
-    }
+    if(currentIndex < gamePlaylist.length) { loadTrack(); } 
+    else { alert("Fin du jeu ! Bravo à tous !"); location.reload(); }
   }
 </script>
 
 <style>
-  body { background: #0d1117; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; }
-  .container { max-width: 800px; margin: auto; padding: 20px; }
+  body { background: #0d1117; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; padding: 20px;}
+  .container { max-width: 800px; margin: auto; }
   #qrcode { background: white; padding: 15px; display: inline-block; border-radius: 10px; margin: 10px; }
   .hidden { display: none !important; }
   .lobby-list, .leaderboard-box { background: #161b22; border-radius: 10px; padding: 20px; border: 1px solid #30363d; margin-top:20px;}
   li { list-style: none; font-size: 1.3em; color: #58a6ff; margin: 5px; }
   #yt-player-container { height: 1px; width: 1px; overflow: hidden; position: absolute; left: -9999px; }
-  #answer-display { font-size: 2em; color: #f2cc60; margin: 20px; font-weight: bold; }
-  
+  #answer-display { font-size: 2.2em; color: #f2cc60; margin: 20px; font-weight: bold; }
+  .num-input { font-size:1.2em; width:60px; border-radius: 5px; border: 1px solid #30363d; background: #0d1117; color: white; padding: 5px; }
   button { background: #1f6feb; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.1em; margin: 5px;}
+  .danger-btn { background: #da3633; }
   #reveal-btn { background: #238636; }
   #next-btn { background: #8957e5; }
-  
-  .answer-card { background: #21262d; padding: 15px; margin: 10px; border-radius: 8px; text-align: left; display: flex; justify-content: space-between; align-items: center;}
-  .point-btn { background: #2ea043; padding: 8px 15px; font-size: 1em;}
+  .answer-card { background: #21262d; padding: 15px; margin: 10px; border-radius: 8px; text-align: left; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #58a6ff;}
+  .point-btn { background: #2ea043; padding: 8px 15px; font-size: 0.9em; margin: 0;}
 </style>
 </style>
