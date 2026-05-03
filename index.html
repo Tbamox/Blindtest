@@ -1,4 +1,3 @@
-<!-- Écran Principal (PC) -->
 <div class="container">
   <h1 id="game-title">🏠 Salon Blind Test</h1>
   
@@ -9,26 +8,28 @@
       <h3>Joueurs connectés :</h3>
       <ul id="player-list"></ul>
     </div>
-    <button onclick="startMultplayerGame()" id="start-btn" style="display:none">Lancer la partie !</button>
+    <button onclick="startMultiplayerGame()" id="start-btn" style="display:none">Lancer la partie !</button>
   </div>
 
   <div id="game-area" class="hidden">
-    <div id="yt-player"></div>
+    <div id="yt-player-container"><div id="yt-player"></div></div>
     <h2 id="question-num">Question</h2>
     <div id="visualizer">🔊 Musique en cours...</div>
-    <div id="answers-feed"></div>
-    <button onclick="revealResult()" id="reveal-btn">Révéler la réponse</button>
-    <button onclick="nextRound()" id="next-btn" class="hidden">Suivant</button>
+    <div id="answers-feed">
+       <p>En attente des réponses sur les téléphones...</p>
+    </div>
+    <div id="answer-display" class="hidden"></div>
+    <button onclick="revealResult()" id="reveal-btn">Révéler la réponse 👁️</button>
+    <button onclick="nextRound()" id="next-btn" class="hidden">Question Suivante ➡️</button>
   </div>
 </div>
 
-<!-- SCRIPTS : Firebase + QR Code -->
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <script>
-  // CONFIGURATION FIREBASE (TES CLÉS)
+  // CONFIGURATION FIREBASE
   const firebaseConfig = {
     apiKey: "AIzaSyC18xshyF3ShbjesR5NsjdmBfAiBaP36BE",
     authDomain: "blindtestfamille.firebaseapp.com",
@@ -42,12 +43,34 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // Générer le QR Code (Lien vers ton futur Pen "Manette")
-  // REMPLACE L'URL CI-DESSOUS PAR LE LIEN DE TON DEUXIEME CODEPEN UNE FOIS CRÉÉ
-  const manetteUrl = "https://Tbamox.github.io/Blindtest/manette.html"; 
+  // Liste des musiques
+  const playlist = [
+    { titre: "Le Roi Lion", id: "F4scQ13uB0U", start: 10 },
+    { titre: "Pokémon", id: "5y-wGgXMeo0", start: 0 },
+    { titre: "Star Wars", id: "EjMNNpIksaI", start: 8 },
+    { titre: "Pirates des Caraïbes", id: "K3pOUvO8qTM", start: 0 }
+  ];
+  let currentIndex = 0;
+  let player;
+
+  // Générer le QR Code
+  const manetteUrl = "https://tbamox.github.io/Blindtest/manette.html"; 
   new QRCode(document.getElementById("qrcode"), manetteUrl);
 
-  // Écouter les nouveaux joueurs
+  // YouTube API
+  var tag = document.createElement('script');
+  tag.src = "https://www.youtube.com/iframe_api";
+  var firstScriptTag = document.getElementsByTagName('script')[0];
+  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+  function onYouTubeIframeAPIReady() {
+    player = new YT.Player('yt-player', {
+      height: '0', width: '0',
+      events: { 'onReady': () => console.log("YT Prêt") }
+    });
+  }
+
+  // Écouter les joueurs
   db.ref('players').on('value', (snap) => {
     const players = snap.val();
     const list = document.getElementById('player-list');
@@ -60,20 +83,70 @@
     }
   });
 
-  // Logique du jeu (simplifiée pour l'exemple)
-  function startMultplayerGame() {
-    db.ref('gameState').set({ status: 'playing', currentTrack: 0 });
+  // Écouter les réponses en direct
+  db.ref('answers').on('value', (snap) => {
+    const answers = snap.val();
+    const feed = document.getElementById('answers-feed');
+    if(answers) {
+      feed.innerHTML = "<h3>Réponses reçues :</h3>";
+      Object.keys(answers).forEach(id => {
+        feed.innerHTML += `<p>✅ Quelqu'un a répondu !</p>`;
+      });
+    }
+  });
+
+  function startMultiplayerGame() {
     document.getElementById('setup-area').classList.add('hidden');
     document.getElementById('game-area').classList.remove('hidden');
-    // Ici on ajouterait la lecture YouTube comme avant
+    loadTrack();
+  }
+
+  function loadTrack() {
+    document.getElementById('question-num').innerText = "Question " + (currentIndex + 1);
+    document.getElementById('answer-display').classList.add('hidden');
+    document.getElementById('next-btn').classList.add('hidden');
+    document.getElementById('reveal-btn').classList.remove('hidden');
+    document.getElementById('answers-feed').innerHTML = "<p>En attente des réponses...</p>";
+    
+    // Reset les réponses dans Firebase pour la nouvelle question
+    db.ref('answers').remove();
+    
+    player.loadVideoById({
+      videoId: playlist[currentIndex].id,
+      startSeconds: playlist[currentIndex].start
+    });
+  }
+
+  function revealResult() {
+    player.stopVideo();
+    const answerDiv = document.getElementById('answer-display');
+    answerDiv.innerText = "La réponse était : " + playlist[currentIndex].titre;
+    answerDiv.classList.remove('hidden');
+    document.getElementById('reveal-btn').classList.add('hidden');
+    document.getElementById('next-btn').classList.remove('hidden');
+  }
+
+  function nextRound() {
+    currentIndex++;
+    if(currentIndex < playlist.length) {
+      loadTrack();
+    } else {
+      alert("Fin de la partie !");
+      location.reload();
+    }
   }
 </script>
 
 <style>
-  body { background: #0d1117; color: white; font-family: sans-serif; text-align: center; }
+  body { background: #0d1117; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; }
   .container { max-width: 800px; margin: auto; padding: 20px; }
-  #qrcode { background: white; padding: 10px; display: inline-block; border-radius: 10px; margin: 20px; }
+  #qrcode { background: white; padding: 15px; display: inline-block; border-radius: 10px; margin: 20px; }
   .hidden { display: none; }
-  .lobby-list { background: #161b22; border-radius: 10px; padding: 10px; }
-  li { list-style: none; font-size: 1.5em; color: #58a6ff; }
+  .lobby-list { background: #161b22; border-radius: 10px; padding: 20px; border: 1px solid #30363d; }
+  li { list-style: none; font-size: 1.5em; color: #58a6ff; margin: 5px; }
+  #yt-player-container { height: 1px; width: 1px; overflow: hidden; position: absolute; left: -9999px; }
+  #answer-display { font-size: 2em; color: #f2cc60; margin: 20px; font-weight: bold; }
+  button { background: #1f6feb; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.2em; }
+  #reveal-btn { background: #238636; }
+  #next-btn { background: #8957e5; }
 </style>
