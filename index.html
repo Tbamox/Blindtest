@@ -7,7 +7,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <style> 
+  <style>
     :root {
       --bg:        #070b14;
       --surface:   #0f1624;
@@ -405,7 +405,7 @@
     <div class="card" style="text-align:center;">
       <div id="question-num">Question</div>
       <div class="timer-wrap">
-        <div id="timer-display">10</div>
+        <div id="timer-display">12</div>
         <div class="timer-bar-bg">
           <div id="timer-bar" style="width:100%"></div>
         </div>
@@ -574,19 +574,32 @@
 
     feed.innerHTML = entries.map(([id, ans]) => {
       const av = ans.avatar || "👤";
-      const isQCM = ans.text && ans.text.includes("(QCM)");
+      const isQCM  = ans.text && ans.text.includes("(QCM)");
+      const isAuto = ans.text && ans.text.includes("(AUTO ✅)");
+      const autoChecked = ans.autoChecked || isQCM || isAuto;
+
       const displayText = isTimeUp
         ? `<span class="answer-text">"${ans.text}"</span>`
         : `<span class="pending">📩 Réponse envoyée…</span>`;
 
-      const action = isTimeUp
-        ? (isQCM
-          ? `<span class="badge-qcm">Auto-corrigé ✔</span>`
-          : `<button class="btn btn-point" onclick="givePoints('${id}', 3)">+3 ✅</button>`)
-        : '';
+      let action = '';
+      if (isTimeUp) {
+        if (autoChecked) {
+          const label = isQCM  ? 'QCM auto ✔'
+                      : isAuto ? 'Auto-corrigé ✔'
+                      : 'Auto ✔';
+          action = `<span class="badge-qcm">${label}</span>`;
+        } else {
+          // Réponse libre non reconnue → l'hôte décide
+          action = `<button class="btn btn-point" onclick="givePoints('${id}', 3)">+3 ✅</button>`;
+        }
+      }
+
+      // Bordure colorée selon le statut
+      const borderColor = isAuto ? 'var(--green)' : isQCM ? 'var(--purple)' : 'var(--accent)';
 
       return `
-        <div class="answer-card">
+        <div class="answer-card" style="border-left-color:${borderColor}">
           <div>
             <div class="player-name">${av} ${ans.name}</div>
             ${displayText}
@@ -617,7 +630,7 @@
 
   function loadTrack() {
     const track = gamePlaylist[currentIndex];
-    totalTime = 10;
+    totalTime = 12;
     timeLeft = totalTime;
 
     const timerEl  = document.getElementById('timer-display');
