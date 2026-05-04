@@ -8,7 +8,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
-    :root { 
+    :root {
       --bg:        #070b14;
       --surface:   #0f1624;
       --border:    #1e2d4a;
@@ -768,11 +768,28 @@ let currentEditorCat = CATEGORIES[0].id;
 let editingTrackKey = null;  // null = ajout, sinon clé Firebase
 
 /* ─────────────────────────────────────────
-   QR CODE
+   QR CODE — généré après chargement complet du DOM
 ───────────────────────────────────────── */
 const manetteUrl = "https://tbamox.github.io/Blindtest/manette.html";
-new QRCode(document.getElementById("qrcode"), { text: manetteUrl, width: 180, height: 180 });
-document.getElementById("qr-url-text").textContent = manetteUrl;
+function initQRCode() {
+  const el = document.getElementById("qrcode");
+  if (!el) return;
+  el.innerHTML = ""; // reset si déjà généré
+  try {
+    new QRCode(el, { text: manetteUrl, width: 180, height: 180 });
+  } catch(e) {
+    // Fallback si la lib n'est pas encore chargée
+    setTimeout(initQRCode, 200);
+    return;
+  }
+  const urlEl = document.getElementById("qr-url-text");
+  if (urlEl) urlEl.textContent = manetteUrl;
+}
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initQRCode);
+} else {
+  initQRCode();
+}
 
 /* ─────────────────────────────────────────
    YOUTUBE
@@ -814,26 +831,21 @@ function switchTab(tab) {
    CHARGEMENT DES TRACKS DEPUIS FIREBASE
 ───────────────────────────────────────── */
 function loadTracksFromFirebase() {
-  db.ref('tracks').once('value', snap => {
+  // Un seul listener .on('value') suffit — il se déclenche aussi au premier chargement
+  db.ref('tracks').on('value', snap => {
     const data = snap.val();
+
     if (!data) {
-      // Première utilisation : on charge les defaults
+      // Première utilisation : écriture des défauts, le listener se re-déclenchera automatiquement
       const batch = {};
       DEFAULT_TRACKS.forEach(t => {
         const key = db.ref('tracks').push().key;
         batch[key] = t;
       });
-      db.ref('tracks').set(batch, () => loadTracksFromFirebase());
+      db.ref('tracks').set(batch);
       return;
     }
-    allTracks = Object.entries(data).map(([key, t]) => ({ ...t, _key: key }));
-    buildCategorySelector();
-    renderEditor();
-  });
-  // Live update si l'éditeur modifie les tracks
-  db.ref('tracks').on('value', snap => {
-    const data = snap.val();
-    if (!data) { allTracks = []; return; }
+
     allTracks = Object.entries(data).map(([key, t]) => ({ ...t, _key: key }));
     buildCategorySelector();
     renderEditor();
