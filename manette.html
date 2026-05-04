@@ -33,7 +33,6 @@
       overflow-x: hidden;
     }
 
-    /* Dot grid background */
     body::before {
       content: '';
       position: fixed;
@@ -57,7 +56,6 @@
     }
     .screen.hidden { display: none !important; }
 
-    /* ── Typography ── */
     .big-title {
       font-family: 'Bangers', cursive;
       font-size: 2.8rem;
@@ -73,9 +71,10 @@
       color: var(--muted);
       font-size: 0.9rem;
       margin-bottom: 28px;
+      text-align: center;
     }
 
-    /* ── Avatar selector ── */
+    /* ── Avatar ── */
     .avatar-grid {
       display: flex;
       gap: 12px;
@@ -139,17 +138,16 @@
       border: none;
       cursor: pointer;
       transition: transform .15s, filter .15s, opacity .15s;
-      letter-spacing: 0.5px;
     }
     .btn:active { transform: scale(0.96); }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .btn:disabled:active { transform: none; }
 
-    .btn-join    { background: linear-gradient(135deg, var(--accent), #0099cc); color: #000; margin-bottom: 0; }
-    .btn-send    { background: linear-gradient(135deg, var(--green), #16a34a); color: #fff; margin-bottom: 14px; }
-    .btn-qcm     { background: linear-gradient(135deg, var(--purple), #7c3aed); color: #fff; margin-bottom: 14px; }
-    .btn-back    { background: var(--card); color: var(--muted); border: 1px solid var(--border); padding: 12px; font-size: 0.9rem; max-width: 160px; }
-    .btn-choice  {
+    .btn-join   { background: linear-gradient(135deg, var(--accent), #0099cc); color: #000; margin-bottom: 0; }
+    .btn-send   { background: linear-gradient(135deg, var(--green), #16a34a); color: #fff; margin-bottom: 14px; }
+    .btn-qcm    { background: linear-gradient(135deg, var(--purple), #7c3aed); color: #fff; margin-bottom: 14px; }
+    .btn-back   { background: var(--card); color: var(--muted); border: 1px solid var(--border); padding: 12px; font-size: 0.9rem; max-width: 160px; }
+    .btn-choice {
       background: var(--card);
       border: 2px solid var(--border);
       color: var(--text);
@@ -163,7 +161,7 @@
     .btn-choice.correct { border-color: var(--green); background: rgba(34,197,94,0.12); color: var(--green); }
     .btn-choice.wrong   { border-color: var(--red);   background: rgba(239,68,68,0.10);  color: var(--red); }
 
-    /* ── Score badge ── */
+    /* ── Score ── */
     .score-badge {
       background: rgba(0,212,255,0.1);
       border: 1px solid rgba(0,212,255,0.25);
@@ -176,7 +174,6 @@
       margin-bottom: 20px;
     }
 
-    /* ── Player name header ── */
     .player-header {
       display: flex;
       flex-direction: column;
@@ -187,7 +184,6 @@
     .player-avatar { font-size: 3rem; }
     .player-name   { font-size: 1.3rem; font-weight: 900; }
 
-    /* ── Status card ── */
     .status-card {
       width: 100%;
       max-width: 360px;
@@ -198,14 +194,8 @@
       text-align: center;
       margin-bottom: 20px;
     }
-    .status-icon { font-size: 3.5rem; margin-bottom: 12px; }
-    .status-label {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-    }
+    .status-icon  { font-size: 3.5rem; margin-bottom: 12px; }
+    .status-label { font-size: 1rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
 
     /* ── Feedback ── */
     #feedback {
@@ -220,9 +210,9 @@
       margin-top: 14px;
       transition: all .3s;
     }
-    #feedback.fb-ok   { background: rgba(34,197,94,0.12);  color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
-    #feedback.fb-err  { background: rgba(239,68,68,0.10);  color: var(--red);   border: 1px solid rgba(239,68,68,0.3); }
-    #feedback.fb-sent { background: rgba(0,212,255,0.08);  color: var(--accent);border: 1px solid rgba(0,212,255,0.25); }
+    #feedback.fb-ok   { background: rgba(34,197,94,0.12);  color: var(--green);  border: 1px solid rgba(34,197,94,0.3); }
+    #feedback.fb-err  { background: rgba(239,68,68,0.10);  color: var(--red);    border: 1px solid rgba(239,68,68,0.3); }
+    #feedback.fb-sent { background: rgba(0,212,255,0.08);  color: var(--accent); border: 1px solid rgba(0,212,255,0.25); }
     #feedback.hidden  { display: none; }
 
     /* ── Divider ── */
@@ -244,7 +234,7 @@
       background: var(--border);
     }
 
-    /* ── Waiting dots ── */
+    /* ── Dots ── */
     .dots span {
       display: inline-block;
       width: 8px; height: 8px;
@@ -260,8 +250,23 @@
       40% { transform: translateY(-8px); opacity: 1; }
     }
 
+    /* ── Reconnexion banner ── */
+    #reconnect-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, #ffd93d, #ff6b6b);
+      color: #000;
+      font-weight: 900;
+      text-align: center;
+      padding: 10px;
+      font-size: 0.95rem;
+      z-index: 200;
+      display: none;
+    }
+
     /* ── Game over ── */
-    #screen-gameover .big-title { font-size: 3rem; }
     .final-score {
       font-family: 'Bangers', cursive;
       font-size: 4rem;
@@ -280,360 +285,468 @@
 </head>
 <body>
 
-  <!-- ══ LOGIN ══ -->
-  <div class="screen" id="screen-login">
-    <div class="big-title">🎵 BLIND TEST</div>
-    <div class="sub">Choisis ton avatar et ton pseudo</div>
+<div id="reconnect-banner">🔄 Reconnexion en cours…</div>
 
-    <div class="avatar-grid" id="avatar-grid">
-      <div class="av-opt selected" onclick="selectAvatar(this)">🐱</div>
-      <div class="av-opt" onclick="selectAvatar(this)">🐶</div>
-      <div class="av-opt" onclick="selectAvatar(this)">🦊</div>
-      <div class="av-opt" onclick="selectAvatar(this)">🦁</div>
-      <div class="av-opt" onclick="selectAvatar(this)">🐸</div>
-      <div class="av-opt" onclick="selectAvatar(this)">🐼</div>
-      <div class="av-opt" onclick="selectAvatar(this)">🦄</div>
-      <div class="av-opt" onclick="selectAvatar(this)">🐙</div>
-    </div>
+<!-- ══ LOGIN ══ -->
+<div class="screen" id="screen-login">
+  <div class="big-title">🎵 BLIND TEST</div>
+  <div class="sub">Choisis ton avatar et ton pseudo</div>
 
-    <input class="field" type="text" id="username" placeholder="Ton pseudo…" maxlength="18" autocomplete="off">
-    <button class="btn btn-join" onclick="joinGame()">Rejoindre 🎮</button>
-    <div id="login-error" style="color:var(--red); font-weight:700; margin-top:12px; min-height:20px;"></div>
+  <div class="avatar-grid" id="avatar-grid">
+    <div class="av-opt selected" onclick="selectAvatar(this)">🐱</div>
+    <div class="av-opt" onclick="selectAvatar(this)">🐶</div>
+    <div class="av-opt" onclick="selectAvatar(this)">🦊</div>
+    <div class="av-opt" onclick="selectAvatar(this)">🦁</div>
+    <div class="av-opt" onclick="selectAvatar(this)">🐸</div>
+    <div class="av-opt" onclick="selectAvatar(this)">🐼</div>
+    <div class="av-opt" onclick="selectAvatar(this)">🦄</div>
+    <div class="av-opt" onclick="selectAvatar(this)">🐙</div>
   </div>
 
-  <!-- ══ WAITING (avant que la partie commence) ══ -->
-  <div class="screen hidden" id="screen-waiting">
-    <div class="player-header">
-      <div class="player-avatar" id="wait-avatar">🐱</div>
-      <div class="player-name" id="wait-name">Joueur</div>
+  <input class="field" type="text" id="username" placeholder="Ton pseudo…" maxlength="18" autocomplete="off">
+  <button class="btn btn-join" onclick="joinGame()">Rejoindre 🎮</button>
+  <div id="login-error" style="color:var(--red); font-weight:700; margin-top:12px; min-height:20px;"></div>
+</div>
+
+<!-- ══ WAITING ══ -->
+<div class="screen hidden" id="screen-waiting">
+  <div class="player-header">
+    <div class="player-avatar" id="wait-avatar">🐱</div>
+    <div class="player-name"  id="wait-name">Joueur</div>
+  </div>
+  <div class="status-card">
+    <div class="status-icon">⏳</div>
+    <div class="status-label">En attente de la partie…</div>
+    <div class="dots" style="margin-top:14px;">
+      <span></span><span></span><span></span>
     </div>
-    <div class="status-card">
-      <div class="status-icon">⏳</div>
-      <div class="status-label">En attente de la partie…</div>
-      <div class="dots" style="margin-top:14px;">
-        <span></span><span></span><span></span>
-      </div>
-    </div>
-    <div class="sub">L'hôte va lancer la musique !</div>
+  </div>
+  <div class="sub">L'hôte va lancer la musique !</div>
+</div>
+
+<!-- ══ JEU ══ -->
+<div class="screen hidden" id="screen-game">
+  <div class="player-header">
+    <div class="player-avatar" id="game-avatar">🐱</div>
+    <div class="player-name"  id="game-name">Joueur</div>
+    <div class="score-badge"  id="game-score">0 pt</div>
   </div>
 
-  <!-- ══ JEU ══ -->
-  <div class="screen hidden" id="screen-game">
-    <div class="player-header">
-      <div class="player-avatar" id="game-avatar">🐱</div>
-      <div class="player-name"  id="game-name">Joueur</div>
-      <div class="score-badge"  id="game-score">0 pt</div>
-    </div>
-
-    <!-- Réponse libre -->
-    <div id="free-zone" style="width:100%; max-width:360px; display:flex; flex-direction:column; align-items:center;">
-      <input class="field" type="text" id="answer-input" placeholder="Ta réponse…" autocomplete="off" maxlength="60">
-      <button class="btn btn-send" id="send-btn" onclick="sendAnswer(false)">🚀 VALIDER</button>
-      <div class="divider">ou</div>
-      <button class="btn btn-qcm" onclick="showQCM()">🤔 Je ne sais pas…</button>
-    </div>
-
-    <!-- QCM -->
-    <div id="qcm-zone" style="width:100%; max-width:360px; display:none; flex-direction:column; align-items:center;">
-      <p style="font-weight:800; font-size:1.05rem; margin-bottom:16px; color:var(--muted); text-transform:uppercase; letter-spacing:1px;">Choisis une réponse</p>
-      <div id="qcm-buttons" style="width:100%;"></div>
-      <button class="btn btn-back" onclick="hideQCM()" style="margin-top:8px;">← Retour</button>
-    </div>
-
-    <div id="feedback" class="hidden"></div>
+  <div id="free-zone" style="width:100%; max-width:360px; display:flex; flex-direction:column; align-items:center;">
+    <input class="field" type="text" id="answer-input" placeholder="Ta réponse…" autocomplete="off" maxlength="60">
+    <button class="btn btn-send" id="send-btn" onclick="sendAnswer(false)">🚀 VALIDER</button>
+    <div class="divider">ou</div>
+    <button class="btn btn-qcm" onclick="showQCM()">🤔 Je ne sais pas…</button>
   </div>
 
-  <!-- ══ TEMPS ÉCOULÉ (entre les manches) ══ -->
-  <div class="screen hidden" id="screen-timeup">
-    <div class="status-card pop">
-      <div class="status-icon">⏰</div>
-      <div class="status-label">Temps écoulé !</div>
-      <p style="color:var(--muted); margin-top:10px; font-size:0.95rem;">L'hôte va révéler la réponse…</p>
-    </div>
-    <div class="score-badge" id="timeup-score">0 pt</div>
+  <div id="qcm-zone" style="width:100%; max-width:360px; display:none; flex-direction:column; align-items:center;">
+    <p style="font-weight:800; font-size:1.05rem; margin-bottom:16px; color:var(--muted); text-transform:uppercase; letter-spacing:1px;">Choisis une réponse</p>
+    <div id="qcm-buttons" style="width:100%;"></div>
+    <button class="btn btn-back" onclick="hideQCM()" style="margin-top:8px;">← Retour</button>
   </div>
 
-  <!-- ══ FIN DE JEU ══ -->
-  <div class="screen hidden" id="screen-gameover">
-    <div class="big-title">🏆 TERMINÉ !</div>
-    <div class="status-card pop" style="margin-top:20px;">
-      <div class="player-avatar" id="end-avatar" style="font-size:3rem; margin-bottom:10px;">🐱</div>
-      <div class="player-name"   id="end-name" style="margin-bottom:6px;">Joueur</div>
-      <div class="sub">Ton score final :</div>
-      <div class="final-score" id="end-score">0 pt</div>
-    </div>
-    <button class="btn btn-join" onclick="location.reload()" style="margin-top:20px; max-width:280px;">🔄 Rejouer</button>
+  <div id="feedback" class="hidden"></div>
+</div>
+
+<!-- ══ TEMPS ÉCOULÉ ══ -->
+<div class="screen hidden" id="screen-timeup">
+  <div class="status-card pop">
+    <div class="status-icon">⏰</div>
+    <div class="status-label">Temps écoulé !</div>
+    <p style="color:var(--muted); margin-top:10px; font-size:0.95rem;">L'hôte va révéler la réponse…</p>
   </div>
+  <div class="score-badge" id="timeup-score">0 pt</div>
+</div>
+
+<!-- ══ FIN DE JEU ══ -->
+<div class="screen hidden" id="screen-gameover">
+  <div class="big-title">🏆 TERMINÉ !</div>
+  <div class="status-card pop" style="margin-top:20px;">
+    <div class="player-avatar" id="end-avatar" style="font-size:3rem; margin-bottom:10px;">🐱</div>
+    <div class="player-name"   id="end-name" style="margin-bottom:6px;">Joueur</div>
+    <div class="sub">Ton score final :</div>
+    <div class="final-score" id="end-score">0 pt</div>
+  </div>
+  <button class="btn btn-join" onclick="clearSessionAndReload()" style="margin-top:20px; max-width:280px;">🔄 Rejouer</button>
+</div>
 
 <script>
-  /* ── FIREBASE ── */
-  const firebaseConfig = {
-    apiKey: "AIzaSyC18xshyF3ShbjesR5NsjdmBfAiBaP36BE",
-    authDomain: "blindtestfamille.firebaseapp.com",
-    databaseURL: "https://blindtestfamille-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "blindtestfamille",
-    storageBucket: "blindtestfamille.firebasestorage.app",
-    messagingSenderId: "319100843512",
-    appId: "1:319100843512:web:5fb89272cd2131f350920d"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+/* ─────────────────────────────────────────
+   FIREBASE
+───────────────────────────────────────── */
+const firebaseConfig = {
+  apiKey: "AIzaSyC18xshyF3ShbjesR5NsjdmBfAiBaP36BE",
+  authDomain: "blindtestfamille.firebaseapp.com",
+  databaseURL: "https://blindtestfamille-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "blindtestfamille",
+  storageBucket: "blindtestfamille.firebasestorage.app",
+  messagingSenderId: "319100843512",
+  appId: "1:319100843512:web:5fb89272cd2131f350920d"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-  /* ── STATE ── */
-  let myId = null;
-  let myName = "";
-  let myAvatar = "🐱";
-  let myScore = 0;
-  let hasAnswered = false;
-  let currentScreen = 'login';
+/* ─────────────────────────────────────────
+   ÉTAT
+───────────────────────────────────────── */
+let myId     = null;
+let myName   = "";
+let myAvatar = "🐱";
+let myScore  = 0;
+let hasAnswered  = false;
+let currentScreen = 'login';
+let gameStateListener = null;
+let scoreListener = null;
+let isReconnecting = false;
 
-  /* ── HELPERS ── */
-  function showScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
-    currentScreen = id;
+/* ─────────────────────────────────────────
+   SESSION (localStorage pour reconnexion)
+───────────────────────────────────────── */
+const SESSION_KEY = 'blindtest_session';
+
+function saveSession() {
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ id: myId, name: myName, avatar: myAvatar }));
+}
+
+function clearSession() {
+  localStorage.removeItem(SESSION_KEY);
+}
+
+function clearSessionAndReload() {
+  clearSession();
+  location.reload();
+}
+
+async function tryReconnect() {
+  const raw = localStorage.getItem(SESSION_KEY);
+  if (!raw) return false;
+
+  let session;
+  try { session = JSON.parse(raw); } catch { clearSession(); return false; }
+
+  // Vérifier que le joueur existe encore dans Firebase
+  const snap = await db.ref('players/' + session.id).once('value');
+  if (!snap.exists()) {
+    // Le lobby a été vidé entre temps → on efface la session
+    clearSession();
+    return false;
   }
 
-  function setFeedback(msg, type) {
-    const el = document.getElementById('feedback');
-    el.textContent = msg;
-    el.className = 'fb-' + type;
-    if (msg) {
-      setTimeout(() => {
-        el.className = 'hidden';
-        el.textContent = '';
-      }, 3500);
+  // Vérifier que le jeu n'est pas terminé
+  const stateSnap = await db.ref('gameState').once('value');
+  const state = stateSnap.val();
+  if (state && state.gameOver) {
+    // Partie terminée → on laisse re-login
+    clearSession();
+    return false;
+  }
+
+  // Réintégrer
+  myId     = session.id;
+  myName   = session.name;
+  myAvatar = session.avatar;
+
+  // Remettre onDisconnect (sans .remove() — voir note plus bas)
+  db.ref('players/' + myId).onDisconnect().cancel();
+  setupPresence();
+
+  updateDisplayNames();
+  showScreen('screen-waiting');
+  listenToGameState();
+  listenToMyScore();
+  return true;
+}
+
+/* ─────────────────────────────────────────
+   PRÉSENCE — correctif bug onDisconnect
+   On utilise un flag "online" plutôt que
+   supprimer le joueur → pas de perte sur
+   coupure mobile brève
+───────────────────────────────────────── */
+function setupPresence() {
+  const presenceRef = db.ref('players/' + myId + '/online');
+  presenceRef.set(true);
+  presenceRef.onDisconnect().set(false);
+
+  // Détection de reconnexion réseau
+  const connRef = db.ref('.info/connected');
+  connRef.on('value', snap => {
+    if (!myId) return;
+    if (snap.val() === true) {
+      presenceRef.set(true);
+      document.getElementById('reconnect-banner').style.display = 'none';
+      isReconnecting = false;
+    } else {
+      if (!isReconnecting) {
+        isReconnecting = true;
+        document.getElementById('reconnect-banner').style.display = 'block';
+      }
     }
+  });
+}
+
+/* ─────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────── */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  currentScreen = id;
+}
+
+function setFeedback(msg, type) {
+  const el = document.getElementById('feedback');
+  el.textContent = msg;
+  el.className = 'fb-' + type;
+  if (msg) {
+    setTimeout(() => { el.className = 'hidden'; el.textContent = ''; }, 3500);
   }
+}
 
-  /* ── AVATAR ── */
-  function selectAvatar(el) {
-    document.querySelectorAll('.av-opt').forEach(o => o.classList.remove('selected'));
-    el.classList.add('selected');
-    myAvatar = el.textContent.trim();
-  }
+function updateDisplayNames() {
+  ['wait','game','end'].forEach(prefix => {
+    const av = document.getElementById(prefix + '-avatar');
+    const nm = document.getElementById(prefix + '-name');
+    if (av) av.textContent = myAvatar;
+    if (nm) nm.textContent = myName;
+  });
+}
 
-  /* ── REJOINDRE ── */
-  function joinGame() {
-    myName = document.getElementById('username').value.trim();
-    const errEl = document.getElementById('login-error');
-    if (!myName) { errEl.textContent = "Choisis un pseudo !"; return; }
-    errEl.textContent = "";
+/* ─────────────────────────────────────────
+   AVATAR
+───────────────────────────────────────── */
+function selectAvatar(el) {
+  document.querySelectorAll('.av-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  myAvatar = el.textContent.trim();
+}
 
-    const ref = db.ref('players').push();
-    myId = ref.key;
+/* ─────────────────────────────────────────
+   JOIN
+───────────────────────────────────────── */
+function joinGame() {
+  myName = document.getElementById('username').value.trim();
+  const errEl = document.getElementById('login-error');
+  if (!myName) { errEl.textContent = "Choisis un pseudo !"; return; }
+  errEl.textContent = "";
 
-    // Nettoyage automatique si l'onglet/téléphone se ferme
-    ref.onDisconnect().remove();
+  const ref = db.ref('players').push();
+  myId = ref.key;
+  ref.set({ name: myName, score: 0, avatar: myAvatar, online: true });
 
-    ref.set({ name: myName, score: 0, avatar: myAvatar });
+  saveSession();
+  setupPresence();
+  updateDisplayNames();
+  showScreen('screen-waiting');
+  listenToGameState();
+  listenToMyScore();
+}
 
-    // Mise à jour des écrans avec le nom/avatar
-    ['wait', 'game', 'end'].forEach(prefix => {
-      const av = document.getElementById(prefix + '-avatar');
-      const nm = document.getElementById(prefix + '-name');
-      if (av) av.textContent = myAvatar;
-      if (nm) nm.textContent = myName;
+/* ─────────────────────────────────────────
+   ÉCOUTE DU SCORE
+───────────────────────────────────────── */
+function listenToMyScore() {
+  if (scoreListener) db.ref('players/' + myId + '/score').off('value', scoreListener);
+  scoreListener = db.ref('players/' + myId + '/score').on('value', snap => {
+    myScore = snap.val() || 0;
+    const label = myScore <= 1 ? 'pt' : 'pts';
+    document.getElementById('game-score').textContent    = myScore + ' ' + label;
+    document.getElementById('timeup-score').textContent  = myScore + ' ' + label;
+    document.getElementById('end-score').textContent     = myScore + ' ' + label;
+  });
+}
+
+/* ─────────────────────────────────────────
+   ÉCOUTE GAME STATE
+───────────────────────────────────────── */
+function listenToGameState() {
+  if (gameStateListener) db.ref('gameState').off('value', gameStateListener);
+  gameStateListener = db.ref('gameState').on('value', snap => {
+    const state = snap.val();
+    if (!state) return;
+
+    if (state.gameOver) {
+      clearSession(); // Fin de partie → on efface la session
+      showScreen('screen-gameover');
+      return;
+    }
+
+    if (state.accepting === true) {
+      hasAnswered = false;
+      resetAnswerUI();
+      showScreen('screen-game');
+      return;
+    }
+
+    if (state.accepting === false && currentScreen === 'screen-game') {
+      showScreen('screen-timeup');
+    }
+  });
+}
+
+/* ─────────────────────────────────────────
+   RESET UI
+───────────────────────────────────────── */
+function resetAnswerUI() {
+  hideQCM();
+  document.getElementById('answer-input').value = '';
+  document.getElementById('send-btn').disabled = false;
+  document.getElementById('feedback').className = 'hidden';
+  document.getElementById('feedback').textContent = '';
+  document.querySelectorAll('.btn-choice').forEach(b => {
+    b.classList.remove('correct', 'wrong');
+    b.disabled = false;
+  });
+}
+
+/* ─────────────────────────────────────────
+   QCM
+───────────────────────────────────────── */
+function showQCM() {
+  db.ref('gameState').once('value', snap => {
+    const state = snap.val();
+    if (!state || !state.choix || !state.accepting) {
+      setFeedback("Attends que la musique commence !", 'err');
+      return;
+    }
+
+    const container = document.getElementById('qcm-buttons');
+    container.innerHTML = '';
+    state.choix.forEach(option => {
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-choice';
+      btn.style.width = '100%';
+      btn.textContent = option;
+      btn.onclick = () => sendAnswer(true, option, btn, state.solution);
+      container.appendChild(btn);
     });
 
-    showScreen('screen-waiting');
-    listenToGameState();
-    listenToMyScore();
-  }
+    document.getElementById('free-zone').style.display = 'none';
+    document.getElementById('qcm-zone').style.display = 'flex';
+  });
+}
 
-  /* ── ÉCOUTE DU SCORE ── */
-  function listenToMyScore() {
-    db.ref('players/' + myId + '/score').on('value', (snap) => {
-      myScore = snap.val() || 0;
-      const label = myScore <= 1 ? 'pt' : 'pts';
-      document.getElementById('game-score').textContent = myScore + ' ' + label;
-      document.getElementById('timeup-score').textContent = myScore + ' ' + label;
-      document.getElementById('end-score').textContent = myScore + ' ' + label;
-    });
-  }
+function hideQCM() {
+  document.getElementById('qcm-zone').style.display = 'none';
+  document.getElementById('free-zone').style.display = 'flex';
+}
 
-  /* ── ÉCOUTE DE L'ÉTAT DU JEU ── */
-  function listenToGameState() {
-    db.ref('gameState').on('value', (snap) => {
-      const state = snap.val();
-      if (!state) return;
+/* ─────────────────────────────────────────
+   AUTO-CORRECTION (Levenshtein)
+───────────────────────────────────────── */
+function normalize(str) {
+  return str
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[''´`]/g, "")
+    .replace(/\b(le|la|les|l|un|une|des|the|a|an)\b/g, "")
+    .replace(/[^a-z0-9 ]/g, "")
+    .replace(/\s+/g, " ").trim();
+}
 
-      if (state.gameOver) {
-        showScreen('screen-gameover');
-        return;
-      }
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m+1 }, (_, i) =>
+    Array.from({ length: n+1 }, (_, j) => j === 0 ? i : 0)
+  );
+  for (let j = 1; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i-1] === b[j-1]
+        ? dp[i-1][j-1]
+        : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+  return dp[m][n];
+}
 
-      if (state.accepting === true) {
-        hasAnswered = false;
-        resetAnswerUI();
-        showScreen('screen-game');
-        return;
-      }
+function isSimilarEnough(answer, solution) {
+  const a = normalize(answer);
+  const s = normalize(solution);
+  if (!a || !s) return false;
+  if (a === s) return true;
+  const maxLen = Math.max(a.length, s.length);
+  return levenshtein(a, s) / maxLen <= 0.25;
+}
 
-      // Temps écoulé (accepting = false, pas gameOver)
-      if (state.accepting === false && currentScreen === 'screen-game') {
-        showScreen('screen-timeup');
-      }
-    });
-  }
+/* ─────────────────────────────────────────
+   ENVOI RÉPONSE
+───────────────────────────────────────── */
+function sendAnswer(isQcm, qcmText, qcmBtn, solution) {
+  if (hasAnswered) return;
 
-  /* ── RESET UI entre les questions ── */
-  function resetAnswerUI() {
-    hideQCM();
+  const text = isQcm ? qcmText : document.getElementById('answer-input').value.trim();
+  if (!text) { setFeedback("Tape une réponse !", 'err'); return; }
+
+  db.ref('gameState').once('value', snap => {
+    const state = snap.val();
+    if (!state || state.accepting !== true) {
+      setFeedback("⏳ Trop tard ! Temps écoulé.", 'err');
+      return;
+    }
+
+    hasAnswered = true;
+    document.getElementById('send-btn').disabled = true;
     document.getElementById('answer-input').value = '';
-    document.getElementById('send-btn').disabled = false;
-    document.getElementById('feedback').className = 'hidden';
-    document.getElementById('feedback').textContent = '';
-    // Réinitialise les couleurs des boutons QCM
-    document.querySelectorAll('.btn-choice').forEach(b => {
-      b.classList.remove('correct', 'wrong');
-      b.disabled = false;
-    });
-  }
 
-  /* ── QCM ── */
-  function showQCM() {
-    db.ref('gameState').once('value', (snap) => {
-      const state = snap.val();
-      if (!state || !state.choix || !state.accepting) {
-        setFeedback("Attends que la musique commence !", 'err');
-        return;
-      }
+    if (isQcm) {
+      const isCorrect = text === state.solution;
+      if (qcmBtn) qcmBtn.classList.add(isCorrect ? 'correct' : 'wrong');
+      document.querySelectorAll('.btn-choice').forEach(b => b.disabled = true);
 
-      const container = document.getElementById('qcm-buttons');
-      container.innerHTML = '';
-      state.choix.forEach(option => {
-        const btn = document.createElement('button');
-        btn.className = 'btn btn-choice';
-        btn.style.width = '100%';
-        btn.textContent = option;
-        btn.onclick = () => sendAnswer(true, option, btn, state.solution);
-        container.appendChild(btn);
+      db.ref('answers/' + myId).set({
+        text: text + " (QCM)",
+        name: myName, avatar: myAvatar,
+        autoChecked: true
       });
 
-      document.getElementById('free-zone').style.display = 'none';
-      document.getElementById('qcm-zone').style.display = 'flex';
-    });
-  }
-
-  function hideQCM() {
-    document.getElementById('qcm-zone').style.display = 'none';
-    document.getElementById('free-zone').style.display = 'flex';
-  }
-
-  /* ══════════════════════════════════════════
-     AUTO-CORRECTION — Algorithme de similarité
-     ══════════════════════════════════════════ */
-
-  // Normalise une chaîne : minuscules, sans accents, sans articles, sans ponctuation
-  function normalize(str) {
-    return str
-      .toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")   // accents → base (é→e)
-      .replace(/[''´`]/g, "")                              // apostrophes
-      .replace(/\b(le|la|les|l|un|une|des|the|a|an)\b/g, "") // articles
-      .replace(/[^a-z0-9 ]/g, "")                          // ponctuation
-      .replace(/\s+/g, " ").trim();
-  }
-
-  // Distance de Levenshtein (nombre de modifications pour passer de a à b)
-  function levenshtein(a, b) {
-    const m = a.length, n = b.length;
-    const dp = Array.from({ length: m + 1 }, (_, i) =>
-      Array.from({ length: n + 1 }, (_, j) => j === 0 ? i : 0)
-    );
-    for (let j = 1; j <= n; j++) dp[0][j] = j;
-    for (let i = 1; i <= m; i++)
-      for (let j = 1; j <= n; j++)
-        dp[i][j] = a[i-1] === b[j-1]
-          ? dp[i-1][j-1]
-          : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
-    return dp[m][n];
-  }
-
-  // Retourne true si la réponse est "assez proche" de la solution
-  // Tolérance : jusqu'à 25 % d'erreur sur la longueur max
-  function isSimilarEnough(answer, solution) {
-    const a = normalize(answer);
-    const s = normalize(solution);
-    if (!a || !s) return false;
-    if (a === s) return true;
-    const maxLen = Math.max(a.length, s.length);
-    const dist   = levenshtein(a, s);
-    return dist / maxLen <= 0.25;
-  }
-
-  /* ── ENVOI DE LA RÉPONSE ── */
-  function sendAnswer(isQcm, qcmText, qcmBtn, solution) {
-    if (hasAnswered) return;
-
-    const text = isQcm ? qcmText : document.getElementById('answer-input').value.trim();
-    if (!text) { setFeedback("Tape une réponse !", 'err'); return; }
-
-    db.ref('gameState').once('value', (snap) => {
-      const state = snap.val();
-      if (!state || state.accepting !== true) {
-        setFeedback("⏳ Trop tard ! Temps écoulé.", 'err');
-        return;
+      if (isCorrect) {
+        db.ref('players/' + myId + '/score').transaction(s => (s || 0) + 1);
+        setFeedback("🎯 Bonne réponse ! +1 pt", 'ok');
+      } else {
+        setFeedback(`❌ Faux ! C'était : ${state.solution}`, 'err');
       }
 
-      hasAnswered = true;
-      document.getElementById('send-btn').disabled = true;
-      document.getElementById('answer-input').value = '';
-
-      if (isQcm) {
-        /* ── QCM : correction exacte ── */
-        const isCorrect = text === state.solution;
-        if (qcmBtn) qcmBtn.classList.add(isCorrect ? 'correct' : 'wrong');
-        document.querySelectorAll('.btn-choice').forEach(b => b.disabled = true);
-
+    } else {
+      const correct = isSimilarEnough(text, state.solution);
+      if (correct) {
+        db.ref('players/' + myId + '/score').transaction(s => (s || 0) + 3);
         db.ref('answers/' + myId).set({
-          text: text + " (QCM)",
+          text: text + " (AUTO ✅)",
           name: myName, avatar: myAvatar,
           autoChecked: true
         });
-
-        if (isCorrect) {
-          db.ref('players/' + myId + '/score').transaction(s => (s || 0) + 1);
-          setFeedback("🎯 Bonne réponse ! +1 pt", 'ok');
-        } else {
-          setFeedback(`❌ Faux ! C'était : ${state.solution}`, 'err');
-        }
-
+        setFeedback("🎯 Bonne réponse ! +3 pts", 'ok');
       } else {
-        /* ── Réponse libre : auto-correction floue ── */
-        const correct = isSimilarEnough(text, state.solution);
-
-        if (correct) {
-          // Bonne réponse (exacte ou proche) → +3 pts, marqué AUTO
-          db.ref('players/' + myId + '/score').transaction(s => (s || 0) + 3);
-          db.ref('answers/' + myId).set({
-            text: text + " (AUTO ✅)",
-            name: myName, avatar: myAvatar,
-            autoChecked: true
-          });
-          setFeedback("🎯 Bonne réponse ! +3 pts", 'ok');
-        } else {
-          // Trop éloigné → envoyé à l'hôte pour correction manuelle
-          db.ref('answers/' + myId).set({
-            text: text,
-            name: myName, avatar: myAvatar,
-            autoChecked: false
-          });
-          setFeedback("✅ Réponse envoyée !", 'sent');
-        }
-        hideQCM();
+        db.ref('answers/' + myId).set({
+          text: text,
+          name: myName, avatar: myAvatar,
+          autoChecked: false
+        });
+        setFeedback("✅ Réponse envoyée !", 'sent');
       }
-    });
-  }
-
-  /* ── ENTRÉE CLAVIER ── */
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      if (currentScreen === 'screen-login') joinGame();
-      else if (currentScreen === 'screen-game') sendAnswer(false);
+      hideQCM();
     }
   });
+}
+
+/* ─────────────────────────────────────────
+   CLAVIER
+───────────────────────────────────────── */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    if (currentScreen === 'screen-login') joinGame();
+    else if (currentScreen === 'screen-game') sendAnswer(false);
+  }
+});
+
+/* ─────────────────────────────────────────
+   INIT — tentative de reconnexion d'abord
+───────────────────────────────────────── */
+(async () => {
+  const reconnected = await tryReconnect();
+  if (!reconnected) {
+    showScreen('screen-login');
+  }
+})();
 </script>
 </body>
 </html>
