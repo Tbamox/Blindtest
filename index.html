@@ -8,7 +8,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
-    :root { 
+    :root {
       --bg:        #070b14;
       --surface:   #0f1624;
       --border:    #1e2d4a;
@@ -266,12 +266,62 @@
     }
     #timer-bar.danger { background: linear-gradient(90deg, #ff4444, var(--accent2)); }
 
-    #question-num {
+    /* ── Compteur de questions ── */
+    .question-counter {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .counter-dots {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .counter-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background .4s, transform .3s;
+    }
+    .counter-dot.done {
+      background: var(--muted);
+    }
+    .counter-dot.active {
+      background: var(--accent3);
+      transform: scale(1.35);
+      box-shadow: 0 0 8px rgba(255,217,61,0.5);
+    }
+    .counter-label {
       font-family: 'Bangers', cursive;
-      font-size: 2rem;
+      font-size: 1.6rem;
       letter-spacing: 2px;
-      text-align: center;
       color: var(--accent3);
+    }
+
+    /* ── Badge catégorie ── */
+    .cat-badge-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 4px;
+    }
+    .cat-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      padding: 7px 20px;
+      border-radius: 50px;
+      background: rgba(168,85,247,0.12);
+      border: 1px solid rgba(168,85,247,0.35);
+      color: var(--purple);
+      animation: popIn .4s ease;
     }
 
     /* ── Answers ── */
@@ -491,7 +541,18 @@
     <!-- ══ GAME ══ -->
     <div id="game-area" class="hidden">
       <div class="card" style="text-align:center;">
-        <div id="question-num">Question</div>
+
+        <!-- Compteur de questions -->
+        <div class="question-counter">
+          <div class="counter-dots" id="counter-dots"></div>
+          <div class="counter-label" id="counter-label">Question 1 / 5</div>
+        </div>
+
+        <!-- Badge catégorie -->
+        <div class="cat-badge-wrap">
+          <div class="cat-badge" id="cat-badge">🎵 Musique</div>
+        </div>
+
         <div class="timer-wrap">
           <div id="timer-display">12</div>
           <div class="timer-bar-bg"><div id="timer-bar" style="width:100%"></div></div>
@@ -952,7 +1013,22 @@ function loadTrack() {
   barEl.style.width = '100%';
   barEl.classList.remove('danger');
 
-  document.getElementById('question-num').textContent = `Question ${currentIndex+1} / ${gamePlaylist.length}`;
+  // Compteur label
+  document.getElementById('counter-label').textContent = `Question ${currentIndex+1} / ${gamePlaylist.length}`;
+
+  // Points dots
+  const dotsEl = document.getElementById('counter-dots');
+  dotsEl.innerHTML = gamePlaylist.map((_, i) => {
+    let cls = 'counter-dot';
+    if (i < currentIndex)    cls += ' done';
+    if (i === currentIndex)  cls += ' active';
+    return `<div class="${cls}"></div>`;
+  }).join('');
+
+  // Badge catégorie
+  const track = gamePlaylist[currentIndex];
+  const cat = CATEGORIES.find(c => c.id === track.categorie);
+  document.getElementById('cat-badge').textContent = cat ? `${cat.icon} ${cat.label}` : '';
   document.getElementById('answer-display').classList.add('hidden');
   document.getElementById('next-btn').classList.add('hidden');
   document.getElementById('reveal-btn').classList.add('hidden');
