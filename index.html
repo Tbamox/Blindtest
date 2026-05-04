@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head> 
+<head>
   <meta charset="UTF-8">
   <title>Blind Test — Salon</title>
   <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -21,9 +21,7 @@
       --muted:     #64748b;
       --radius:    14px;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       background: var(--bg);
       color: var(--text);
@@ -31,8 +29,6 @@
       min-height: 100vh;
       overflow-x: hidden;
     }
-
-    /* Background animated grid */
     body::before {
       content: '';
       position: fixed;
@@ -44,19 +40,47 @@
       pointer-events: none;
       z-index: 0;
     }
-
     .container {
-      max-width: 900px;
+      max-width: 960px;
       margin: 0 auto;
-      padding: 24px 20px 60px;
+      padding: 24px 20px 80px;
       position: relative;
       z-index: 1;
+    }
+
+    /* ── Tabs de navigation ── */
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 28px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0;
+    }
+    .nav-tab {
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 800;
+      padding: 10px 22px;
+      border: none;
+      border-radius: 10px 10px 0 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all .2s;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -1px;
+    }
+    .nav-tab:hover { color: var(--text); }
+    .nav-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      background: rgba(0,212,255,0.06);
     }
 
     /* ── Header ── */
     .site-header {
       text-align: center;
-      margin-bottom: 32px;
+      margin-bottom: 28px;
     }
     .site-header h1 {
       font-family: 'Bangers', cursive;
@@ -68,11 +92,7 @@
       background-clip: text;
       line-height: 1.1;
     }
-    .site-header p {
-      color: var(--muted);
-      margin-top: 6px;
-      font-size: 0.95rem;
-    }
+    .site-header p { color: var(--muted); margin-top: 6px; font-size: 0.95rem; }
 
     /* ── Card ── */
     .card {
@@ -91,26 +111,12 @@
       margin-bottom: 16px;
     }
 
-    /* ── QR Code ── */
-    .qr-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-    }
-    #qrcode {
-      background: white;
-      padding: 14px;
-      border-radius: 10px;
-      display: inline-block;
-    }
-    .qr-url {
-      font-size: 0.8rem;
-      color: var(--muted);
-      word-break: break-all;
-    }
+    /* ── QR ── */
+    .qr-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    #qrcode { background: white; padding: 14px; border-radius: 10px; display: inline-block; }
+    .qr-url { font-size: 0.8rem; color: var(--muted); word-break: break-all; }
 
-    /* ── Player list ── */
+    /* ── Players ── */
     #player-list {
       list-style: none;
       display: flex;
@@ -131,23 +137,56 @@
       from { transform: scale(0.7); opacity: 0; }
       to   { transform: scale(1);   opacity: 1; }
     }
-    .no-players {
-      color: var(--muted);
-      font-style: italic;
-      font-size: 0.95rem;
-    }
+    .no-players { color: var(--muted); font-style: italic; font-size: 0.95rem; }
 
-    /* ── Game options ── */
+    /* ── Catégories selector ── */
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .cat-chip {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 14px 10px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      background: var(--bg);
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--muted);
+      transition: all .2s;
+      user-select: none;
+    }
+    .cat-chip .cat-icon { font-size: 1.8rem; }
+    .cat-chip .cat-count {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--muted);
+      opacity: 0.7;
+    }
+    .cat-chip:hover { border-color: var(--accent); color: var(--text); }
+    .cat-chip.selected {
+      border-color: var(--accent);
+      background: rgba(0,212,255,0.08);
+      color: var(--accent);
+    }
+    .cat-chip.selected .cat-count { color: var(--accent); }
+
+    /* ── Options ── */
     .options-row {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       gap: 14px;
+      margin-bottom: 16px;
     }
-    .options-row label {
-      font-weight: 700;
-      color: var(--text);
-    }
+    .options-row label { font-weight: 700; color: var(--text); }
     .num-input {
       font-size: 1.1rem;
       width: 70px;
@@ -160,6 +199,12 @@
       font-weight: 700;
       text-align: center;
     }
+    .pool-info {
+      font-size: 0.9rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+    .pool-info span { color: var(--accent3); font-weight: 700; }
 
     /* ── Buttons ── */
     .btn {
@@ -173,11 +218,10 @@
       border-radius: 10px;
       padding: 12px 24px;
       cursor: pointer;
-      transition: transform .15s, box-shadow .15s, filter .15s;
+      transition: transform .15s, filter .15s;
     }
     .btn:hover  { transform: translateY(-2px); filter: brightness(1.1); }
     .btn:active { transform: translateY(0); }
-
     .btn-primary  { background: linear-gradient(135deg, var(--accent), #0099cc); color: #000; }
     .btn-danger   { background: linear-gradient(135deg, var(--accent2), #cc2200); color: #fff; }
     .btn-reveal   { background: linear-gradient(135deg, var(--green), #16a34a); color: #fff; }
@@ -191,15 +235,18 @@
       border-radius: 12px;
       box-shadow: 0 0 24px rgba(255,217,61,0.3);
     }
-
-    /* ── Hidden YouTube player ── */
-    #yt-player-container { position: absolute; left: -9999px; height: 1px; width: 1px; overflow: hidden; }
-
-    /* ── Timer bar ── */
-    .timer-wrap {
-      text-align: center;
-      margin: 20px 0;
+    .btn-sm {
+      font-size: 0.8rem;
+      padding: 6px 12px;
+      border-radius: 7px;
     }
+    .btn-edit { background: rgba(168,85,247,0.2); color: var(--purple); border: 1px solid var(--purple); }
+    .btn-add  { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid var(--green); }
+    .btn-del  { background: rgba(239,68,68,0.15); color: var(--accent2); border: 1px solid var(--accent2); }
+
+    /* ── Timer ── */
+    #yt-player-container { position: absolute; left: -9999px; height: 1px; width: 1px; overflow: hidden; }
+    .timer-wrap { text-align: center; margin: 20px 0; }
     #timer-display {
       font-family: 'Bangers', cursive;
       font-size: 5rem;
@@ -210,14 +257,7 @@
     }
     #timer-display.danger { color: var(--accent2); animation: pulse 0.5s infinite alternate; }
     @keyframes pulse { to { transform: scale(1.06); } }
-
-    .timer-bar-bg {
-      background: var(--border);
-      border-radius: 99px;
-      height: 10px;
-      margin: 10px 0;
-      overflow: hidden;
-    }
+    .timer-bar-bg { background: var(--border); border-radius: 99px; height: 10px; margin: 10px 0; overflow: hidden; }
     #timer-bar {
       height: 100%;
       background: linear-gradient(90deg, var(--green), var(--accent));
@@ -226,7 +266,6 @@
     }
     #timer-bar.danger { background: linear-gradient(90deg, #ff4444, var(--accent2)); }
 
-    /* ── Question num ── */
     #question-num {
       font-family: 'Bangers', cursive;
       font-size: 2rem;
@@ -235,15 +274,8 @@
       color: var(--accent3);
     }
 
-    /* ── Answer feed ── */
-    .section-title {
-      font-size: 0.85rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: var(--muted);
-      margin-bottom: 12px;
-    }
+    /* ── Answers ── */
+    .section-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 12px; }
     .answer-card {
       display: flex;
       justify-content: space-between;
@@ -265,7 +297,6 @@
     .answer-card .pending     { color: var(--muted); font-style: italic; font-size: 0.9rem; }
     .badge-qcm { font-size: 0.8rem; color: var(--muted); font-style: italic; }
 
-    /* ── Answer reveal ── */
     #answer-display {
       text-align: center;
       padding: 20px;
@@ -278,14 +309,7 @@
     #answer-display .reveal-label { font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
     #answer-display .reveal-answer { font-family: 'Bangers', cursive; font-size: 2.6rem; color: var(--green); letter-spacing: 2px; line-height: 1.1; }
 
-    /* ── Controls bar ── */
-    .controls {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin: 20px 0;
-    }
+    .controls { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 20px 0; }
 
     /* ── Leaderboard ── */
     #leaderboard-list { list-style: none; }
@@ -298,20 +322,16 @@
       margin-bottom: 8px;
       background: rgba(255,255,255,0.03);
       border: 1px solid var(--border);
-      transition: background .3s;
     }
     .lb-item.rank-1 { border-color: gold;   background: rgba(255,215,0,0.06); }
     .lb-item.rank-2 { border-color: silver; background: rgba(192,192,192,0.06); }
     .lb-item.rank-3 { border-color: #cd7f32; background: rgba(205,127,50,0.06); }
     .lb-rank   { font-family: 'Bangers', cursive; font-size: 1.4rem; width: 32px; text-align: center; }
     .lb-name   { flex: 1; font-weight: 800; font-size: 1rem; }
-    .lb-score  { font-family: 'Bangers', cursive; font-size: 1.4rem; color: var(--accent3); letter-spacing: 1px; }
+    .lb-score  { font-family: 'Bangers', cursive; font-size: 1.4rem; color: var(--accent3); }
 
-    /* ── Podium (fin de jeu) ── */
-    #podium-area {
-      text-align: center;
-      animation: popIn .5s ease;
-    }
+    /* ── Podium ── */
+    #podium-area { text-align: center; animation: popIn .5s ease; }
     #podium-area h2 {
       font-family: 'Bangers', cursive;
       font-size: 3.5rem;
@@ -321,422 +341,839 @@
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    .podium-grid {
-      display: flex;
-      justify-content: center;
-      align-items: flex-end;
-      gap: 12px;
-      margin: 30px 0;
-    }
-    .podium-step {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-    }
+    .podium-grid { display: flex; justify-content: center; align-items: flex-end; gap: 12px; margin: 30px 0; }
+    .podium-step { display: flex; flex-direction: column; align-items: center; gap: 8px; }
     .podium-avatar { font-size: 2.5rem; }
     .podium-pname  { font-weight: 800; font-size: 0.95rem; }
     .podium-pscore { font-family: 'Bangers', cursive; font-size: 1.4rem; color: var(--accent3); }
-    .podium-block  {
-      width: 90px;
-      border-radius: 8px 8px 0 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Bangers', cursive;
-      font-size: 2.2rem;
-      letter-spacing: 1px;
-    }
+    .podium-block  { width: 90px; border-radius: 8px 8px 0 0; display: flex; align-items: center; justify-content: center; font-family: 'Bangers', cursive; font-size: 2.2rem; }
     .podium-block.p1 { height: 130px; background: linear-gradient(180deg, gold, #b8860b); color: #000; }
     .podium-block.p2 { height: 95px;  background: linear-gradient(180deg, silver, #808080); color: #000; }
     .podium-block.p3 { height: 70px;  background: linear-gradient(180deg, #cd7f32, #8b4513); color: #fff; }
 
-    /* ── Hidden ── */
+    /* ── Editeur ── */
+    .editor-cat-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .editor-cat-tab {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 8px 16px;
+      border-radius: 50px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--muted);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .editor-cat-tab.active { border-color: var(--accent); color: var(--accent); background: rgba(0,212,255,0.08); }
+
+    .track-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 80px 80px auto;
+      gap: 8px;
+      align-items: center;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+    .track-row span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .track-row .track-id { color: var(--muted); font-size: 0.8rem; font-family: monospace; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn .2s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px;
+      width: 100%;
+      max-width: 560px;
+      animation: popIn .2s ease;
+    }
+    .modal h3 { font-family: 'Bangers', cursive; font-size: 1.8rem; letter-spacing: 2px; color: var(--accent); margin-bottom: 20px; }
+    .form-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .form-row label { font-size: 0.85rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    .form-input {
+      font-family: 'Nunito', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 10px 14px;
+      width: 100%;
+      transition: border-color .2s;
+    }
+    .form-input:focus { outline: none; border-color: var(--accent); }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    .choix-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+    .choix-row input { flex: 1; }
+    .choix-row small { font-size: 0.75rem; color: var(--green); white-space: nowrap; }
+
     .hidden { display: none !important; }
 
-    /* ── Responsive ── */
     @media (max-width: 600px) {
       #timer-display { font-size: 3.5rem; }
-      .btn-launch { font-size: 1rem; padding: 14px 24px; }
+      .track-row { grid-template-columns: 1fr auto; }
+      .track-row .track-id, .track-row .track-start, .track-row .track-cat { display: none; }
     }
   </style>
 </head>
 <body>
-
 <div id="yt-player-container"><div id="yt-player"></div></div>
 
 <div class="container">
-
   <header class="site-header">
     <h1>🎵 BLIND TEST</h1>
     <p>Écran du salon — PC hôte</p>
   </header>
 
-  <!-- ══ SETUP ══ -->
-  <div id="setup-area">
-    <div class="card">
-      <div class="card-title">📱 Scanner pour rejoindre</div>
-      <div class="qr-wrap">
-        <div id="qrcode"></div>
-        <span class="qr-url" id="qr-url-text"></span>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">👥 Joueurs connectés (<span id="player-count">0</span>)</div>
-      <ul id="player-list"><li class="no-players">En attente de joueurs…</li></ul>
-    </div>
-
-    <div id="game-options" class="card hidden">
-      <div class="options-row" style="margin-bottom:20px;">
-        <label for="nb-questions">Nombre de questions :</label>
-        <input type="number" id="nb-questions" value="3" min="1" max="10" class="num-input">
-      </div>
-      <div class="controls">
-        <button class="btn btn-danger" onclick="resetLobby()">🗑️ Vider le salon</button>
-        <button class="btn btn-launch" onclick="startMultiplayerGame()">🚀 Lancer la partie !</button>
-      </div>
-    </div>
+  <!-- Navigation -->
+  <div class="nav-tabs" id="main-nav">
+    <button class="nav-tab active" onclick="switchTab('lobby')">🎮 Salon</button>
+    <button class="nav-tab" onclick="switchTab('editor')">✏️ Éditeur</button>
   </div>
 
-  <!-- ══ GAME ══ -->
-  <div id="game-area" class="hidden">
+  <!-- ══ LOBBY ══ -->
+  <div id="tab-lobby">
+    <div id="setup-area">
+      <div class="card">
+        <div class="card-title">📱 Scanner pour rejoindre</div>
+        <div class="qr-wrap">
+          <div id="qrcode"></div>
+          <span class="qr-url" id="qr-url-text"></span>
+        </div>
+      </div>
 
-    <div class="card" style="text-align:center;">
-      <div id="question-num">Question</div>
-      <div class="timer-wrap">
-        <div id="timer-display">12</div>
-        <div class="timer-bar-bg">
-          <div id="timer-bar" style="width:100%"></div>
+      <div class="card">
+        <div class="card-title">👥 Joueurs connectés (<span id="player-count">0</span>)</div>
+        <ul id="player-list"><li class="no-players">En attente de joueurs…</li></ul>
+      </div>
+
+      <div id="game-options" class="card hidden">
+        <div class="card-title">🎯 Catégories</div>
+        <div class="cat-grid" id="cat-selector"></div>
+
+        <div class="options-row">
+          <label for="nb-questions">Questions :</label>
+          <input type="number" id="nb-questions" value="5" min="1" max="30" class="num-input">
+          <span class="pool-info" id="pool-info">Pool : <span id="pool-count">0</span> titres disponibles</span>
+        </div>
+
+        <div class="controls">
+          <button class="btn btn-danger" onclick="resetLobby()">🗑️ Vider le salon</button>
+          <button class="btn btn-launch" onclick="startMultiplayerGame()">🚀 Lancer la partie !</button>
         </div>
       </div>
     </div>
 
-    <div class="card">
-      <div class="section-title" id="answers-title">⏳ Attente des réponses</div>
-      <div id="answers-feed"></div>
+    <!-- ══ GAME ══ -->
+    <div id="game-area" class="hidden">
+      <div class="card" style="text-align:center;">
+        <div id="question-num">Question</div>
+        <div class="timer-wrap">
+          <div id="timer-display">12</div>
+          <div class="timer-bar-bg"><div id="timer-bar" style="width:100%"></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title" id="answers-title">⏳ Attente des réponses</div>
+        <div id="answers-feed"></div>
+      </div>
+
+      <div id="answer-display" class="hidden">
+        <div class="reveal-label">La réponse était…</div>
+        <div class="reveal-answer" id="reveal-answer-text"></div>
+      </div>
+
+      <div class="controls">
+        <button class="btn btn-reveal hidden" id="reveal-btn" onclick="revealResult()">👁️ Révéler la réponse</button>
+        <button class="btn btn-next  hidden" id="next-btn"   onclick="nextRound()">Suivant ➡️</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🏆 Classement en direct</div>
+        <ul id="leaderboard-list"></ul>
+      </div>
     </div>
 
-    <div id="answer-display" class="hidden">
-      <div class="reveal-label">La réponse était…</div>
-      <div class="reveal-answer" id="reveal-answer-text"></div>
-    </div>
-
-    <div class="controls">
-      <button class="btn btn-reveal hidden" id="reveal-btn" onclick="revealResult()">👁️ Révéler la réponse</button>
-      <button class="btn btn-next  hidden" id="next-btn"   onclick="nextRound()">Suivant ➡️</button>
-    </div>
-
-    <div class="card">
-      <div class="card-title">🏆 Classement en direct</div>
-      <ul id="leaderboard-list"></ul>
+    <!-- ══ PODIUM ══ -->
+    <div id="podium-area" class="hidden">
+      <h2>🏆 FIN DU JEU !</h2>
+      <div class="podium-grid" id="podium-grid"></div>
+      <div class="card" style="margin-top:20px;">
+        <div class="card-title">Classement final</div>
+        <ul id="final-leaderboard"></ul>
+      </div>
+      <div class="controls" style="margin-top:24px;">
+        <button class="btn btn-launch" onclick="location.reload()">🔄 Rejouer</button>
+      </div>
     </div>
   </div>
 
-  <!-- ══ PODIUM ══ -->
-  <div id="podium-area" class="hidden">
-    <h2>🏆 FIN DU JEU !</h2>
-    <div class="podium-grid" id="podium-grid"></div>
-    <div class="card" style="margin-top:20px;">
-      <div class="card-title">Classement final</div>
-      <ul id="final-leaderboard"></ul>
-    </div>
-    <div class="controls" style="margin-top:24px;">
-      <button class="btn btn-launch" onclick="location.reload()">🔄 Rejouer</button>
+  <!-- ══ EDITEUR ══ -->
+  <div id="tab-editor" class="hidden">
+    <div class="card">
+      <div class="card-title">✏️ Gérer les questions</div>
+      <div class="editor-cat-tabs" id="editor-cat-tabs"></div>
+      <div style="display:flex; justify-content:flex-end; margin-bottom:14px;">
+        <button class="btn btn-sm btn-add" onclick="openAddModal()">＋ Ajouter un titre</button>
+      </div>
+      <div id="editor-tracks-list"></div>
     </div>
   </div>
+</div>
 
+<!-- ── Modal ajout/édition ── -->
+<div class="modal-overlay hidden" id="modal-overlay" onclick="closeModalOnOverlay(event)">
+  <div class="modal">
+    <h3 id="modal-title">Ajouter un titre</h3>
+
+    <div class="form-row">
+      <label>Catégorie</label>
+      <select class="form-input" id="m-category"></select>
+    </div>
+    <div class="form-row">
+      <label>Titre (réponse correcte)</label>
+      <input class="form-input" type="text" id="m-titre" placeholder="Ex: Le Roi Lion">
+    </div>
+    <div class="form-row">
+      <label>YouTube Video ID</label>
+      <input class="form-input" type="text" id="m-ytid" placeholder="Ex: 08pZpY_mPto">
+      <small style="color:var(--muted);font-size:0.8rem;">L'ID se trouve après ?v= dans l'URL YouTube</small>
+    </div>
+    <div class="form-row">
+      <label>Démarrer à (secondes)</label>
+      <input class="form-input" type="number" id="m-start" value="0" min="0">
+    </div>
+    <div class="form-row">
+      <label>Choix QCM (4 propositions — le titre est automatiquement inclus)</label>
+      <div class="choix-row"><input class="form-input" type="text" id="m-c1" placeholder="Mauvaise réponse 1"><small>faux</small></div>
+      <div class="choix-row"><input class="form-input" type="text" id="m-c2" placeholder="Mauvaise réponse 2"><small>faux</small></div>
+      <div class="choix-row"><input class="form-input" type="text" id="m-c3" placeholder="Mauvaise réponse 3"><small>faux</small></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-danger btn-sm" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary btn-sm" onclick="saveTrack()">💾 Sauvegarder</button>
+    </div>
+  </div>
 </div>
 
 <script>
-  /* ── FIREBASE ── */
-  const firebaseConfig = {
-    apiKey: "AIzaSyC18xshyF3ShbjesR5NsjdmBfAiBaP36BE",
-    authDomain: "blindtestfamille.firebaseapp.com",
-    databaseURL: "https://blindtestfamille-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "blindtestfamille",
-    storageBucket: "blindtestfamille.firebasestorage.app",
-    messagingSenderId: "319100843512",
-    appId: "1:319100843512:web:5fb89272cd2131f350920d"
+/* ─────────────────────────────────────────
+   FIREBASE
+───────────────────────────────────────── */
+const firebaseConfig = {
+  apiKey: "AIzaSyC18xshyF3ShbjesR5NsjdmBfAiBaP36BE",
+  authDomain: "blindtestfamille.firebaseapp.com",
+  databaseURL: "https://blindtestfamille-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "blindtestfamille",
+  storageBucket: "blindtestfamille.firebasestorage.app",
+  messagingSenderId: "319100843512",
+  appId: "1:319100843512:web:5fb89272cd2131f350920d"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+/* ─────────────────────────────────────────
+   CATÉGORIES
+───────────────────────────────────────── */
+const CATEGORIES = [
+  { id: "musique",     label: "Musique",           icon: "🎵" },
+  { id: "film",        label: "Films / Séries",    icon: "🎬" },
+  { id: "pub",         label: "Publicités",         icon: "📺" },
+  { id: "jv",         label: "Jeux Vidéo",         icon: "🎮" },
+  { id: "replique",    label: "Répliques",          icon: "💬" },
+  { id: "anime",       label: "Animés",             icon: "⛩️" },
+  { id: "dessinanim",  label: "Dessins Animés",     icon: "🐭" },
+  { id: "sport",       label: "Sport",              icon: "⚽" },
+  { id: "classique",   label: "Classique",          icon: "🎻" },
+  { id: "annees80",    label: "Années 80-90",       icon: "📼" },
+  { id: "francais",    label: "Chanson Française",  icon: "🇫🇷" },
+  { id: "kids",        label: "Pour enfants",       icon: "🧸" },
+];
+
+/* ─────────────────────────────────────────
+   PLAYLIST PAR DÉFAUT (stockée dans Firebase si vide)
+───────────────────────────────────────── */
+const DEFAULT_TRACKS = [
+  // 🎬 Films
+  { titre:"Le Roi Lion",         categorie:"film",       id:"08pZpY_mPto", start:10, choix:["Le Roi Lion","Aladdin","Mulan","Tarzan"] },
+  { titre:"Star Wars",           categorie:"film",       id:"EjMNNpIksaI", start:8,  choix:["Star Wars","Star Trek","Interstellar","Dune"] },
+  { titre:"Pirates des Caraïbes",categorie:"film",       id:"K3pOUvO8qTM", start:0,  choix:["Pirates des Caraïbes","Vaiana","Peter Pan","Sinbad"] },
+  { titre:"Harry Potter",        categorie:"film",       id:"Htaj3o3JD8I", start:0,  choix:["Harry Potter","Narnia","Eragon","Willow"] },
+  { titre:"Titanic",             categorie:"film",       id:"3gK_2XdjOdY", start:0,  choix:["Titanic","Forrest Gump","Braveheart","Ghost"] },
+  { titre:"Inception",           categorie:"film",       id:"YoHD9XEInc0", start:0,  choix:["Inception","Interstellar","Tenet","The Matrix"] },
+  { titre:"Jurassic Park",       categorie:"film",       id:"PJlmYh27MHg", start:0,  choix:["Jurassic Park","King Kong","Godzilla","La Momie"] },
+  { titre:"Indiana Jones",       categorie:"film",       id:"mBBH6IKDOFs", start:0,  choix:["Indiana Jones","Tomb Raider","National Treasure","The Mummy"] },
+
+  // 🎵 Musique
+  { titre:"Bohemian Rhapsody",   categorie:"musique",    id:"fJ9rUzIMcZQ", start:0,  choix:["Bohemian Rhapsody","We Will Rock You","Don't Stop Me Now","Somebody to Love"] },
+  { titre:"Thriller",            categorie:"musique",    id:"sOnqjkJTMaA", start:0,  choix:["Thriller","Billie Jean","Beat It","Bad"] },
+  { titre:"Smells Like Teen Spirit",categorie:"musique", id:"hTWKbfoikeg", start:0,  choix:["Smells Like Teen Spirit","Come As You Are","Heart-Shaped Box","In Bloom"] },
+  { titre:"Sweet Child O' Mine", categorie:"musique",    id:"1w7OgIMMRc4", start:0,  choix:["Sweet Child O' Mine","November Rain","Paradise City","Welcome to the Jungle"] },
+  { titre:"Uptown Funk",         categorie:"musique",    id:"OPf0YbXqDm0", start:0,  choix:["Uptown Funk","Happy","Blurred Lines","Get Lucky"] },
+  { titre:"Shape of You",        categorie:"musique",    id:"JGwWNGJdvx8", start:0,  choix:["Shape of You","Perfect","Thinking Out Loud","Castle on the Hill"] },
+  { titre:"Despacito",           categorie:"musique",    id:"kTJczUoc26U", start:0,  choix:["Despacito","Bailando","Lean On","Mi Gente"] },
+
+  // 🎮 Jeux Vidéo
+  { titre:"Super Mario Bros",    categorie:"jv",         id:"wGX4obVl64w", start:0,  choix:["Super Mario Bros","Donkey Kong","Kirby","Yoshi's Island"] },
+  { titre:"Tetris",              categorie:"jv",         id:"NmCCQxVBfyM", start:0,  choix:["Tetris","Pac-Man","Pong","Snake"] },
+  { titre:"Zelda - Hyrule",      categorie:"jv",         id:"0_7X3nFebZA", start:0,  choix:["The Legend of Zelda","Metroid","Star Fox","Kirby"] },
+  { titre:"Minecraft",           categorie:"jv",         id:"Dg0IjOX0Nbc", start:0,  choix:["Minecraft","Terraria","Fortnite","Roblox"] },
+  { titre:"Final Fantasy VII",   categorie:"jv",         id:"GMsnKtfcqUU", start:0,  choix:["Final Fantasy VII","Chrono Trigger","Secret of Mana","Kingdom Hearts"] },
+  { titre:"Undertale - Megalovania",categorie:"jv",      id:"0FCvzsVlXpQ", start:0,  choix:["Undertale","Hollow Knight","Cuphead","Celeste"] },
+
+  // 📺 Pub
+  { titre:"Évian",               categorie:"pub",        id:"XQcVllWpwGs", start:0,  choix:["Évian","Volvic","Badoit","Contrex"] },
+  { titre:"Coca-Cola",           categorie:"pub",        id:"v2P-55T-_Bc", start:0,  choix:["Coca-Cola","Pepsi","Fanta","Sprite"] },
+
+  // ⛩️ Animé
+  { titre:"Dragon Ball Z",       categorie:"anime",      id:"JQeOy0eGfGk", start:0,  choix:["Dragon Ball Z","Naruto","One Piece","Bleach"] },
+  { titre:"Naruto",              categorie:"anime",      id:"DquviEJ-9rY", start:0,  choix:["Naruto","Dragon Ball","Sword Art Online","Attack on Titan"] },
+  { titre:"One Piece",           categorie:"anime",      id:"LL9-StMPqKo", start:0,  choix:["One Piece","Fairy Tail","Hunter x Hunter","My Hero Academia"] },
+  { titre:"Sailor Moon",         categorie:"anime",      id:"VrGZA7jxFUI", start:0,  choix:["Sailor Moon","Cardcaptor Sakura","Tokyo Mew Mew","Magic Knight Rayearth"] },
+  { titre:"Neon Genesis Evangelion",categorie:"anime",   id:"YOJsGAXFUCo", start:0,  choix:["Evangelion","Cowboy Bebop","FLCL","Trigun"] },
+  { titre:"Pokémon",             categorie:"anime",      id:"5y-wGgXMeo0", start:0,  choix:["Pokémon","Digimon","Yu-Gi-Oh","Beyblade"] },
+
+  // 🐭 Dessin animé
+  { titre:"Toy Story",           categorie:"dessinanim", id:"NK-VMBHlHoY", start:0,  choix:["Toy Story","Monstres et Cie","Cars","1001 Pattes"] },
+  { titre:"Shrek",               categorie:"dessinanim", id:"l5QiEBSJGQ8", start:0,  choix:["Shrek","Kung Fu Panda","Madagascar","Bee Movie"] },
+  { titre:"Les Aristochats",     categorie:"dessinanim", id:"hpgBK_68Xwk", start:0,  choix:["Les Aristochats","Bambi","Pinocchio","Dumbo"] },
+  { titre:"Bob l'éponge",        categorie:"dessinanim", id:"Fpy4kxb3E7M", start:0,  choix:["Bob l'éponge","Patrick","Blanche Neige","Mulan"] },
+  { titre:"Tom et Jerry",        categorie:"dessinanim", id:"1WJlbFRxrE4", start:0,  choix:["Tom et Jerry","Looney Tunes","Scooby-Doo","Hanna-Barbera"] },
+
+  // 📼 Années 80-90
+  { titre:"Take On Me",          categorie:"annees80",   id:"djV11Xbc914", start:0,  choix:["Take On Me","The Final Countdown","Don't You Want Me","Wake Me Up Before You Go-Go"] },
+  { titre:"I Will Always Love You",categorie:"annees80", id:"3JWTaaS7LdU", start:0,  choix:["I Will Always Love You","My Heart Will Go On","Nothing Compares 2 U","One Moment in Time"] },
+  { titre:"Africa",              categorie:"annees80",   id:"FTQbiNvZqaY", start:0,  choix:["Africa","Rosanna","Hold the Line","I'll Be Over You"] },
+  { titre:"Sweet Dreams",        categorie:"annees80",   id:"qkBMCwPWyGg", start:0,  choix:["Sweet Dreams","Here Comes the Rain Again","Thorn in My Side","Would I Lie to You?"] },
+
+  // 🇫🇷 Chanson Française
+  { titre:"La Vie en Rose",      categorie:"francais",   id:"NKE_6WixyZA", start:0,  choix:["La Vie en Rose","Non, je ne regrette rien","Hymne à l'amour","Milord"] },
+  { titre:"Alors on danse",      categorie:"francais",   id:"ReFAGOoYZdk", start:0,  choix:["Alors on danse","Formidable","Tous les mêmes","Papaoutai"] },
+  { titre:"Je veux",             categorie:"francais",   id:"AZRK8pFJADQ", start:0,  choix:["Je veux","Chandelier","Les yeux de la mama","Eblouie par la nuit"] },
+
+  // 🎻 Classique
+  { titre:"La Lettre à Élise",   categorie:"classique",  id:"_mVW8tgGY_w", start:0,  choix:["La Lettre à Élise","Clair de Lune","Gymnopédie n°1","Sonate au Clair de Lune"] },
+  { titre:"La Chevauchée des Walkyries",categorie:"classique",id:"GGu1C0YZUTM",start:0,choix:["La Chevauchée des Walkyries","Carmina Burana","Also Sprach Zarathustra","Le Lac des Cygnes"] },
+  { titre:"Beethoven - 5ème Symphonie",categorie:"classique",id:"_4IRMYuE1hI",start:0,choix:["5ème Symphonie","9ème Symphonie","Sonate Pathétique","Ode à la Joie"] },
+
+  // ⚽ Sport
+  { titre:"UEFA Champions League",categorie:"sport",     id:"wFMPTEHnmXs", start:0,  choix:["UEFA Champions League","Coupe du Monde","Roland Garros","Tour de France"] },
+  { titre:"WWE - Intro",         categorie:"sport",      id:"aVMWBRMEk7U", start:0,  choix:["WWE","UFC","NBA","NFL"] },
+
+  // 🧸 Enfants
+  { titre:"Dora l'Exploratrice", categorie:"kids",       id:"4oRWaAGBGSQ", start:0,  choix:["Dora l'Exploratrice","Peppa Pig","Bluey","Miraculous"] },
+  { titre:"Cocomelon",           categorie:"kids",       id:"BQO11A7CALY", start:0,  choix:["Cocomelon","Paw Patrol","Bluey","PJ Masks"] },
+];
+
+/* ─────────────────────────────────────────
+   ÉTAT LOCAL
+───────────────────────────────────────── */
+let allTracks = [];          // toutes les questions depuis Firebase
+let gamePlaylist = [];
+let currentIndex = 0;
+let player, playerReady = false;
+let timeLeft = 12, totalTime = 12;
+let timerInterval;
+let currentAnswers = {};
+let playersCache = {};
+let selectedCategories = new Set();
+let currentEditorCat = CATEGORIES[0].id;
+let editingTrackKey = null;  // null = ajout, sinon clé Firebase
+
+/* ─────────────────────────────────────────
+   QR CODE
+───────────────────────────────────────── */
+const manetteUrl = "https://tbamox.github.io/Blindtest/manette.html";
+new QRCode(document.getElementById("qrcode"), { text: manetteUrl, width: 180, height: 180 });
+document.getElementById("qr-url-text").textContent = manetteUrl;
+
+/* ─────────────────────────────────────────
+   YOUTUBE
+───────────────────────────────────────── */
+var ytTag = document.createElement('script');
+ytTag.src = "https://www.youtube.com/iframe_api";
+document.head.appendChild(ytTag);
+
+function onYouTubeIframeAPIReady() {
+  player = new YT.Player('yt-player', {
+    height: '1', width: '1',
+    events: { onReady: () => { playerReady = true; } }
+  });
+}
+function safeLoadVideo(videoId, startSeconds) {
+  const tryLoad = () => {
+    if (playerReady && player && player.loadVideoById) {
+      player.loadVideoById({ videoId, startSeconds });
+    } else {
+      setTimeout(tryLoad, 300);
+    }
   };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+  tryLoad();
+}
 
-  /* ── QR CODE ── */
-  const manetteUrl = "https://tbamox.github.io/Blindtest/manette.html";
-  new QRCode(document.getElementById("qrcode"), { text: manetteUrl, width: 180, height: 180 });
-  document.getElementById("qr-url-text").textContent = manetteUrl;
+/* ─────────────────────────────────────────
+   TABS
+───────────────────────────────────────── */
+function switchTab(tab) {
+  document.getElementById('tab-lobby').classList.toggle('hidden', tab !== 'lobby');
+  document.getElementById('tab-editor').classList.toggle('hidden', tab !== 'editor');
+  document.querySelectorAll('.nav-tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && tab === 'lobby') || (i === 1 && tab === 'editor'));
+  });
+  if (tab === 'editor') renderEditor();
+}
 
-  /* ── PLAYLIST ── */
-  let basePlaylist = [
-    { titre: "Le Roi Lion",        id: "08pZpY_mPto", start: 10, choix: ["Le Roi Lion", "Aladdin", "Mulan", "Tarzan"] },
-    { titre: "Pokémon",            id: "5y-wGgXMeo0", start: 0,  choix: ["Pokémon", "Digimon", "Yu-Gi-Oh", "Beyblade"] },
-    { titre: "Star Wars",          id: "EjMNNpIksaI", start: 8,  choix: ["Star Wars", "Star Trek", "Interstellar", "Dune"] },
-    { titre: "Pirates des Caraïbes",id:"K3pOUvO8qTM", start: 0,  choix: ["Pirates des Caraïbes", "Vaiana", "Peter Pan", "Sinbad"] },
-    { titre: "Harry Potter",       id: "Htaj3o3JD8I", start: 0,  choix: ["Harry Potter", "Narnia", "Eragon", "Willow"] }
-  ];
+/* ─────────────────────────────────────────
+   CHARGEMENT DES TRACKS DEPUIS FIREBASE
+───────────────────────────────────────── */
+function loadTracksFromFirebase() {
+  db.ref('tracks').once('value', snap => {
+    const data = snap.val();
+    if (!data) {
+      // Première utilisation : on charge les defaults
+      const batch = {};
+      DEFAULT_TRACKS.forEach(t => {
+        const key = db.ref('tracks').push().key;
+        batch[key] = t;
+      });
+      db.ref('tracks').set(batch, () => loadTracksFromFirebase());
+      return;
+    }
+    allTracks = Object.entries(data).map(([key, t]) => ({ ...t, _key: key }));
+    buildCategorySelector();
+    renderEditor();
+  });
+  // Live update si l'éditeur modifie les tracks
+  db.ref('tracks').on('value', snap => {
+    const data = snap.val();
+    if (!data) { allTracks = []; return; }
+    allTracks = Object.entries(data).map(([key, t]) => ({ ...t, _key: key }));
+    buildCategorySelector();
+    renderEditor();
+  });
+}
 
-  let gamePlaylist = [];
-  let currentIndex = 0;
-  let player, playerReady = false;
-  let timeLeft = 10, totalTime = 10;
-  let timerInterval;
-  let currentAnswers = {};
-  let playersCache = {};
+/* ─────────────────────────────────────────
+   SÉLECTEUR DE CATÉGORIES (lobby)
+───────────────────────────────────────── */
+function buildCategorySelector() {
+  const container = document.getElementById('cat-selector');
+  const countsByCat = {};
+  allTracks.forEach(t => { countsByCat[t.categorie] = (countsByCat[t.categorie] || 0) + 1; });
 
-  /* ── YOUTUBE ── */
-  var ytTag = document.createElement('script');
-  ytTag.src = "https://www.youtube.com/iframe_api";
-  document.head.appendChild(ytTag);
+  container.innerHTML = CATEGORIES.map(cat => {
+    const count = countsByCat[cat.id] || 0;
+    if (count === 0) return '';
+    const sel = selectedCategories.has(cat.id) ? 'selected' : '';
+    return `
+      <div class="cat-chip ${sel}" onclick="toggleCat('${cat.id}', this)" data-cat="${cat.id}">
+        <span class="cat-icon">${cat.icon}</span>
+        <span>${cat.label}</span>
+        <span class="cat-count">${count} titres</span>
+      </div>`;
+  }).join('');
 
-  function onYouTubeIframeAPIReady() {
-    player = new YT.Player('yt-player', {
-      height: '1', width: '1',
-      events: { onReady: () => { playerReady = true; } }
-    });
+  updatePoolInfo();
+}
+
+function toggleCat(catId, el) {
+  if (selectedCategories.has(catId)) {
+    selectedCategories.delete(catId);
+    el.classList.remove('selected');
+  } else {
+    selectedCategories.add(catId);
+    el.classList.add('selected');
   }
+  updatePoolInfo();
+}
 
-  function safeLoadVideo(videoId, startSeconds) {
-    const tryLoad = () => {
-      if (playerReady && player && player.loadVideoById) {
-        player.loadVideoById({ videoId, startSeconds });
+function updatePoolInfo() {
+  const pool = selectedCategories.size === 0
+    ? allTracks.length
+    : allTracks.filter(t => selectedCategories.has(t.categorie)).length;
+  document.getElementById('pool-count').textContent = pool;
+}
+
+/* ─────────────────────────────────────────
+   JOUEURS
+───────────────────────────────────────── */
+db.ref('players').on('value', snap => {
+  playersCache = snap.val() || {};
+  const keys = Object.keys(playersCache);
+  document.getElementById('player-count').textContent = keys.length;
+
+  const list = document.getElementById('player-list');
+  if (keys.length === 0) {
+    list.innerHTML = '<li class="no-players">En attente de joueurs…</li>';
+    document.getElementById('game-options').classList.add('hidden');
+  } else {
+    document.getElementById('game-options').classList.remove('hidden');
+    list.innerHTML = keys.map(id => {
+      const p = playersCache[id];
+      return `<li>${p.avatar || "👤"} ${p.name}</li>`;
+    }).join('');
+  }
+  updateLeaderboard();
+});
+
+function updateLeaderboard() {
+  const arr = Object.keys(playersCache).map(id => ({ id, ...playersCache[id] }));
+  arr.sort((a, b) => (b.score || 0) - (a.score || 0));
+  const medals = ["🥇","🥈","🥉"];
+  const rankClasses = ["rank-1","rank-2","rank-3"];
+  document.getElementById('leaderboard-list').innerHTML = arr.map((p, i) => `
+    <li class="lb-item ${rankClasses[i] || ''}">
+      <span class="lb-rank">${medals[i] || (i+1)}</span>
+      <span class="lb-name">${p.avatar||"👤"} ${p.name}</span>
+      <span class="lb-score">${p.score||0} pts</span>
+    </li>`).join('');
+}
+
+function resetLobby() {
+  if (!confirm("Vider le salon et remettre à zéro ?")) return;
+  db.ref('players').remove();
+  db.ref('answers').remove();
+  db.ref('gameState').set({ accepting: false });
+}
+
+/* ─────────────────────────────────────────
+   RÉPONSES
+───────────────────────────────────────── */
+db.ref('answers').on('value', snap => {
+  currentAnswers = snap.val() || {};
+  renderAnswers();
+});
+
+function renderAnswers() {
+  const feed = document.getElementById('answers-feed');
+  const title = document.getElementById('answers-title');
+  const isTimeUp = (timeLeft <= 0);
+  const entries = Object.entries(currentAnswers);
+  const nbPlayers = Object.keys(playersCache).length;
+  title.textContent = isTimeUp
+    ? `✅ ${entries.length} réponse(s) reçue(s)`
+    : `⏳ ${entries.length} / ${nbPlayers} joueur(s) ont répondu`;
+
+  if (entries.length === 0) { feed.innerHTML = ''; return; }
+
+  feed.innerHTML = entries.map(([id, ans]) => {
+    const av = ans.avatar || "👤";
+    const isQCM  = ans.text && ans.text.includes("(QCM)");
+    const isAuto = ans.text && ans.text.includes("(AUTO ✅)");
+    const autoChecked = ans.autoChecked || isQCM || isAuto;
+
+    const displayText = isTimeUp
+      ? `<span class="answer-text">"${ans.text}"</span>`
+      : `<span class="pending">📩 Réponse envoyée…</span>`;
+
+    let action = '';
+    if (isTimeUp) {
+      if (autoChecked) {
+        const label = isQCM ? 'QCM ✔' : isAuto ? 'Auto ✔' : 'Auto ✔';
+        action = `<span class="badge-qcm">${label}</span>`;
       } else {
-        setTimeout(tryLoad, 300);
+        action = `<button class="btn btn-point" onclick="givePoints('${id}', 3)">+3 ✅</button>`;
       }
-    };
-    tryLoad();
-  }
-
-  /* ── JOUEURS ── */
-  db.ref('players').on('value', (snap) => {
-    playersCache = snap.val() || {};
-    const keys = Object.keys(playersCache);
-    document.getElementById('player-count').textContent = keys.length;
-
-    const list = document.getElementById('player-list');
-    if (keys.length === 0) {
-      list.innerHTML = '<li class="no-players">En attente de joueurs…</li>';
-      document.getElementById('game-options').classList.add('hidden');
-    } else {
-      document.getElementById('game-options').classList.remove('hidden');
-      list.innerHTML = keys.map(id => {
-        const p = playersCache[id];
-        return `<li>${p.avatar || "👤"} ${p.name}</li>`;
-      }).join('');
     }
+    const borderColor = isAuto ? 'var(--green)' : isQCM ? 'var(--purple)' : 'var(--accent)';
+    return `
+      <div class="answer-card" style="border-left-color:${borderColor}">
+        <div>
+          <div class="player-name">${av} ${ans.name}</div>
+          ${displayText}
+        </div>
+        ${action}
+      </div>`;
+  }).join('');
+}
 
-    updateLeaderboard();
+function givePoints(playerId, points) {
+  db.ref('players/' + playerId + '/score').transaction(cur => (cur || 0) + points);
+}
+
+/* ─────────────────────────────────────────
+   JEU
+───────────────────────────────────────── */
+function startMultiplayerGame() {
+  const pool = selectedCategories.size === 0
+    ? [...allTracks]
+    : allTracks.filter(t => selectedCategories.has(t.categorie));
+
+  if (pool.length === 0) {
+    alert("Aucun titre disponible pour les catégories sélectionnées !");
+    return;
+  }
+
+  const nb = Math.min(parseInt(document.getElementById('nb-questions').value) || 5, pool.length);
+  gamePlaylist = pool.sort(() => 0.5 - Math.random()).slice(0, nb);
+  currentIndex = 0;
+
+  document.getElementById('setup-area').classList.add('hidden');
+  document.getElementById('game-area').classList.remove('hidden');
+  document.getElementById('main-nav').classList.add('hidden');
+  loadTrack();
+}
+
+function loadTrack() {
+  const track = gamePlaylist[currentIndex];
+  totalTime = 12;
+  timeLeft = totalTime;
+
+  const timerEl = document.getElementById('timer-display');
+  const barEl   = document.getElementById('timer-bar');
+  timerEl.textContent = timeLeft;
+  timerEl.classList.remove('danger');
+  barEl.style.width = '100%';
+  barEl.classList.remove('danger');
+
+  document.getElementById('question-num').textContent = `Question ${currentIndex+1} / ${gamePlaylist.length}`;
+  document.getElementById('answer-display').classList.add('hidden');
+  document.getElementById('next-btn').classList.add('hidden');
+  document.getElementById('reveal-btn').classList.add('hidden');
+
+  db.ref('answers').remove();
+  db.ref('gameState').set({
+    accepting: true,
+    choix: track.choix,
+    solution: track.titre
   });
 
-  function updateLeaderboard() {
-    const arr = Object.keys(playersCache).map(id => ({ id, ...playersCache[id] }));
-    arr.sort((a, b) => (b.score || 0) - (a.score || 0));
+  safeLoadVideo(track.id, track.start);
 
-    const medals = ["🥇", "🥈", "🥉"];
-    const rankClasses = ["rank-1", "rank-2", "rank-3"];
-
-    document.getElementById('leaderboard-list').innerHTML = arr.map((p, i) => `
-      <li class="lb-item ${rankClasses[i] || ''}">
-        <span class="lb-rank">${medals[i] || (i + 1)}</span>
-        <span class="lb-name">${p.avatar || "👤"} ${p.name}</span>
-        <span class="lb-score">${p.score || 0} pts</span>
-      </li>
-    `).join('');
-  }
-
-  function resetLobby() {
-    if (!confirm("Vider le salon et remettre à zéro ?")) return;
-    db.ref('players').remove();
-    db.ref('answers').remove();
-    db.ref('gameState').set({ accepting: false });
-  }
-
-  /* ── RÉPONSES ── */
-  db.ref('answers').on('value', (snap) => {
-    currentAnswers = snap.val() || {};
-    renderAnswers();
-  });
-
-  function renderAnswers() {
-    const feed = document.getElementById('answers-feed');
-    const title = document.getElementById('answers-title');
-    const isTimeUp = (timeLeft <= 0);
-    const entries = Object.entries(currentAnswers);
-
-    const nbPlayers = Object.keys(playersCache).length;
-    const nbAnswered = entries.length;
-
-    title.textContent = isTimeUp
-      ? `✅ ${nbAnswered} réponse(s) reçue(s)`
-      : `⏳ ${nbAnswered} / ${nbPlayers} joueur(s) ont répondu`;
-
-    if (entries.length === 0) { feed.innerHTML = ''; return; }
-
-    feed.innerHTML = entries.map(([id, ans]) => {
-      const av = ans.avatar || "👤";
-      const isQCM  = ans.text && ans.text.includes("(QCM)");
-      const isAuto = ans.text && ans.text.includes("(AUTO ✅)");
-      const autoChecked = ans.autoChecked || isQCM || isAuto;
-
-      const displayText = isTimeUp
-        ? `<span class="answer-text">"${ans.text}"</span>`
-        : `<span class="pending">📩 Réponse envoyée…</span>`;
-
-      let action = '';
-      if (isTimeUp) {
-        if (autoChecked) {
-          const label = isQCM  ? 'QCM auto ✔'
-                      : isAuto ? 'Auto-corrigé ✔'
-                      : 'Auto ✔';
-          action = `<span class="badge-qcm">${label}</span>`;
-        } else {
-          // Réponse libre non reconnue → l'hôte décide
-          action = `<button class="btn btn-point" onclick="givePoints('${id}', 3)">+3 ✅</button>`;
-        }
-      }
-
-      // Bordure colorée selon le statut
-      const borderColor = isAuto ? 'var(--green)' : isQCM ? 'var(--purple)' : 'var(--accent)';
-
-      return `
-        <div class="answer-card" style="border-left-color:${borderColor}">
-          <div>
-            <div class="player-name">${av} ${ans.name}</div>
-            ${displayText}
-          </div>
-          ${action}
-        </div>`;
-    }).join('');
-  }
-
-  /* ── POINTS — transaction Firebase pour éviter les race conditions ── */
-  function givePoints(playerId, points) {
-    db.ref('players/' + playerId + '/score').transaction(currentScore => {
-      return (currentScore || 0) + points;
-    });
-  }
-
-  /* ── JEU ── */
-  function startMultiplayerGame() {
-    const nb = parseInt(document.getElementById('nb-questions').value) || 3;
-    const shuffled = [...basePlaylist].sort(() => 0.5 - Math.random());
-    gamePlaylist = shuffled.slice(0, nb);
-    currentIndex = 0;
-
-    document.getElementById('setup-area').classList.add('hidden');
-    document.getElementById('game-area').classList.remove('hidden');
-    loadTrack();
-  }
-
-  function loadTrack() {
-    const track = gamePlaylist[currentIndex];
-    totalTime = 12;
-    timeLeft = totalTime;
-
-    const timerEl  = document.getElementById('timer-display');
-    const barEl    = document.getElementById('timer-bar');
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timeLeft--;
     timerEl.textContent = timeLeft;
-    timerEl.classList.remove('danger');
-    barEl.style.width = '100%';
-    barEl.classList.remove('danger');
-
-    document.getElementById('question-num').textContent =
-      `Question ${currentIndex + 1} / ${gamePlaylist.length}`;
-    document.getElementById('answer-display').classList.add('hidden');
-    document.getElementById('next-btn').classList.add('hidden');
-    document.getElementById('reveal-btn').classList.add('hidden');
-
-    db.ref('answers').remove();
-    db.ref('gameState').set({
-      accepting: true,
-      choix: track.choix,
-      solution: track.titre
-    });
-
-    safeLoadVideo(track.id, track.start);
-
-    clearInterval(timerInterval);
-    timerInterval = setInterval(() => {
-      timeLeft--;
-      timerEl.textContent = timeLeft;
-      barEl.style.width = ((timeLeft / totalTime) * 100) + '%';
-
-      if (timeLeft <= 3) {
-        timerEl.classList.add('danger');
-        barEl.classList.add('danger');
-      }
-      if (timeLeft <= 0) {
-        clearInterval(timerInterval);
-        stopAnswering();
-      }
-    }, 1000);
-  }
-
-  function stopAnswering() {
-    if (playerReady && player) player.stopVideo();
-    db.ref('gameState').update({ accepting: false });
-    document.getElementById('timer-display').textContent = "⏰";
-    document.getElementById('reveal-btn').classList.remove('hidden');
-    renderAnswers();
-  }
-
-  function revealResult() {
-    const titre = gamePlaylist[currentIndex].titre;
-    document.getElementById('reveal-answer-text').textContent = titre;
-    document.getElementById('answer-display').classList.remove('hidden');
-    document.getElementById('reveal-btn').classList.add('hidden');
-    document.getElementById('next-btn').classList.remove('hidden');
-  }
-
-  function nextRound() {
-    currentIndex++;
-    if (currentIndex < gamePlaylist.length) {
-      loadTrack();
-    } else {
-      showPodium();
+    barEl.style.width = ((timeLeft / totalTime) * 100) + '%';
+    if (timeLeft <= 3) {
+      timerEl.classList.add('danger');
+      barEl.classList.add('danger');
     }
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      stopAnswering();
+    }
+  }, 1000);
+}
+
+function stopAnswering() {
+  if (playerReady && player) player.stopVideo();
+  db.ref('gameState').update({ accepting: false });
+  document.getElementById('timer-display').textContent = "⏰";
+  document.getElementById('reveal-btn').classList.remove('hidden');
+  renderAnswers();
+}
+
+function revealResult() {
+  const track = gamePlaylist[currentIndex];
+  const cat = CATEGORIES.find(c => c.id === track.categorie);
+  const catLabel = cat ? `${cat.icon} ${cat.label}` : '';
+  document.getElementById('reveal-answer-text').innerHTML = `${track.titre}<br><small style="font-size:1rem;color:var(--muted)">${catLabel}</small>`;
+  document.getElementById('answer-display').classList.remove('hidden');
+  document.getElementById('reveal-btn').classList.add('hidden');
+  document.getElementById('next-btn').classList.remove('hidden');
+}
+
+function nextRound() {
+  currentIndex++;
+  if (currentIndex < gamePlaylist.length) {
+    loadTrack();
+  } else {
+    showPodium();
+  }
+}
+
+function showPodium() {
+  document.getElementById('game-area').classList.add('hidden');
+  document.getElementById('podium-area').classList.remove('hidden');
+  db.ref('gameState').set({ accepting: false, gameOver: true });
+
+  const arr = Object.keys(playersCache)
+    .map(id => ({ id, ...playersCache[id] }))
+    .sort((a, b) => (b.score||0) - (a.score||0));
+
+  const podiumOrder = [1, 0, 2];
+  const blockClasses = ['p2','p1','p3'];
+  const medals = ['🥈','🥇','🥉'];
+
+  document.getElementById('podium-grid').innerHTML = podiumOrder.map((rank, pos) => {
+    const p = arr[rank];
+    if (!p) return '';
+    return `
+      <div class="podium-step">
+        <div class="podium-avatar">${p.avatar||"👤"}</div>
+        <div class="podium-pname">${p.name}</div>
+        <div class="podium-pscore">${p.score||0} pts</div>
+        <div class="podium-block ${blockClasses[pos]}">${medals[pos]}</div>
+      </div>`;
+  }).join('');
+
+  const finalMedals = ["🥇","🥈","🥉"];
+  const rankClasses = ["rank-1","rank-2","rank-3"];
+  document.getElementById('final-leaderboard').innerHTML = arr.map((p, i) => `
+    <li class="lb-item ${rankClasses[i]||''}">
+      <span class="lb-rank">${finalMedals[i]||(i+1)}</span>
+      <span class="lb-name">${p.avatar||"👤"} ${p.name}</span>
+      <span class="lb-score">${p.score||0} pts</span>
+    </li>`).join('');
+}
+
+/* ─────────────────────────────────────────
+   ÉDITEUR
+───────────────────────────────────────── */
+function renderEditor() {
+  // Onglets catégories
+  const tabsEl = document.getElementById('editor-cat-tabs');
+  tabsEl.innerHTML = CATEGORIES.map(cat => {
+    const count = allTracks.filter(t => t.categorie === cat.id).length;
+    return `<button class="editor-cat-tab ${cat.id === currentEditorCat ? 'active' : ''}"
+      onclick="setEditorCat('${cat.id}', this)">
+      ${cat.icon} ${cat.label} <span style="opacity:.6;font-size:.8em">(${count})</span>
+    </button>`;
+  }).join('');
+
+  // Liste des tracks de la catégorie active
+  const list = document.getElementById('editor-tracks-list');
+  const tracks = allTracks.filter(t => t.categorie === currentEditorCat);
+  if (tracks.length === 0) {
+    list.innerHTML = '<p style="color:var(--muted);text-align:center;padding:20px;">Aucun titre dans cette catégorie. Ajoutez-en un !</p>';
+    return;
+  }
+  list.innerHTML = tracks.map(t => `
+    <div class="track-row">
+      <span title="${t.titre}"><strong>${t.titre}</strong></span>
+      <span class="track-id" title="YouTube ID">${t.id}</span>
+      <span class="track-start">${t.start}s</span>
+      <span class="track-cat" style="color:var(--muted);font-size:.8em;">${t.choix ? t.choix.length+1 : '?'} choix</span>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-sm btn-edit" onclick="openEditModal('${t._key}')">✏️</button>
+        <button class="btn btn-sm btn-del"  onclick="deleteTrack('${t._key}', '${t.titre}')">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+function setEditorCat(catId, el) {
+  currentEditorCat = catId;
+  document.querySelectorAll('.editor-cat-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderEditor();
+}
+
+/* ─────────────────────────────────────────
+   MODAL
+───────────────────────────────────────── */
+function populateCategorySelect(selectedId) {
+  const sel = document.getElementById('m-category');
+  sel.innerHTML = CATEGORIES.map(c => `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''}>${c.icon} ${c.label}</option>`).join('');
+}
+
+function openAddModal() {
+  editingTrackKey = null;
+  document.getElementById('modal-title').textContent = 'Ajouter un titre';
+  populateCategorySelect(currentEditorCat);
+  document.getElementById('m-titre').value = '';
+  document.getElementById('m-ytid').value = '';
+  document.getElementById('m-start').value = '0';
+  document.getElementById('m-c1').value = '';
+  document.getElementById('m-c2').value = '';
+  document.getElementById('m-c3').value = '';
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+function openEditModal(key) {
+  editingTrackKey = key;
+  const track = allTracks.find(t => t._key === key);
+  if (!track) return;
+
+  document.getElementById('modal-title').textContent = 'Modifier le titre';
+  populateCategorySelect(track.categorie);
+  document.getElementById('m-titre').value = track.titre;
+  document.getElementById('m-ytid').value = track.id;
+  document.getElementById('m-start').value = track.start;
+
+  // Les choix QCM sont stockés SANS le titre (titre ajouté dynamiquement au jeu)
+  // On filtre le titre correct des choix pour l'affichage
+  const wrongChoices = (track.choix || []).filter(c => c !== track.titre);
+  document.getElementById('m-c1').value = wrongChoices[0] || '';
+  document.getElementById('m-c2').value = wrongChoices[1] || '';
+  document.getElementById('m-c3').value = wrongChoices[2] || '';
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.add('hidden');
+  editingTrackKey = null;
+}
+
+function closeModalOnOverlay(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+function saveTrack() {
+  const titre  = document.getElementById('m-titre').value.trim();
+  const ytid   = document.getElementById('m-ytid').value.trim();
+  const start  = parseInt(document.getElementById('m-start').value) || 0;
+  const cat    = document.getElementById('m-category').value;
+  const c1     = document.getElementById('m-c1').value.trim();
+  const c2     = document.getElementById('m-c2').value.trim();
+  const c3     = document.getElementById('m-c3').value.trim();
+
+  if (!titre || !ytid) {
+    alert("Le titre et l'ID YouTube sont obligatoires.");
+    return;
   }
 
-  /* ── PODIUM FINAL ── */
-  function showPodium() {
-    document.getElementById('game-area').classList.add('hidden');
-    document.getElementById('podium-area').classList.remove('hidden');
-    db.ref('gameState').set({ accepting: false, gameOver: true });
+  // Construire les 4 choix QCM (titre correct + 3 faux) mélangés
+  const wrongOnes = [c1, c2, c3].filter(Boolean);
+  const allChoices = [titre, ...wrongOnes].sort(() => 0.5 - Math.random());
 
-    const arr = Object.keys(playersCache)
-      .map(id => ({ id, ...playersCache[id] }))
-      .sort((a, b) => (b.score || 0) - (a.score || 0));
+  const trackData = { titre, id: ytid, start, categorie: cat, choix: allChoices };
 
-    /* Podium visuel (top 3) */
-    const podiumOrder = [1, 0, 2]; // affichage : 2ème, 1er, 3ème
-    const blockClasses = ['p2', 'p1', 'p3'];
-    const medals = ['🥈', '🥇', '🥉'];
-
-    const podiumHtml = podiumOrder.map((rank, pos) => {
-      const p = arr[rank];
-      if (!p) return '';
-      return `
-        <div class="podium-step">
-          <div class="podium-avatar">${p.avatar || "👤"}</div>
-          <div class="podium-pname">${p.name}</div>
-          <div class="podium-pscore">${p.score || 0} pts</div>
-          <div class="podium-block ${blockClasses[pos]}">${medals[pos]}</div>
-        </div>`;
-    }).join('');
-
-    document.getElementById('podium-grid').innerHTML = podiumHtml;
-
-    /* Classement complet */
-    const finalMedals = ["🥇", "🥈", "🥉"];
-    const rankClasses = ["rank-1", "rank-2", "rank-3"];
-    document.getElementById('final-leaderboard').innerHTML = arr.map((p, i) => `
-      <li class="lb-item ${rankClasses[i] || ''}">
-        <span class="lb-rank">${finalMedals[i] || (i + 1)}</span>
-        <span class="lb-name">${p.avatar || "👤"} ${p.name}</span>
-        <span class="lb-score">${p.score || 0} pts</span>
-      </li>
-    `).join('');
+  if (editingTrackKey) {
+    db.ref('tracks/' + editingTrackKey).set(trackData);
+  } else {
+    db.ref('tracks').push(trackData);
   }
+
+  currentEditorCat = cat;
+  closeModal();
+}
+
+function deleteTrack(key, titre) {
+  if (!confirm(`Supprimer "${titre}" ?`)) return;
+  db.ref('tracks/' + key).remove();
+}
+
+/* ─────────────────────────────────────────
+   INIT
+───────────────────────────────────────── */
+loadTracksFromFirebase();
 </script>
 </body>
 </html>
