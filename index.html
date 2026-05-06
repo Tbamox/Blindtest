@@ -353,66 +353,171 @@ const db = firebase.database();
 
 /* ── CATÉGORIES ── */
 const CATEGORIES = [
-  { id:"musique",    label:"Musique",          icon:"🎵" },
-  { id:"film",       label:"Films / Séries",   icon:"🎬" },
-  { id:"pub",        label:"Publicités",        icon:"📺" },
-  { id:"jv",         label:"Jeux Vidéo",        icon:"🎮" },
-  { id:"replique",   label:"Répliques",         icon:"💬" },
-  { id:"anime",      label:"Animés",            icon:"⛩️" },
-  { id:"dessinanim", label:"Dessins Animés",    icon:"🐭" },
-  { id:"sport",      label:"Sport",             icon:"⚽" },
-  { id:"classique",  label:"Classique",         icon:"🎻" },
-  { id:"annees80",   label:"Années 80-90",      icon:"📼" },
-  { id:"francais",   label:"Chanson Française", icon:"🇫🇷" },
-  { id:"kids",       label:"Pour enfants",      icon:"🧸" },
+  { id:"musique",    label:"Musique",           icon:"🎵" },
+  { id:"film",       label:"Films / Séries",    icon:"🎬" },
+  { id:"pub",        label:"Publicités",         icon:"📺" },
+  { id:"jv",         label:"Jeux Vidéo",         icon:"🎮" },
+  { id:"replique",   label:"Répliques",          icon:"💬" },
+  { id:"anime",      label:"Animés",             icon:"⛩️" },
+  { id:"dessinanim", label:"Dessins Animés",     icon:"🐭" },
+  { id:"disney",     label:"Disney",             icon:"🏰" },
+  { id:"sport",      label:"Sport",              icon:"⚽" },
+  { id:"classique",  label:"Classique",          icon:"🎻" },
+  { id:"annees80",   label:"Années 80-90",       icon:"📼" },
+  { id:"francais",   label:"Chanson Française",  icon:"🇫🇷" },
+  { id:"kids",       label:"Pour enfants",       icon:"🧸" },
+  { id:"kpop",       label:"K-Pop / J-Pop",      icon:"🎤" },
+  { id:"comedie",    label:"Comédies Musicales", icon:"🎭" },
+  { id:"monde",      label:"Musiques du Monde",  icon:"🌍" },
 ];
 
 /* ── PLAYLIST PAR DÉFAUT ── */
+// start = point de départ de base ; à chaque partie un offset aléatoire est ajouté via randomStart()
 const DEFAULT_TRACKS = [
-  {titre:"Le Roi Lion",           categorie:"film",       id:"08pZpY_mPto",start:10,choix:["Le Roi Lion","Aladdin","Mulan","Tarzan"]},
-  {titre:"Star Wars",             categorie:"film",       id:"EjMNNpIksaI",start:8, choix:["Star Wars","Star Trek","Interstellar","Dune"]},
-  {titre:"Pirates des Caraïbes",  categorie:"film",       id:"K3pOUvO8qTM",start:0, choix:["Pirates des Caraïbes","Vaiana","Peter Pan","Sinbad"]},
-  {titre:"Harry Potter",          categorie:"film",       id:"Htaj3o3JD8I",start:0, choix:["Harry Potter","Narnia","Eragon","Willow"]},
-  {titre:"Titanic",               categorie:"film",       id:"3gK_2XdjOdY",start:0, choix:["Titanic","Forrest Gump","Braveheart","Ghost"]},
-  {titre:"Inception",             categorie:"film",       id:"YoHD9XEInc0",start:0, choix:["Inception","Interstellar","Tenet","The Matrix"]},
-  {titre:"Jurassic Park",         categorie:"film",       id:"PJlmYh27MHg",start:0, choix:["Jurassic Park","King Kong","Godzilla","La Momie"]},
-  {titre:"Indiana Jones",         categorie:"film",       id:"mBBH6IKDOFs",start:0, choix:["Indiana Jones","Tomb Raider","National Treasure","The Mummy"]},
-  {titre:"Bohemian Rhapsody",     categorie:"musique",    id:"fJ9rUzIMcZQ",start:0, choix:["Bohemian Rhapsody","We Will Rock You","Don't Stop Me Now","Somebody to Love"]},
-  {titre:"Thriller",              categorie:"musique",    id:"sOnqjkJTMaA",start:0, choix:["Thriller","Billie Jean","Beat It","Bad"]},
-  {titre:"Smells Like Teen Spirit",categorie:"musique",   id:"hTWKbfoikeg",start:0, choix:["Smells Like Teen Spirit","Come As You Are","Heart-Shaped Box","In Bloom"]},
-  {titre:"Sweet Child O' Mine",   categorie:"musique",    id:"1w7OgIMMRc4",start:0, choix:["Sweet Child O' Mine","November Rain","Paradise City","Welcome to the Jungle"]},
-  {titre:"Uptown Funk",           categorie:"musique",    id:"OPf0YbXqDm0",start:0, choix:["Uptown Funk","Happy","Blurred Lines","Get Lucky"]},
-  {titre:"Shape of You",          categorie:"musique",    id:"JGwWNGJdvx8",start:0, choix:["Shape of You","Perfect","Thinking Out Loud","Castle on the Hill"]},
-  {titre:"Despacito",             categorie:"musique",    id:"kTJczUoc26U",start:0, choix:["Despacito","Bailando","Lean On","Mi Gente"]},
-  {titre:"Super Mario Bros",      categorie:"jv",         id:"wGX4obVl64w",start:0, choix:["Super Mario Bros","Donkey Kong","Kirby","Yoshi's Island"]},
-  {titre:"Tetris",                categorie:"jv",         id:"NmCCQxVBfyM",start:0, choix:["Tetris","Pac-Man","Pong","Snake"]},
-  {titre:"Zelda - Hyrule",        categorie:"jv",         id:"0_7X3nFebZA",start:0, choix:["The Legend of Zelda","Metroid","Star Fox","Kirby"]},
-  {titre:"Minecraft",             categorie:"jv",         id:"Dg0IjOX0Nbc",start:0, choix:["Minecraft","Terraria","Fortnite","Roblox"]},
-  {titre:"Final Fantasy VII",     categorie:"jv",         id:"GMsnKtfcqUU",start:0, choix:["Final Fantasy VII","Chrono Trigger","Secret of Mana","Kingdom Hearts"]},
-  {titre:"Undertale - Megalovania",categorie:"jv",        id:"0FCvzsVlXpQ",start:0, choix:["Undertale","Hollow Knight","Cuphead","Celeste"]},
-  {titre:"Évian",                 categorie:"pub",        id:"XQcVllWpwGs",start:0, choix:["Évian","Volvic","Badoit","Contrex"]},
-  {titre:"Coca-Cola",             categorie:"pub",        id:"v2P-55T-_Bc",start:0, choix:["Coca-Cola","Pepsi","Fanta","Sprite"]},
-  {titre:"Dragon Ball Z",         categorie:"anime",      id:"JQeOy0eGfGk",start:0, choix:["Dragon Ball Z","Naruto","One Piece","Bleach"]},
-  {titre:"Naruto",                categorie:"anime",      id:"DquviEJ-9rY",start:0, choix:["Naruto","Dragon Ball","Sword Art Online","Attack on Titan"]},
-  {titre:"One Piece",             categorie:"anime",      id:"LL9-StMPqKo",start:0, choix:["One Piece","Fairy Tail","Hunter x Hunter","My Hero Academia"]},
-  {titre:"Sailor Moon",           categorie:"anime",      id:"VrGZA7jxFUI",start:0, choix:["Sailor Moon","Cardcaptor Sakura","Tokyo Mew Mew","Magic Knight Rayearth"]},
-  {titre:"Pokémon",               categorie:"anime",      id:"5y-wGgXMeo0",start:0, choix:["Pokémon","Digimon","Yu-Gi-Oh","Beyblade"]},
-  {titre:"Toy Story",             categorie:"dessinanim", id:"NK-VMBHlHoY",start:0, choix:["Toy Story","Monstres et Cie","Cars","1001 Pattes"]},
-  {titre:"Shrek",                 categorie:"dessinanim", id:"l5QiEBSJGQ8",start:0, choix:["Shrek","Kung Fu Panda","Madagascar","Bee Movie"]},
-  {titre:"Les Aristochats",       categorie:"dessinanim", id:"hpgBK_68Xwk",start:0, choix:["Les Aristochats","Bambi","Pinocchio","Dumbo"]},
-  {titre:"Bob l'éponge",          categorie:"dessinanim", id:"Fpy4kxb3E7M",start:0, choix:["Bob l'éponge","Tom et Jerry","Scooby-Doo","Looney Tunes"]},
-  {titre:"Take On Me",            categorie:"annees80",   id:"djV11Xbc914",start:0, choix:["Take On Me","The Final Countdown","Don't You Want Me","Wake Me Up Before You Go-Go"]},
-  {titre:"I Will Always Love You",categorie:"annees80",   id:"3JWTaaS7LdU",start:0, choix:["I Will Always Love You","My Heart Will Go On","Nothing Compares 2 U","One Moment in Time"]},
-  {titre:"Africa",                categorie:"annees80",   id:"FTQbiNvZqaY",start:0, choix:["Africa","Rosanna","Hold the Line","I'll Be Over You"]},
-  {titre:"Sweet Dreams",          categorie:"annees80",   id:"qkBMCwPWyGg",start:0, choix:["Sweet Dreams","Here Comes the Rain Again","Thorn in My Side","Would I Lie to You?"]},
-  {titre:"La Vie en Rose",        categorie:"francais",   id:"NKE_6WixyZA",start:0, choix:["La Vie en Rose","Non je ne regrette rien","Hymne à l'amour","Milord"]},
-  {titre:"Alors on danse",        categorie:"francais",   id:"ReFAGOoYZdk",start:0, choix:["Alors on danse","Formidable","Tous les mêmes","Papaoutai"]},
-  {titre:"Je veux",               categorie:"francais",   id:"AZRK8pFJADQ",start:0, choix:["Je veux","Chandelier","Les yeux de la mama","Eblouie par la nuit"]},
-  {titre:"La Lettre à Élise",     categorie:"classique",  id:"_mVW8tgGY_w",start:0, choix:["La Lettre à Élise","Clair de Lune","Gymnopédie n°1","Sonate au Clair de Lune"]},
-  {titre:"Beethoven - 5ème",      categorie:"classique",  id:"_4IRMYuE1hI",start:0, choix:["5ème Symphonie","9ème Symphonie","Sonate Pathétique","Ode à la Joie"]},
-  {titre:"UEFA Champions League", categorie:"sport",      id:"wFMPTEHnmXs",start:0, choix:["UEFA Champions League","Coupe du Monde","Roland Garros","Tour de France"]},
-  {titre:"Dora l'Exploratrice",   categorie:"kids",       id:"4oRWaAGBGSQ",start:0, choix:["Dora l'Exploratrice","Peppa Pig","Bluey","Miraculous"]},
-  {titre:"Cocomelon",             categorie:"kids",       id:"BQO11A7CALY",start:0, choix:["Cocomelon","Paw Patrol","Bluey","PJ Masks"]},
+
+  // ══ 🎵 MUSIQUE ══
+  {titre:"Bohemian Rhapsody",      categorie:"musique", id:"fJ9rUzIMcZQ", start:0,  choix:["Bohemian Rhapsody","We Will Rock You","Don't Stop Me Now","Somebody to Love"]},
+  {titre:"Thriller",               categorie:"musique", id:"sOnqjkJTMaA", start:0,  choix:["Thriller","Billie Jean","Beat It","Bad"]},
+  {titre:"Smells Like Teen Spirit",categorie:"musique", id:"hTWKbfoikeg", start:0,  choix:["Smells Like Teen Spirit","Come As You Are","Heart-Shaped Box","In Bloom"]},
+  {titre:"Sweet Child O' Mine",    categorie:"musique", id:"1w7OgIMMRc4", start:0,  choix:["Sweet Child O' Mine","November Rain","Paradise City","Welcome to the Jungle"]},
+  {titre:"Uptown Funk",            categorie:"musique", id:"OPf0YbXqDm0", start:0,  choix:["Uptown Funk","Happy","Blurred Lines","Get Lucky"]},
+  {titre:"Shape of You",           categorie:"musique", id:"JGwWNGJdvx8", start:0,  choix:["Shape of You","Perfect","Thinking Out Loud","Castle on the Hill"]},
+  {titre:"Despacito",              categorie:"musique", id:"kTJczUoc26U", start:0,  choix:["Despacito","Bailando","Lean On","Mi Gente"]},
+  {titre:"Blinding Lights",        categorie:"musique", id:"4NRXx6U8BKQ", start:0,  choix:["Blinding Lights","Save Your Tears","Starboy","Can't Feel My Face"]},
+  {titre:"Rolling in the Deep",    categorie:"musique", id:"rYEDA3JcQqw", start:0,  choix:["Rolling in the Deep","Someone Like You","Hello","Set Fire to the Rain"]},
+  {titre:"Lose Yourself",          categorie:"musique", id:"_Yhyp-_hX2s", start:0,  choix:["Lose Yourself","Slim Shady","Without Me","The Real Slim Shady"]},
+  {titre:"Billie Jean",            categorie:"musique", id:"Zi_XLOBDo_Y", start:0,  choix:["Billie Jean","Beat It","Thriller","Bad"]},
+  {titre:"Hotel California",       categorie:"musique", id:"BciS5krYL64", start:0,  choix:["Hotel California","Life in the Fast Lane","Desperado","One of These Nights"]},
+  {titre:"Stairway to Heaven",     categorie:"musique", id:"QkF3oxziUI4", start:0,  choix:["Stairway to Heaven","Kashmir","Black Dog","Whole Lotta Love"]},
+  {titre:"Wonderwall",             categorie:"musique", id:"bx1Bh8ZvH84", start:0,  choix:["Wonderwall","Don't Look Back in Anger","Champagne Supernova","Live Forever"]},
+  {titre:"Mr. Brightside",         categorie:"musique", id:"gGdGFtwCNBE", start:0,  choix:["Mr. Brightside","Somebody Told Me","All These Things That I've Done","Smile Like You Mean It"]},
+  {titre:"Toxic",                  categorie:"musique", id:"LOZuxwVk7TU", start:0,  choix:["Toxic","Oops!... I Did It Again","Baby One More Time","Womanizer"]},
+  {titre:"Crazy in Love",          categorie:"musique", id:"ViwtNLUqkMY", start:0,  choix:["Crazy in Love","Single Ladies","Halo","Irreplaceable"]},
+  {titre:"Since U Been Gone",      categorie:"musique", id:"R7UrFYvl5TE", start:0,  choix:["Since U Been Gone","Behind These Hazel Eyes","Because of You","Walk Away"]},
+  {titre:"Somebody That I Used to Know",categorie:"musique",id:"8UVNT4wvIGY",start:0,choix:["Somebody That I Used to Know","Eyes Wide Open","Heart's a Mess","Coming Back"]},
+  {titre:"Get Lucky",              categorie:"musique", id:"5NV6Rdv1h3Q", start:0,  choix:["Get Lucky","Instant Crush","Lose Yourself to Dance","Give Life Back to Music"]},
+
+  // ══ 🎬 FILMS / SÉRIES ══
+  {titre:"Le Roi Lion",            categorie:"film", id:"08pZpY_mPto", start:10, choix:["Le Roi Lion","Aladdin","Mulan","Tarzan"]},
+  {titre:"Star Wars",              categorie:"film", id:"EjMNNpIksaI", start:8,  choix:["Star Wars","Star Trek","Interstellar","Dune"]},
+  {titre:"Pirates des Caraïbes",   categorie:"film", id:"K3pOUvO8qTM", start:0,  choix:["Pirates des Caraïbes","Vaiana","Peter Pan","Sinbad"]},
+  {titre:"Harry Potter",           categorie:"film", id:"Htaj3o3JD8I", start:0,  choix:["Harry Potter","Narnia","Eragon","Willow"]},
+  {titre:"Titanic",                categorie:"film", id:"3gK_2XdjOdY", start:0,  choix:["Titanic","Forrest Gump","Braveheart","Ghost"]},
+  {titre:"Inception",              categorie:"film", id:"YoHD9XEInc0", start:0,  choix:["Inception","Interstellar","Tenet","The Matrix"]},
+  {titre:"Jurassic Park",          categorie:"film", id:"PJlmYh27MHg", start:0,  choix:["Jurassic Park","King Kong","Godzilla","La Momie"]},
+  {titre:"Indiana Jones",          categorie:"film", id:"mBBH6IKDOFs", start:0,  choix:["Indiana Jones","Tomb Raider","National Treasure","The Mummy"]},
+  {titre:"Interstellar",           categorie:"film", id:"UDVtMYqUAyw", start:0,  choix:["Interstellar","Inception","Gravity","The Martian"]},
+  {titre:"Game of Thrones",        categorie:"film", id:"bjMnJGc5HHo", start:0,  choix:["Game of Thrones","The Witcher","House of the Dragon","Vikings"]},
+  {titre:"Stranger Things",        categorie:"film", id:"pFS4zaid1t8", start:0,  choix:["Stranger Things","Dark","The OA","Black Mirror"]},
+  {titre:"Breaking Bad",           categorie:"film", id:"HhesHBpEZhM", start:0,  choix:["Breaking Bad","Better Call Saul","Ozark","Narcos"]},
+  {titre:"The Mandalorian",        categorie:"film", id:"aOC8E8z_ifw", start:0,  choix:["The Mandalorian","Obi-Wan Kenobi","Andor","The Book of Boba Fett"]},
+  {titre:"Avengers",               categorie:"film", id:"7yK91c5v-rc", start:0,  choix:["Avengers","Captain America","Thor","Iron Man"]},
+  {titre:"Gladiator",              categorie:"film", id:"owK1qxDselE", start:0,  choix:["Gladiator","Braveheart","300","Troy"]},
+  {titre:"Le Parrain",             categorie:"film", id:"1R3V5wGvJWQ", start:0,  choix:["Le Parrain","Les Affranchis","Casino","Il était une fois en Amérique"]},
+  {titre:"Schindler's List",       categorie:"film", id:"4-_eOAJb9lE", start:0,  choix:["Schindler's List","La Liste de Schindler","Saving Private Ryan","The Pianist"]},
+  {titre:"Batman - Dark Knight",   categorie:"film", id:"ZQmOWZzGO9E", start:0,  choix:["Batman","Superman","Iron Man","Deadpool"]},
+  {titre:"James Bond - Skyfall",   categorie:"film", id:"DeumyOzKqgI", start:0,  choix:["Skyfall","Casino Royale","GoldenEye","Spectre"]},
+  {titre:"La La Land",             categorie:"film", id:"0pdqf4P9MB8", start:0,  choix:["La La Land","Whiplash","Moulin Rouge","Chicago"]},
+
+  // ══ 🎮 JEUX VIDÉO ══
+  {titre:"Super Mario Bros",       categorie:"jv", id:"wGX4obVl64w", start:0, choix:["Super Mario Bros","Donkey Kong","Kirby","Yoshi's Island"]},
+  {titre:"Tetris",                 categorie:"jv", id:"NmCCQxVBfyM", start:0, choix:["Tetris","Pac-Man","Pong","Snake"]},
+  {titre:"Legend of Zelda",        categorie:"jv", id:"0_7X3nFebZA", start:0, choix:["The Legend of Zelda","Metroid","Star Fox","Kirby"]},
+  {titre:"Minecraft",              categorie:"jv", id:"Dg0IjOX0Nbc", start:0, choix:["Minecraft","Terraria","Fortnite","Roblox"]},
+  {titre:"Final Fantasy VII",      categorie:"jv", id:"GMsnKtfcqUU", start:0, choix:["Final Fantasy VII","Chrono Trigger","Secret of Mana","Kingdom Hearts"]},
+  {titre:"Undertale - Megalovania",categorie:"jv", id:"0FCvzsVlXpQ", start:0, choix:["Undertale","Hollow Knight","Cuphead","Celeste"]},
+  {titre:"Halo - Main Theme",      categorie:"jv", id:"0-l4P1LAlAw", start:0, choix:["Halo","Destiny","Call of Duty","Gears of War"]},
+  {titre:"Sonic the Hedgehog",     categorie:"jv", id:"xSRMclMj-Lk", start:0, choix:["Sonic the Hedgehog","Crash Bandicoot","Spyro","Rayman"]},
+  {titre:"Doom - BFG Division",    categorie:"jv", id:"nqFsXAlhPn8", start:0, choix:["Doom","Quake","Wolfenstein","Duke Nukem"]},
+  {titre:"Pokémon - Intro",        categorie:"jv", id:"JuYeHPFR3f0", start:0, choix:["Pokémon","Digimon World","Yo-kai Watch","Temtem"]},
+  {titre:"God of War",             categorie:"jv", id:"NQ6cWA1hjcY", start:0, choix:["God of War","Assassin's Creed","Devil May Cry","Bayonetta"]},
+  {titre:"The Last of Us",         categorie:"jv", id:"XczBHgkR5iA", start:0, choix:["The Last of Us","Resident Evil","Dead Space","Silent Hill"]},
+  {titre:"Fortnite",               categorie:"jv", id:"bZz0QLWG5LU", start:0, choix:["Fortnite","Apex Legends","PUBG","Warzone"]},
+  {titre:"Among Us",               categorie:"jv", id:"8kDeVLEtbY0", start:0, choix:["Among Us","Fall Guys","Goose Game","Party Animals"]},
+  {titre:"Animal Crossing",        categorie:"jv", id:"ZMzXmLMSWbk", start:0, choix:["Animal Crossing","Stardew Valley","Harvest Moon","My Time at Portia"]},
+  {titre:"Skyrim - Dragonborn",    categorie:"jv", id:"9MwMF2so7hs", start:0, choix:["Skyrim","Oblivion","Morrowind","Dragon Age"]},
+  {titre:"GTA San Andreas",        categorie:"jv", id:"dJEY3KSzqF8", start:0, choix:["GTA San Andreas","GTA Vice City","GTA V","Saints Row"]},
+  {titre:"FIFA - Dribbling",       categorie:"jv", id:"gqaXTZnPhqQ", start:0, choix:["FIFA","PES","eFootball","Rocket League"]},
+  {titre:"Cyberpunk 2077",         categorie:"jv", id:"OsQEuEgKRSI", start:0, choix:["Cyberpunk 2077","Deus Ex","Disco Elysium","Outer Worlds"]},
+  {titre:"Kirby's Dream Land",     categorie:"jv", id:"pCEGLlFuetg", start:0, choix:["Kirby","Yoshi","Toad","Pikmin"]},
+
+  // ══ 🐭 DESSINS ANIMÉS ══
+  {titre:"Toy Story",              categorie:"dessinanim", id:"NK-VMBHlHoY", start:0, choix:["Toy Story","Monstres et Cie","Cars","1001 Pattes"]},
+  {titre:"Shrek",                  categorie:"dessinanim", id:"l5QiEBSJGQ8", start:0, choix:["Shrek","Kung Fu Panda","Madagascar","Bee Movie"]},
+  {titre:"Les Aristochats",        categorie:"dessinanim", id:"hpgBK_68Xwk", start:0, choix:["Les Aristochats","Bambi","Pinocchio","Dumbo"]},
+  {titre:"Bob l'éponge",           categorie:"dessinanim", id:"Fpy4kxb3E7M", start:0, choix:["Bob l'éponge","Tom et Jerry","Scooby-Doo","Looney Tunes"]},
+  {titre:"Tom et Jerry",           categorie:"dessinanim", id:"1WJlbFRxrE4", start:0, choix:["Tom et Jerry","Looney Tunes","Tex Avery","Oggy et les Cafards"]},
+  {titre:"Scooby-Doo",             categorie:"dessinanim", id:"YiPBpYdPpME", start:0, choix:["Scooby-Doo","Shaggy","Fred","Daphné"]},
+  {titre:"Les Simpsons",           categorie:"dessinanim", id:"LXDXFPZ2MBQ", start:0, choix:["Les Simpsons","Futurama","Family Guy","American Dad"]},
+  {titre:"South Park",             categorie:"dessinanim", id:"tPFmPThDMQE", start:0, choix:["South Park","Beavis & Butt-Head","The Simpsons","Family Guy"]},
+  {titre:"Futurama",               categorie:"dessinanim", id:"gzOJkbMRxts", start:0, choix:["Futurama","Les Simpsons","Rick et Morty","Disenchantment"]},
+  {titre:"Rick et Morty",          categorie:"dessinanim", id:"kAfOOFMobC4", start:0, choix:["Rick et Morty","Solar Opposites","Futurama","Gravity Falls"]},
+  {titre:"Kung Fu Panda",          categorie:"dessinanim", id:"wTZ3O45UrI0", start:0, choix:["Kung Fu Panda","Shrek","Madagascar","Les Croods"]},
+  {titre:"Looney Tunes",           categorie:"dessinanim", id:"sOVRlBhYG8c", start:0, choix:["Looney Tunes","Merrie Melodies","Tom et Jerry","Tex Avery"]},
+  {titre:"He-Man",                 categorie:"dessinanim", id:"ZoOEcMVoBCo", start:0, choix:["He-Man","SilverHawks","ThunderCats","Conan l'Aventurier"]},
+  {titre:"Les Tortues Ninja",      categorie:"dessinanim", id:"rLHi5J4OAPU", start:0, choix:["Les Tortues Ninja","Power Rangers","Biker Mice","Street Sharks"]},
+  {titre:"Lucky Luke",             categorie:"dessinanim", id:"VjFcmUNVYJg", start:0, choix:["Lucky Luke","Astérix","Tintin","Les Dalton"]},
+  {titre:"Capitaine Flam",         categorie:"dessinanim", id:"1OX2q8Y2N4k", start:0, choix:["Capitaine Flam","Goldorak","Albator","Candy"]},
+  {titre:"Inspecteur Gadget",      categorie:"dessinanim", id:"p5AcGnCVPE8", start:0, choix:["Inspecteur Gadget","Les Schtroumpfs","Danger Mouse","Ulysses 31"]},
+  {titre:"Cow and Chicken",        categorie:"dessinanim", id:"e0bkKhFxLSQ", start:0, choix:["Cow and Chicken","Dexter","Johnny Bravo","Les Super Nanas"]},
+  {titre:"Phinéas et Ferb",        categorie:"dessinanim", id:"NkQiQOLbwdI", start:0, choix:["Phinéas et Ferb","Gravity Falls","Star vs. les Forces du Mal","Amphibia"]},
+  {titre:"Avatar - Le Dernier Maître de l'Air",categorie:"dessinanim",id:"d1EnW4eXOjY",start:0,choix:["Avatar","Korra","Wakfu","Steven Universe"]},
+
+  // ══ 🏰 DISNEY ══
+  {titre:"Circle of Life - Le Roi Lion",  categorie:"disney", id:"GibiNy4d4gc", start:0, choix:["Le Roi Lion","La Belle et la Bête","Aladdin","Mulan"]},
+  {titre:"Under the Sea - La Petite Sirène",categorie:"disney",id:"GC_mV1IpjY4",start:0,choix:["La Petite Sirène","Pocahontas","Atlantide","Lilo & Stitch"]},
+  {titre:"Be Our Guest - La Belle et la Bête",categorie:"disney",id:"SMXQ3A0GKWI",start:0,choix:["La Belle et la Bête","Cendrillon","Blanche-Neige","La Belle au Bois Dormant"]},
+  {titre:"A Whole New World - Aladdin",   categorie:"disney", id:"hZ1Rb9hC4jU", start:0, choix:["Aladdin","Mulan","Tarzan","Hercule"]},
+  {titre:"Let It Go - La Reine des Neiges",categorie:"disney",id:"L0MK7qz13bU",start:0,choix:["La Reine des Neiges","Raiponce","Vaiana","Wish"]},
+  {titre:"Hakuna Matata - Le Roi Lion",   categorie:"disney", id:"xB5ceArudum", start:0, choix:["Le Roi Lion","Dumbo","Bambi","Pinocchio"]},
+  {titre:"Colors of the Wind - Pocahontas",categorie:"disney",id:"CpjpkM8WBYI",start:0,choix:["Pocahontas","Atlantide","Mulan","Frère des Ours"]},
+  {titre:"I'll Make a Man Out of You - Mulan",categorie:"disney",id:"ZSS5dEeMX64",start:0,choix:["Mulan","Hercule","Tarzan","Hunchback"]},
+  {titre:"How Far I'll Go - Vaiana",      categorie:"disney", id:"cPAbx5B_UQE", start:0, choix:["Vaiana","La Reine des Neiges","Raiponce","Encanto"]},
+  {titre:"We Don't Talk About Bruno - Encanto",categorie:"disney",id:"bvWRMAU6V-c",start:0,choix:["Encanto","Coco","Raya","Soul"]},
+  {titre:"Part of Your World - La Petite Sirène",categorie:"disney",id:"vBZ4LQYQ1Bg",start:0,choix:["La Petite Sirène","La Belle et la Bête","Cendrillon","Raiponce"]},
+  {titre:"You've Got a Friend in Me - Toy Story",categorie:"disney",id:"6-OqDFIKuV0",start:0,choix:["Toy Story","Cars","Monstres et Cie","1001 Pattes"]},
+  {titre:"Remember Me - Coco",            categorie:"disney", id:"XBgMHPbOuAI", start:0, choix:["Coco","Soul","Encanto","Raya"]},
+  {titre:"I See the Light - Raiponce",    categorie:"disney", id:"KW-jNGFIFTQ", start:0, choix:["Raiponce","La Reine des Neiges","Vaiana","Wish"]},
+  {titre:"Reflection - Mulan",            categorie:"disney", id:"kKMle5sAFKE", start:0, choix:["Mulan","Pocahontas","Hercule","Atlantide"]},
+  {titre:"Go the Distance - Hercule",     categorie:"disney", id:"6BFuCBzFT9k", start:0, choix:["Hercule","Mulan","Aladdin","Tarzan"]},
+  {titre:"Strangers Like Me - Tarzan",    categorie:"disney", id:"gyMHqJy7bYE", start:0, choix:["Tarzan","Le Roi Lion","Hercule","La Petite Sirène"]},
+  {titre:"Lava - Court-métrage Pixar",    categorie:"disney", id:"pyNSCdkQv2c", start:0, choix:["Lava","Soul","Coco","Brave"]},
+  {titre:"Touch the Sky - Brave",         categorie:"disney", id:"m2B-Vs6-Qqw", start:0, choix:["Brave","Rebelle","Mérida","Moana"]},
+  {titre:"Into the Unknown - La Reine des Neiges 2",categorie:"disney",id:"zFg7KYtmTMU",start:0,choix:["La Reine des Neiges 2","La Reine des Neiges","Wish","Raiponce"]},
+
+  // ══ 📺 PUBLICITÉS (maintenu) ══
+  {titre:"Évian",                  categorie:"pub", id:"XQcVllWpwGs", start:0, choix:["Évian","Volvic","Badoit","Contrex"]},
+  {titre:"Coca-Cola",              categorie:"pub", id:"v2P-55T-_Bc", start:0, choix:["Coca-Cola","Pepsi","Fanta","Sprite"]},
+
+  // ══ ⛩️ ANIMÉS (maintenu) ══
+  {titre:"Dragon Ball Z",          categorie:"anime", id:"JQeOy0eGfGk", start:0, choix:["Dragon Ball Z","Naruto","One Piece","Bleach"]},
+  {titre:"Naruto",                 categorie:"anime", id:"DquviEJ-9rY", start:0, choix:["Naruto","Dragon Ball","Sword Art Online","Attack on Titan"]},
+  {titre:"One Piece",              categorie:"anime", id:"LL9-StMPqKo", start:0, choix:["One Piece","Fairy Tail","Hunter x Hunter","My Hero Academia"]},
+  {titre:"Sailor Moon",            categorie:"anime", id:"VrGZA7jxFUI", start:0, choix:["Sailor Moon","Cardcaptor Sakura","Tokyo Mew Mew","Magic Knight Rayearth"]},
+  {titre:"Pokémon",                categorie:"anime", id:"5y-wGgXMeo0", start:0, choix:["Pokémon","Digimon","Yu-Gi-Oh","Beyblade"]},
+  {titre:"Neon Genesis Evangelion",categorie:"anime", id:"YOJsGAXFUCo", start:0, choix:["Evangelion","Cowboy Bebop","FLCL","Trigun"]},
+
+  // ══ 📼 ANNÉES 80-90 (maintenu) ══
+  {titre:"Take On Me",             categorie:"annees80", id:"djV11Xbc914", start:0, choix:["Take On Me","The Final Countdown","Don't You Want Me","Wake Me Up Before You Go-Go"]},
+  {titre:"I Will Always Love You", categorie:"annees80", id:"3JWTaaS7LdU", start:0, choix:["I Will Always Love You","My Heart Will Go On","Nothing Compares 2 U","One Moment in Time"]},
+  {titre:"Africa",                 categorie:"annees80", id:"FTQbiNvZqaY", start:0, choix:["Africa","Rosanna","Hold the Line","I'll Be Over You"]},
+  {titre:"Sweet Dreams",           categorie:"annees80", id:"qkBMCwPWyGg", start:0, choix:["Sweet Dreams","Here Comes the Rain Again","Thorn in My Side","Would I Lie to You?"]},
+
+  // ══ 🇫🇷 CHANSON FRANÇAISE (maintenu) ══
+  {titre:"La Vie en Rose",         categorie:"francais", id:"NKE_6WixyZA", start:0, choix:["La Vie en Rose","Non je ne regrette rien","Hymne à l'amour","Milord"]},
+  {titre:"Alors on danse",         categorie:"francais", id:"ReFAGOoYZdk", start:0, choix:["Alors on danse","Formidable","Tous les mêmes","Papaoutai"]},
+  {titre:"Je veux",                categorie:"francais", id:"AZRK8pFJADQ", start:0, choix:["Je veux","Chandelier","Les yeux de la mama","Eblouie par la nuit"]},
+
+  // ══ 🎻 CLASSIQUE (maintenu) ══
+  {titre:"La Lettre à Élise",      categorie:"classique", id:"_mVW8tgGY_w", start:0, choix:["La Lettre à Élise","Clair de Lune","Gymnopédie n°1","Sonate au Clair de Lune"]},
+  {titre:"Beethoven - 5ème",       categorie:"classique", id:"_4IRMYuE1hI", start:0, choix:["5ème Symphonie","9ème Symphonie","Sonate Pathétique","Ode à la Joie"]},
+
+  // ══ ⚽ SPORT (maintenu) ══
+  {titre:"UEFA Champions League",  categorie:"sport", id:"wFMPTEHnmXs", start:0, choix:["UEFA Champions League","Coupe du Monde","Roland Garros","Tour de France"]},
+
+  // ══ 🧸 ENFANTS (maintenu) ══
+  {titre:"Dora l'Exploratrice",    categorie:"kids", id:"4oRWaAGBGSQ", start:0, choix:["Dora l'Exploratrice","Peppa Pig","Bluey","Miraculous"]},
+  {titre:"Cocomelon",              categorie:"kids", id:"BQO11A7CALY", start:0, choix:["Cocomelon","Paw Patrol","Bluey","PJ Masks"]},
 ];
 
 /* ── ÉTAT ── */
@@ -460,9 +565,12 @@ function onYouTubeIframeAPIReady() {
   });
 }
 function safeLoadVideo(videoId, startSeconds) {
+  // Offset aléatoire de 0 à 8 secondes pour varier le point d'entrée
+  var offset = Math.floor(Math.random() * 8);
+  var finalStart = (startSeconds || 0) + offset;
   var tryLoad = function() {
     if (playerReady && player && player.loadVideoById) {
-      player.loadVideoById({ videoId: videoId, startSeconds: startSeconds });
+      player.loadVideoById({ videoId: videoId, startSeconds: finalStart });
     } else {
       setTimeout(tryLoad, 300);
     }
