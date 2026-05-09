@@ -163,7 +163,57 @@
     .choix-row input{flex:1}
     .choix-row small{font-size:.75rem;color:var(--accent2);white-space:nowrap}
 
-    .hidden{display:none!important}
+    /* ── GAME LAYOUT ── */
+    .game-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    .score-sidebar {
+      position: sticky;
+      top: 16px;
+    }
+    .score-sidebar .card { padding: 16px; }
+    .score-sidebar #leaderboard-list .lb-item {
+      padding: 10px 12px;
+      font-size: .9rem;
+    }
+    .score-sidebar .lb-score { font-size: 1.2rem; }
+
+    /* ── BOUTON SUIVANT GRAND ── */
+    .btn-next-big {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      font-family: 'Bangers', cursive;
+      font-size: 2rem;
+      letter-spacing: 3px;
+      font-weight: 400;
+      padding: 22px;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--purple), #7c3aed);
+      color: #fff;
+      box-shadow: 0 0 30px rgba(168,85,247,.4);
+      transition: transform .15s, filter .15s, box-shadow .15s;
+      animation: popIn .3s ease;
+      margin-top: 4px;
+    }
+    .btn-next-big:hover {
+      transform: translateY(-3px);
+      filter: brightness(1.1);
+      box-shadow: 0 0 40px rgba(168,85,247,.6);
+    }
+    .btn-next-big:active { transform: translateY(0); }
+
+    @media (max-width: 700px) {
+      .game-layout { grid-template-columns: 1fr; }
+      .score-sidebar { position: static; order: 2; }
+      .game-main { order: 1; }
+    }
 
     /* DEBUG */
     #debug-bar{position:fixed;bottom:0;left:0;right:0;background:#1a0a00;color:#ffa500;font-size:.75rem;font-family:monospace;padding:6px 12px;z-index:999;display:none}
@@ -237,39 +287,58 @@
 
     <!-- GAME -->
     <div id="game-area" class="hidden">
-      <div class="card" style="text-align:center">
-        <div class="question-counter">
-          <div class="counter-dots" id="counter-dots"></div>
-          <div class="counter-label" id="counter-label">Question 1 / 5</div>
-        </div>
-        <div class="cat-badge-wrap">
-          <div class="cat-badge" id="cat-badge">🎵 Musique</div>
-        </div>
-        <div class="timer-wrap">
-          <div id="timer-display">12</div>
-          <div class="timer-bar-bg"><div id="timer-bar" style="width:100%"></div></div>
-        </div>
-      </div>
+      <div class="game-layout">
 
-      <div class="card">
-        <div class="section-title" id="answers-title">⏳ Attente des réponses</div>
-        <div id="answers-feed"></div>
-      </div>
+        <!-- ── Sidebar score ── -->
+        <aside class="score-sidebar">
+          <div class="card" style="padding:16px">
+            <div class="card-title" style="margin-bottom:12px">🏆 Classement</div>
+            <ul id="leaderboard-list"></ul>
+          </div>
+        </aside>
 
-      <div id="answer-display" class="hidden">
-        <div class="reveal-label">La réponse était…</div>
-        <div class="reveal-answer" id="reveal-answer-text"></div>
-      </div>
+        <!-- ── Contenu principal ── -->
+        <div class="game-main">
 
-      <div class="controls">
-        <button class="btn btn-reveal hidden" id="reveal-btn" onclick="revealResult()">👁️ Révéler la réponse</button>
-        <button class="btn btn-next hidden" id="next-btn" onclick="nextRound()">Suivant ➡️</button>
-      </div>
+          <!-- Timer + compteur -->
+          <div class="card" style="text-align:center">
+            <div class="question-counter">
+              <div class="counter-dots" id="counter-dots"></div>
+              <div class="counter-label" id="counter-label">Question 1 / 5</div>
+            </div>
+            <div class="cat-badge-wrap">
+              <div class="cat-badge" id="cat-badge">🎵 Musique</div>
+            </div>
+            <div class="timer-wrap">
+              <div id="timer-display">12</div>
+              <div class="timer-bar-bg"><div id="timer-bar" style="width:100%"></div></div>
+            </div>
 
-      <div class="card">
-        <div class="card-title">🏆 Classement en direct</div>
-        <ul id="leaderboard-list"></ul>
-      </div>
+            <!-- Bouton Révéler dans la card timer -->
+            <div id="reveal-wrap" class="hidden" style="margin-top:16px">
+              <button class="btn btn-reveal" id="reveal-btn" onclick="revealResult()">👁️ Révéler la réponse</button>
+            </div>
+          </div>
+
+          <!-- Réponse révélée -->
+          <div id="answer-display" class="hidden">
+            <div class="reveal-label">La réponse était…</div>
+            <div class="reveal-answer" id="reveal-answer-text"></div>
+          </div>
+
+          <!-- Réponses des joueurs -->
+          <div class="card">
+            <div class="section-title" id="answers-title">⏳ Attente des réponses</div>
+            <div id="answers-feed"></div>
+          </div>
+
+          <!-- Bouton SUIVANT — grand, bien visible, pleine largeur -->
+          <div id="next-wrap" class="hidden">
+            <button class="btn-next-big" onclick="nextRound()">Suivant ➡️</button>
+          </div>
+
+        </div><!-- /game-main -->
+      </div><!-- /game-layout -->
     </div><!-- /game-area -->
 
     <!-- PODIUM -->
@@ -1036,8 +1105,8 @@ function loadTrack() {
   document.getElementById('cat-badge').textContent = cat ? cat.icon+' '+cat.label : '';
 
   document.getElementById('answer-display').classList.add('hidden');
-  document.getElementById('next-btn').classList.add('hidden');
-  document.getElementById('reveal-btn').classList.add('hidden');
+  document.getElementById('next-wrap').classList.add('hidden');
+  document.getElementById('reveal-wrap').classList.add('hidden');
 
   db.ref('answers').remove();
   db.ref('gameState').set({ accepting: true, choix: track.choix, solution: track.titre });
@@ -1058,7 +1127,7 @@ function stopAnswering() {
   document.getElementById('yt-player-container').style.display = 'none';
   db.ref('gameState').update({ accepting: false });
   document.getElementById('timer-display').textContent = '⏰';
-  document.getElementById('reveal-btn').classList.remove('hidden');
+  document.getElementById('reveal-wrap').classList.remove('hidden');
   renderAnswers();
 }
 
@@ -1068,8 +1137,8 @@ function revealResult() {
   document.getElementById('reveal-answer-text').innerHTML =
     track.titre + (cat ? '<br><small style="font-size:1rem;color:var(--muted)">'+cat.icon+' '+cat.label+'</small>' : '');
   document.getElementById('answer-display').classList.remove('hidden');
-  document.getElementById('reveal-btn').classList.add('hidden');
-  document.getElementById('next-btn').classList.remove('hidden');
+  document.getElementById('reveal-wrap').classList.add('hidden');
+  document.getElementById('next-wrap').classList.remove('hidden');
 }
 
 function nextRound() {
