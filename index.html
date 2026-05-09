@@ -150,7 +150,8 @@
     .track-id{color:var(--muted);font-size:.8rem;font-family:monospace}
 
     /* MODAL */
-    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+    .modal-overlay:not(.hidden){display:flex;animation:fadeIn .2s ease}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
     .modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:28px;width:100%;max-width:560px;animation:popIn .2s ease;max-height:90vh;overflow-y:auto}
     .modal h3{font-family:'Bangers',cursive;font-size:1.8rem;letter-spacing:2px;color:var(--accent);margin-bottom:20px}
@@ -229,9 +230,9 @@
 </div>
 
 <!-- Bouton d'activation audio (nécessaire pour contourner la politique autoplay des navigateurs) -->
-<div id="audio-gate" style="position:fixed;inset:0;background:rgba(7,11,20,.92);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px">
+<div id="audio-gate" style="position:fixed;inset:0;background:rgba(7,11,20,.96);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px">
   <div style="font-family:'Bangers',cursive;font-size:3rem;letter-spacing:3px;background:linear-gradient(135deg,#00d4ff,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">🎵 BLIND TEST</div>
-  <p style="color:#64748b;font-size:1rem;font-family:'Nunito',sans-serif">Cliquez pour activer le son</p>
+  <p style="color:#64748b;font-size:1rem;font-family:'Nunito',sans-serif;text-align:center;max-width:300px">Cliquez pour activer le son et accéder au salon</p>
   <button onclick="unlockAudio()" style="font-family:'Nunito',sans-serif;font-size:1.3rem;font-weight:900;background:linear-gradient(135deg,#ffd93d,#ff6b6b);color:#000;border:none;border-radius:14px;padding:18px 48px;cursor:pointer;box-shadow:0 0 30px rgba(255,217,61,.4)">
     🔊 Démarrer
   </button>
