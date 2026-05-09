@@ -170,7 +170,23 @@
   </style>
 </head>
 <body>
-<div id="yt-player-container"><div id="yt-player"></div></div>
+<!-- Player YouTube visible mais miniaturisé - nécessaire pour l'autoplay -->
+<div id="yt-player-container" style="position:fixed;bottom:12px;right:12px;z-index:50;border-radius:10px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.5);display:none">
+  <div id="yt-player"></div>
+  <div style="position:absolute;inset:0;background:rgba(7,11,20,.85);display:flex;align-items:center;justify-content:center;pointer-events:none">
+    <span style="font-size:1.5rem">🎵</span>
+  </div>
+</div>
+
+<!-- Bouton d'activation audio (nécessaire pour contourner la politique autoplay des navigateurs) -->
+<div id="audio-gate" style="position:fixed;inset:0;background:rgba(7,11,20,.92);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px">
+  <div style="font-family:'Bangers',cursive;font-size:3rem;letter-spacing:3px;background:linear-gradient(135deg,#00d4ff,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">🎵 BLIND TEST</div>
+  <p style="color:#64748b;font-size:1rem;font-family:'Nunito',sans-serif">Cliquez pour activer le son</p>
+  <button onclick="unlockAudio()" style="font-family:'Nunito',sans-serif;font-size:1.3rem;font-weight:900;background:linear-gradient(135deg,#ffd93d,#ff6b6b);color:#000;border:none;border-radius:14px;padding:18px 48px;cursor:pointer;box-shadow:0 0 30px rgba(255,217,61,.4)">
+    🔊 Démarrer
+  </button>
+</div>
+
 <div id="debug-bar"></div>
 
 <div class="container">
@@ -365,7 +381,6 @@ const CATEGORIES = [
   { id:"classique",  label:"Classique",          icon:"🎻" },
   { id:"annees80",   label:"Années 80-90",       icon:"📼" },
   { id:"francais",   label:"Chanson Française",  icon:"🇫🇷" },
-  { id:"kids",       label:"Pour enfants",       icon:"🧸" },
   { id:"kpop",       label:"K-Pop / J-Pop",      icon:"🎤" },
   { id:"comedie",    label:"Comédies Musicales", icon:"🎭" },
   { id:"animaux",    label:"Cris d'Animaux",      icon:"🐾" },
@@ -600,26 +615,26 @@ const DEFAULT_TRACKS = [
   {titre:"SFR Sport - Ligue 1",        categorie:"sport", id:"VdE1ieAEPjM", start:0, choix:["Ligue 1","Premier League","La Liga","Serie A"]},
 
   // ══ 🧸 ENFANTS ══
-  {titre:"Dora l'Exploratrice",        categorie:"kids", id:"4oRWaAGBGSQ", start:0, choix:["Dora l'Exploratrice","Peppa Pig","Bluey","Miraculous"]},
-  {titre:"Cocomelon",                  categorie:"kids", id:"BQO11A7CALY", start:0, choix:["Cocomelon","Paw Patrol","Bluey","PJ Masks"]},
-  {titre:"Peppa Pig",                  categorie:"kids", id:"rCZnLtaHJOI", start:0, choix:["Peppa Pig","Bluey","Ben & Holly","Bing"]},
-  {titre:"Paw Patrol",                 categorie:"kids", id:"5BF9gqm0hPI", start:0, choix:["Paw Patrol","Dino Ranch","Abby Hatcher","Ricky Zoom"]},
-  {titre:"Miraculous Ladybug",         categorie:"kids", id:"9lEHbm6rBwY", start:0, choix:["Miraculous Ladybug","Winx Club","W.I.T.C.H.","Totally Spies"]},
-  {titre:"Bluey",                      categorie:"kids", id:"mYHWJCCWGwU", start:0, choix:["Bluey","Peppa Pig","Hey Duggee","Ben & Holly"]},
-  {titre:"Les Filles de Totally Spies",categorie:"kids", id:"msCxSMnHMbQ", start:0, choix:["Totally Spies","Winx Club","Miraculous","Jem"]},
-  {titre:"Teletubbies",                categorie:"kids", id:"aBU5MibpFcA", start:0, choix:["Teletubbies","Boohbah","In the Night Garden","Fimbles"]},
-  {titre:"Barney le Dinosaure",        categorie:"kids", id:"c9zHRfN77ko", start:0, choix:["Barney","Dino","Rex","Ptéranodon"]},
-  {titre:"Dragon Tales",               categorie:"kids", id:"Vp4aFNPJ05k", start:0, choix:["Dragon Tales","How to Train Your Dragon","Dragon Ball","Dragons - Race to the Edge"]},
-  {titre:"Bob le Bricoleur",           categorie:"kids", id:"xtpH3QcCmpQ", start:0, choix:["Bob le Bricoleur","Fireman Sam","Postman Pat","Thomas le Petit Train"]},
-  {titre:"Thomas le Train",            categorie:"kids", id:"LBRknRfkz3E", start:0, choix:["Thomas le Train","Bob le Bricoleur","Chuggington","Tayo le Petit Bus"]},
-  {titre:"In the Night Garden",        categorie:"kids", id:"VrROq7R5Maw", start:0, choix:["In the Night Garden","Teletubbies","Fimbles","Boohbah"]},
-  {titre:"Masha et Michka",            categorie:"kids", id:"Ei1QkPT8YC0", start:0, choix:["Masha et Michka","Petit Ours Brun","Ourson Paddington","Baloo"]},
-  {titre:"Petit Ours Brun",            categorie:"kids", id:"2k4_LHDGfTs", start:0, choix:["Petit Ours Brun","Masha et Michka","Kirikou","T'choupi"]},
-  {titre:"T'choupi",                   categorie:"kids", id:"gXFLPBZsiBk", start:0, choix:["T'choupi","Petit Ours Brun","Oui-Oui","Les Octonautes"]},
-  {titre:"Les Octonautes",             categorie:"kids", id:"JXoMqaJLOMU", start:0, choix:["Les Octonautes","T'choupi","Umizoomi","Blaze"]},
-  {titre:"Bluey - Bus Stop",           categorie:"kids", id:"zvCl0QLHM3A", start:0, choix:["Bluey","Peppa Pig","Hey Duggee","Numberblocks"]},
-  {titre:"Hey Duggee",                 categorie:"kids", id:"KKpOwNsR5_Q", start:0, choix:["Hey Duggee","Bluey","Peppa Pig","Bing"]},
-  {titre:"Bing",                       categorie:"kids", id:"OolQHg_GHZA", start:0, choix:["Bing","Bluey","Peppa Pig","Ben & Holly"]},
+  {titre:"Dora l'Exploratrice",        categorie:"dessinanim", id:"4oRWaAGBGSQ", start:0, choix:["Dora l'Exploratrice","Peppa Pig","Bluey","Miraculous"]},
+  {titre:"Cocomelon",                  categorie:"dessinanim", id:"BQO11A7CALY", start:0, choix:["Cocomelon","Paw Patrol","Bluey","PJ Masks"]},
+  {titre:"Peppa Pig",                  categorie:"dessinanim", id:"rCZnLtaHJOI", start:0, choix:["Peppa Pig","Bluey","Ben & Holly","Bing"]},
+  {titre:"Paw Patrol",                 categorie:"dessinanim", id:"5BF9gqm0hPI", start:0, choix:["Paw Patrol","Dino Ranch","Abby Hatcher","Ricky Zoom"]},
+  {titre:"Miraculous Ladybug",         categorie:"dessinanim", id:"9lEHbm6rBwY", start:0, choix:["Miraculous Ladybug","Winx Club","W.I.T.C.H.","Totally Spies"]},
+  {titre:"Bluey",                      categorie:"dessinanim", id:"mYHWJCCWGwU", start:0, choix:["Bluey","Peppa Pig","Hey Duggee","Ben & Holly"]},
+  {titre:"Les Filles de Totally Spies",categorie:"dessinanim", id:"msCxSMnHMbQ", start:0, choix:["Totally Spies","Winx Club","Miraculous","Jem"]},
+  {titre:"Teletubbies",                categorie:"dessinanim", id:"aBU5MibpFcA", start:0, choix:["Teletubbies","Boohbah","In the Night Garden","Fimbles"]},
+  {titre:"Barney le Dinosaure",        categorie:"dessinanim", id:"c9zHRfN77ko", start:0, choix:["Barney","Dino","Rex","Ptéranodon"]},
+  {titre:"Dragon Tales",               categorie:"dessinanim", id:"Vp4aFNPJ05k", start:0, choix:["Dragon Tales","How to Train Your Dragon","Dragon Ball","Dragons - Race to the Edge"]},
+  {titre:"Bob le Bricoleur",           categorie:"dessinanim", id:"xtpH3QcCmpQ", start:0, choix:["Bob le Bricoleur","Fireman Sam","Postman Pat","Thomas le Petit Train"]},
+  {titre:"Thomas le Train",            categorie:"dessinanim", id:"LBRknRfkz3E", start:0, choix:["Thomas le Train","Bob le Bricoleur","Chuggington","Tayo le Petit Bus"]},
+  {titre:"In the Night Garden",        categorie:"dessinanim", id:"VrROq7R5Maw", start:0, choix:["In the Night Garden","Teletubbies","Fimbles","Boohbah"]},
+  {titre:"Masha et Michka",            categorie:"dessinanim", id:"Ei1QkPT8YC0", start:0, choix:["Masha et Michka","Petit Ours Brun","Ourson Paddington","Baloo"]},
+  {titre:"Petit Ours Brun",            categorie:"dessinanim", id:"2k4_LHDGfTs", start:0, choix:["Petit Ours Brun","Masha et Michka","Kirikou","T'choupi"]},
+  {titre:"T'choupi",                   categorie:"dessinanim", id:"gXFLPBZsiBk", start:0, choix:["T'choupi","Petit Ours Brun","Oui-Oui","Les Octonautes"]},
+  {titre:"Les Octonautes",             categorie:"dessinanim", id:"JXoMqaJLOMU", start:0, choix:["Les Octonautes","T'choupi","Umizoomi","Blaze"]},
+  {titre:"Bluey - Bus Stop",           categorie:"dessinanim", id:"zvCl0QLHM3A", start:0, choix:["Bluey","Peppa Pig","Hey Duggee","Numberblocks"]},
+  {titre:"Hey Duggee",                 categorie:"dessinanim", id:"KKpOwNsR5_Q", start:0, choix:["Hey Duggee","Bluey","Peppa Pig","Bing"]},
+  {titre:"Bing",                       categorie:"dessinanim", id:"OolQHg_GHZA", start:0, choix:["Bing","Bluey","Peppa Pig","Ben & Holly"]},
 
   // ══ 🎤 K-POP / J-POP ══
   {titre:"Dynamite - BTS",             categorie:"kpop", id:"gdZLi9oWNZg", start:0, choix:["BTS","BLACKPINK","EXO","TWICE"]},
@@ -764,22 +779,50 @@ function initQR() {
 }
 window.addEventListener('load', initQR);
 
-/* ── YOUTUBE ── */
+/* ── YOUTUBE + UNLOCK AUDIO ── */
+var audioUnlocked = false;
+
+function unlockAudio() {
+  document.getElementById('audio-gate').style.display = 'none';
+  audioUnlocked = true;
+  // Créer le player ICI, après interaction utilisateur → autoplay autorisé
+  initYTPlayer();
+}
+
+function initYTPlayer() {
+  player = new YT.Player('yt-player', {
+    height: '80',
+    width:  '140',
+    playerVars: { autoplay: 1, controls: 0, mute: 0 },
+    events: {
+      onReady: function(e) {
+        playerReady = true;
+        // Jouer puis mettre en pause pour "débloquer" le contexte audio
+        e.target.mute();
+        e.target.playVideo();
+        setTimeout(function() { e.target.stopVideo(); e.target.unMute(); }, 300);
+        dbg('YouTube OK');
+      }
+    }
+  });
+}
+
 (function(){
   var s = document.createElement('script');
   s.src = "https://www.youtube.com/iframe_api";
   document.head.appendChild(s);
 })();
+
+// Appelé automatiquement par l'API YouTube quand elle est prête
 function onYouTubeIframeAPIReady() {
-  player = new YT.Player('yt-player', {
-    height:'1', width:'1',
-    events:{ onReady: () => { playerReady = true; dbg('YouTube OK'); } }
-  });
+  // On attend que l'utilisateur clique "Démarrer" - ne rien faire ici
+  dbg('YouTube API prête - attente interaction');
 }
+
 function safeLoadVideo(videoId, startSeconds) {
-  // Offset aléatoire de 0 à 8 secondes pour varier le point d'entrée
   var offset = Math.floor(Math.random() * 8);
   var finalStart = (startSeconds || 0) + offset;
+  document.getElementById('yt-player-container').style.display = 'block';
   var tryLoad = function() {
     if (playerReady && player && player.loadVideoById) {
       player.loadVideoById({ videoId: videoId, startSeconds: finalStart });
@@ -1012,6 +1055,7 @@ function loadTrack() {
 
 function stopAnswering() {
   if (playerReady && player) player.stopVideo();
+  document.getElementById('yt-player-container').style.display = 'none';
   db.ref('gameState').update({ accepting: false });
   document.getElementById('timer-display').textContent = '⏰';
   document.getElementById('reveal-btn').classList.remove('hidden');
