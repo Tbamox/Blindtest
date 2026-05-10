@@ -160,8 +160,8 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 #audio-gate p{color:var(--muted);font-size:1rem;text-align:center}
 #audio-gate button{font-family:'Nunito',sans-serif;font-size:1.4rem;font-weight:900;background:linear-gradient(135deg,#ffd93d,#ff6b6b);color:#000;border:none;border-radius:14px;padding:20px 52px;cursor:pointer;box-shadow:0 0 40px rgba(255,217,61,.4)}
 
-/* HIDDEN YT */
-#yt-player-wrap{position:fixed;bottom:12px;right:12px;z-index:50;border-radius:10px;overflow:hidden;display:none;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+/* HIDDEN YT - invisible mais audio actif */
+#yt-player-wrap{position:fixed;bottom:-9999px;right:-9999px;width:1px;height:1px;overflow:hidden;pointer-events:none;opacity:0}
 
 .hidden{display:none!important}
 @media(max-width:700px){.game-layout{grid-template-columns:1fr}.score-sidebar{position:static}}
@@ -414,7 +414,6 @@ function onYouTubeIframeAPIReady() {
 function safeLoadVideo(videoId, startSeconds) {
   var offset=Math.floor(Math.random()*8);
   var t=(startSeconds||0)+offset;
-  document.getElementById('yt-player-wrap').style.display='block';
   var try_=function(){
     if(playerReady && player && player.loadVideoById){
       player.loadVideoById({videoId:videoId, startSeconds:t});
@@ -633,7 +632,6 @@ function loadTrack() {
 
 function stopAnswering() {
   if(playerReady&&player) player.stopVideo();
-  document.getElementById('yt-player-wrap').style.display='none';
   db.ref('gameState').update({accepting:false});
   document.getElementById('timer-display').textContent='⏰';
   document.getElementById('reveal-wrap').classList.remove('hidden');
