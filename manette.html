@@ -1,1092 +1,752 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>Blind Test — Salon</title>
-<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#070b14;--surface:#0f1624;--border:#1e2d4a;--accent:#00d4ff;--accent2:#ff6b6b;--accent3:#ffd93d;--purple:#a855f7;--green:#22c55e;--text:#e2e8f0;--muted:#64748b;--radius:14px}
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;min-height:100vh}
-body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
-.container{max-width:1100px;margin:0 auto;padding:24px 20px 80px;position:relative;z-index:1}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Blind Test — Manette</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+  <style> 
+    :root {
+      --bg:       #07090f;
+      --surface:  #0e1420;
+      --card:     #141d2e;
+      --border:   #1e2d4a;
+      --accent:   #00d4ff;
+      --green:    #22c55e;
+      --red:      #ef4444;
+      --yellow:   #fbbf24;
+      --purple:   #a855f7;
+      --text:     #e2e8f0;
+      --muted:    #64748b;
+      --radius:   18px;
+    }
 
-/* NAV */
-.nav-tabs{display:flex;gap:8px;margin-bottom:28px;border-bottom:1px solid var(--border)}
-.nav-tab{font-family:'Nunito',sans-serif;font-size:.95rem;font-weight:800;padding:10px 22px;border:none;border-radius:10px 10px 0 0;background:transparent;color:var(--muted);cursor:pointer;transition:all .2s;border-bottom:3px solid transparent;margin-bottom:-1px}
-.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(0,212,255,.06)}
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-/* HEADER */
-.site-header{text-align:center;margin-bottom:28px}
-.site-header h1{font-family:'Bangers',cursive;font-size:clamp(2.4rem,6vw,3.8rem);letter-spacing:3px;background:linear-gradient(135deg,var(--accent),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.site-header p{color:var(--muted);margin-top:6px;font-size:.95rem}
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Nunito', sans-serif;
+      overflow-x: hidden;
+    }
 
-/* CARD */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px}
-.card-title{font-size:.9rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:16px}
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(0,212,255,0.06) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+      z-index: 0;
+    }
 
-/* QR */
-.qr-wrap{display:flex;flex-direction:column;align-items:center;gap:12px}
-#qrcode{background:white;padding:14px;border-radius:10px;display:inline-block}
-.qr-url{font-size:.8rem;color:var(--muted);word-break:break-all;text-align:center}
+    .screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 20px;
+      z-index: 1;
+      overflow-y: auto;
+    }
+    .screen.hidden { display: none !important; }
 
-/* PLAYERS */
-#player-list{list-style:none;display:flex;flex-wrap:wrap;gap:10px}
-#player-list li{background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.2);border-radius:50px;padding:8px 18px;font-size:1rem;font-weight:700;color:var(--accent);animation:popIn .3s ease}
-.no-players{color:var(--muted);font-style:italic}
-@keyframes popIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
-@keyframes slideIn{from{transform:translateX(-14px);opacity:0}to{transform:translateX(0);opacity:1}}
-@keyframes pulse{to{transform:scale(1.06)}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    .big-title {
+      font-family: 'Bangers', cursive;
+      font-size: 2.8rem;
+      letter-spacing: 3px;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .sub {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 28px;
+      text-align: center;
+    }
 
-/* CATEGORIES */
-.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px;margin-bottom:20px}
-.cat-chip{display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 8px;border-radius:12px;border:2px solid var(--border);background:var(--bg);cursor:pointer;font-family:'Nunito',sans-serif;font-size:.85rem;font-weight:700;color:var(--muted);transition:all .2s;text-align:center;user-select:none}
-.cat-chip .ci{font-size:1.7rem}
-.cat-chip .cc{font-size:.7rem;opacity:.7}
-.cat-chip:hover{border-color:var(--accent);color:var(--text)}
-.cat-chip.selected{border-color:var(--accent);background:rgba(0,212,255,.08);color:var(--accent)}
+    /* ── Avatar ── */
+    .avatar-grid {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+    .av-opt {
+      font-size: 2rem;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--card);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform .2s, border-color .2s, background .2s;
+      user-select: none;
+    }
+    .av-opt.selected {
+      border-color: var(--accent);
+      background: rgba(0,212,255,0.12);
+      transform: scale(1.15);
+    }
 
-/* OPTIONS */
-.options-row{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-bottom:16px}
-.options-row label{font-weight:700}
-.num-input{font-size:1.1rem;width:70px;border-radius:8px;background:var(--bg);color:white;border:1px solid var(--border);padding:8px 10px;font-family:'Nunito',sans-serif;font-weight:700;text-align:center}
-.pool-info{font-size:.9rem;color:var(--muted);font-style:italic}
-.pool-info b{color:var(--accent3)}
+    /* ── Input ── */
+    .field {
+      width: 100%;
+      max-width: 360px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 16px 18px;
+      border-radius: 12px;
+      background: var(--card);
+      color: var(--text);
+      border: 2px solid var(--border);
+      outline: none;
+      margin-bottom: 14px;
+      transition: border-color .2s;
+      -webkit-appearance: none;
+    }
+    .field:focus { border-color: var(--accent); }
+    .field::placeholder { color: var(--muted); font-weight: 600; }
 
-/* BUTTONS */
-.btn{display:inline-flex;align-items:center;gap:6px;font-family:'Nunito',sans-serif;font-size:1rem;font-weight:800;border:none;border-radius:10px;padding:12px 24px;cursor:pointer;transition:transform .15s,filter .15s}
-.btn:hover{transform:translateY(-2px);filter:brightness(1.1)}
-.btn:active{transform:translateY(0)}
-.btn-danger{background:linear-gradient(135deg,var(--accent2),#cc2200);color:#fff}
-.btn-reveal{background:linear-gradient(135deg,var(--green),#16a34a);color:#fff}
-.btn-launch{background:linear-gradient(135deg,#ffd93d,#ff6b6b);color:#000;font-size:1.2rem;padding:16px 36px;border-radius:12px;box-shadow:0 0 24px rgba(255,217,61,.3)}
-.btn-point{background:var(--green);color:#fff;font-size:.85rem;padding:8px 14px;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:800;border:none;cursor:pointer}
-.btn-sm{font-size:.8rem;padding:6px 12px;border-radius:7px}
-.btn-edit{background:rgba(168,85,247,.2);color:var(--purple);border:1px solid var(--purple)}
-.btn-add{background:rgba(34,197,94,.15);color:var(--green);border:1px solid var(--green)}
-.btn-del{background:rgba(239,68,68,.15);color:var(--accent2);border:1px solid var(--accent2)}
-.btn-primary{background:linear-gradient(135deg,var(--accent),#0099cc);color:#000}
-.controls{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:16px 0}
+    /* ── Buttons ── */
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      max-width: 360px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 900;
+      padding: 18px;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      transition: transform .15s, filter .15s, opacity .15s;
+    }
+    .btn:active { transform: scale(0.96); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn:disabled:active { transform: none; }
 
-/* GAME LAYOUT */
-.game-layout{display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start}
-.score-sidebar{position:sticky;top:16px}
-.score-sidebar .card{padding:16px}
-.score-sidebar .lb-item{padding:9px 10px}
-.game-main{}
+    .btn-join   { background: linear-gradient(135deg, var(--accent), #0099cc); color: #000; margin-bottom: 0; }
+    .btn-send   { background: linear-gradient(135deg, var(--green), #16a34a); color: #fff; margin-bottom: 14px; }
+    .btn-qcm    { background: linear-gradient(135deg, var(--purple), #7c3aed); color: #fff; margin-bottom: 14px; }
+    .btn-back   { background: var(--card); color: var(--muted); border: 1px solid var(--border); padding: 12px; font-size: 0.9rem; max-width: 160px; }
+    .btn-choice {
+      background: var(--card);
+      border: 2px solid var(--border);
+      color: var(--text);
+      font-size: 1rem;
+      padding: 20px 16px;
+      border-radius: 14px;
+      margin-bottom: 12px;
+      transition: border-color .2s, background .2s, transform .15s;
+    }
+    .btn-choice:active { transform: scale(0.97); }
+    .btn-choice.correct { border-color: var(--green); background: rgba(34,197,94,0.12); color: var(--green); }
+    .btn-choice.wrong   { border-color: var(--red);   background: rgba(239,68,68,0.10);  color: var(--red); }
 
-/* TIMER */
-.timer-wrap{text-align:center;margin:16px 0}
-#timer-display{font-family:'Bangers',cursive;font-size:5rem;letter-spacing:4px;color:var(--accent);line-height:1}
-#timer-display.danger{color:var(--accent2);animation:pulse .5s infinite alternate}
-.timer-bar-bg{background:var(--border);border-radius:99px;height:10px;margin:10px 0;overflow:hidden}
-#timer-bar{height:100%;background:linear-gradient(90deg,var(--green),var(--accent));border-radius:99px;transition:width 1s linear}
-#timer-bar.danger{background:linear-gradient(90deg,#ff4444,var(--accent2))}
+    /* ── Score ── */
+    .score-badge {
+      background: rgba(0,212,255,0.1);
+      border: 1px solid rgba(0,212,255,0.25);
+      border-radius: 50px;
+      padding: 6px 18px;
+      font-family: 'Bangers', cursive;
+      font-size: 1.4rem;
+      color: var(--accent);
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
 
-/* QUESTION COUNTER */
-.question-counter{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:12px}
-.counter-dots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
-.counter-dot{width:11px;height:11px;border-radius:50%;background:var(--border);transition:background .4s,transform .3s}
-.counter-dot.done{background:var(--muted)}
-.counter-dot.active{background:var(--accent3);transform:scale(1.4);box-shadow:0 0 8px rgba(255,217,61,.5)}
-.counter-label{font-family:'Bangers',cursive;font-size:1.6rem;letter-spacing:2px;color:var(--accent3)}
+    .player-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 28px;
+    }
+    .player-avatar { font-size: 3rem; }
+    .player-name   { font-size: 1.3rem; font-weight: 900; }
 
-/* CAT BADGE */
-.cat-badge-wrap{display:flex;justify-content:center;margin-bottom:4px}
-.cat-badge{display:inline-flex;align-items:center;gap:7px;font-family:'Nunito',sans-serif;font-size:1rem;font-weight:800;padding:7px 20px;border-radius:50px;background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.35);color:var(--purple)}
+    .status-card {
+      width: 100%;
+      max-width: 360px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .status-icon  { font-size: 3.5rem; margin-bottom: 12px; }
+    .status-label { font-size: 1rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
 
-/* ANSWERS */
-.section-title{font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:12px}
-.answer-card{display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.04);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:10px;padding:12px 16px;margin-bottom:10px;animation:slideIn .25s ease}
-.answer-card .pname{font-weight:800;font-size:1rem}
-.answer-card .atext{color:var(--accent3);font-style:italic;margin-top:2px;font-size:.95rem}
-.answer-card .pending{color:var(--muted);font-style:italic;font-size:.9rem}
-.badge-auto{font-size:.8rem;color:var(--muted);font-style:italic}
+    /* ── Feedback ── */
+    #feedback {
+      width: 100%;
+      max-width: 360px;
+      min-height: 48px;
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 800;
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 14px;
+      transition: all .3s;
+    }
+    #feedback.fb-ok   { background: rgba(34,197,94,0.12);  color: var(--green);  border: 1px solid rgba(34,197,94,0.3); }
+    #feedback.fb-err  { background: rgba(239,68,68,0.10);  color: var(--red);    border: 1px solid rgba(239,68,68,0.3); }
+    #feedback.fb-sent { background: rgba(0,212,255,0.08);  color: var(--accent); border: 1px solid rgba(0,212,255,0.25); }
+    #feedback.hidden  { display: none; }
 
-/* ANSWER REVEAL */
-#answer-display{text-align:center;padding:20px;border-radius:var(--radius);background:rgba(34,197,94,.1);border:2px solid var(--green);margin:12px 0;animation:popIn .4s ease}
-.reveal-label{font-size:.85rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
-.reveal-answer{font-family:'Bangers',cursive;font-size:2.6rem;color:var(--green);letter-spacing:2px;line-height:1.1}
+    /* ── Divider ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin: 4px 0 14px;
+      width: 100%;
+      max-width: 360px;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
 
-/* NEXT BTN */
-.btn-next-big{display:flex;align-items:center;justify-content:center;width:100%;font-family:'Bangers',cursive;font-size:2rem;letter-spacing:3px;padding:22px;border:none;border-radius:16px;cursor:pointer;background:linear-gradient(135deg,var(--purple),#7c3aed);color:#fff;box-shadow:0 0 30px rgba(168,85,247,.4);transition:transform .15s,filter .15s;animation:popIn .3s ease;margin-top:4px}
-.btn-next-big:hover{transform:translateY(-3px);filter:brightness(1.1)}
+    /* ── Dots ── */
+    .dots span {
+      display: inline-block;
+      width: 8px; height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      margin: 0 3px;
+      animation: bounce 1.2s infinite;
+    }
+    .dots span:nth-child(2) { animation-delay: .2s; }
+    .dots span:nth-child(3) { animation-delay: .4s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); opacity: .4; }
+      40% { transform: translateY(-8px); opacity: 1; }
+    }
 
-/* LEADERBOARD */
-#leaderboard-list,#final-leaderboard{list-style:none}
-.lb-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,.03);border:1px solid var(--border)}
-.lb-item.rank-1{border-color:gold;background:rgba(255,215,0,.06)}
-.lb-item.rank-2{border-color:silver;background:rgba(192,192,192,.06)}
-.lb-item.rank-3{border-color:#cd7f32;background:rgba(205,127,50,.06)}
-.lb-rank{font-family:'Bangers',cursive;font-size:1.3rem;width:28px;text-align:center}
-.lb-name{flex:1;font-weight:800;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lb-score{font-family:'Bangers',cursive;font-size:1.3rem;color:var(--accent3)}
+    /* ── Reconnexion banner ── */
+    #reconnect-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, #ffd93d, #ff6b6b);
+      color: #000;
+      font-weight: 900;
+      text-align: center;
+      padding: 10px;
+      font-size: 0.95rem;
+      z-index: 200;
+      display: none;
+    }
 
-/* PODIUM */
-#podium-area{text-align:center;animation:popIn .5s ease}
-#podium-area h2{font-family:'Bangers',cursive;font-size:3.5rem;letter-spacing:3px;background:linear-gradient(135deg,gold,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.podium-grid{display:flex;justify-content:center;align-items:flex-end;gap:12px;margin:30px 0}
-.podium-step{display:flex;flex-direction:column;align-items:center;gap:8px}
-.podium-block{width:90px;border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:center;font-family:'Bangers',cursive;font-size:2.2rem}
-.podium-block.p1{height:130px;background:linear-gradient(180deg,gold,#b8860b);color:#000}
-.podium-block.p2{height:95px;background:linear-gradient(180deg,silver,#808080);color:#000}
-.podium-block.p3{height:70px;background:linear-gradient(180deg,#cd7f32,#8b4513);color:#fff}
+    /* ── Game over ── */
+    .final-score {
+      font-family: 'Bangers', cursive;
+      font-size: 4rem;
+      color: var(--yellow);
+      letter-spacing: 3px;
+      line-height: 1;
+      margin: 12px 0 6px;
+    }
 
-/* EDITOR */
-.editor-cat-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
-.editor-cat-tab{font-family:'Nunito',sans-serif;font-weight:700;font-size:.85rem;padding:8px 14px;border-radius:50px;border:1px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;transition:all .2s}
-.editor-cat-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,.08)}
-.track-row{display:grid;grid-template-columns:1fr 110px auto;gap:8px;align-items:center;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;font-size:.9rem}
-.track-id{color:var(--muted);font-size:.8rem;font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-/* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
-.modal-overlay.open{display:flex;animation:fadeIn .2s ease}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:28px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;animation:popIn .2s ease}
-.modal h3{font-family:'Bangers',cursive;font-size:1.8rem;letter-spacing:2px;color:var(--accent);margin-bottom:20px}
-.form-row{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
-.form-row label{font-size:.85rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
-.form-input{font-family:'Nunito',sans-serif;font-size:1rem;font-weight:700;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:10px 14px;width:100%;transition:border-color .2s}
-.form-input:focus{outline:none;border-color:var(--accent)}
-.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
-.choix-row{display:flex;gap:8px;margin-bottom:8px;align-items:center}
-.choix-row input{flex:1}
-.choix-row small{font-size:.75rem;color:var(--accent2);white-space:nowrap}
-
-/* AUDIO GATE */
-#audio-gate{position:fixed;inset:0;background:rgba(7,11,20,.97);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px}
-#audio-gate h1{font-family:'Bangers',cursive;font-size:3.5rem;letter-spacing:4px;background:linear-gradient(135deg,var(--accent),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-#audio-gate p{color:var(--muted);font-size:1rem;text-align:center}
-#audio-gate button{font-family:'Nunito',sans-serif;font-size:1.4rem;font-weight:900;background:linear-gradient(135deg,#ffd93d,#ff6b6b);color:#000;border:none;border-radius:14px;padding:20px 52px;cursor:pointer;box-shadow:0 0 40px rgba(255,217,61,.4)}
-
-/* HIDDEN YT - invisible mais audio actif */
-#yt-player-wrap{position:fixed;bottom:-9999px;right:-9999px;width:1px;height:1px;overflow:hidden;pointer-events:none;opacity:0}
-
-.hidden{display:none!important}
-@media(max-width:700px){.game-layout{grid-template-columns:1fr}.score-sidebar{position:static}}
-</style>
+    @keyframes popIn {
+      from { transform: scale(0.75); opacity: 0; }
+      to   { transform: scale(1);    opacity: 1; }
+    }
+    .pop { animation: popIn .35s cubic-bezier(.17,.67,.38,1.3); }
+  </style>
 </head>
 <body>
 
-<!-- AUDIO GATE -->
-<div id="audio-gate">
-  <h1>🎵 BLIND TEST</h1>
-  <p>Cliquez pour activer le son et accéder au salon</p>
-  <button onclick="unlockAudio()">🔊 Démarrer</button>
+<div id="reconnect-banner">🔄 Reconnexion en cours…</div>
+
+<!-- ══ LOGIN ══ -->
+<div class="screen" id="screen-login">
+  <div class="big-title">🎵 BLIND TEST</div>
+  <div class="sub">Choisis ton avatar et ton pseudo</div>
+
+  <div class="avatar-grid" id="avatar-grid">
+    <div class="av-opt selected" onclick="selectAvatar(this)">🐱</div>
+    <div class="av-opt" onclick="selectAvatar(this)">🐶</div>
+    <div class="av-opt" onclick="selectAvatar(this)">🦊</div>
+    <div class="av-opt" onclick="selectAvatar(this)">🦁</div>
+    <div class="av-opt" onclick="selectAvatar(this)">🐸</div>
+    <div class="av-opt" onclick="selectAvatar(this)">🐼</div>
+    <div class="av-opt" onclick="selectAvatar(this)">🦄</div>
+    <div class="av-opt" onclick="selectAvatar(this)">🐙</div>
+  </div>
+
+  <input class="field" type="text" id="username" placeholder="Ton pseudo…" maxlength="18" autocomplete="off">
+  <button class="btn btn-join" onclick="joinGame()">Rejoindre 🎮</button>
+  <div id="login-error" style="color:var(--red); font-weight:700; margin-top:12px; min-height:20px;"></div>
 </div>
 
-<!-- YT Player caché -->
-<div id="yt-player-wrap"><div id="yt-player"></div></div>
-
-<div class="container">
-  <header class="site-header">
-    <h1>🎵 BLIND TEST</h1>
-    <p>Écran du salon — PC hôte</p>
-  </header>
-
-  <!-- NAV -->
-  <div class="nav-tabs" id="main-nav">
-    <button class="nav-tab active" onclick="switchTab('lobby')">🎮 Salon</button>
-    <button class="nav-tab" onclick="switchTab('editor')">✏️ Éditeur</button>
+<!-- ══ WAITING ══ -->
+<div class="screen hidden" id="screen-waiting">
+  <div class="player-header">
+    <div class="player-avatar" id="wait-avatar">🐱</div>
+    <div class="player-name"  id="wait-name">Joueur</div>
   </div>
-
-  <!-- ══ TAB LOBBY ══ -->
-  <div id="tab-lobby">
-    <div id="setup-area">
-      <div class="card">
-        <div class="card-title">📱 Scanner pour rejoindre</div>
-        <div class="qr-wrap">
-          <div id="qrcode"></div>
-          <span class="qr-url" id="qr-url-text"></span>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">👥 Joueurs connectés (<span id="player-count">0</span>)</div>
-        <ul id="player-list"><li class="no-players">En attente de joueurs…</li></ul>
-      </div>
-
-      <div id="game-options" class="card hidden">
-        <div class="card-title">🎯 Catégories</div>
-        <div class="cat-grid" id="cat-selector"><p style="color:var(--muted);font-style:italic;font-size:.9rem">Chargement…</p></div>
-        <div class="options-row">
-          <label for="nb-questions">Questions :</label>
-          <input type="number" id="nb-questions" value="5" min="1" max="30" class="num-input">
-          <span class="pool-info">Pool : <b id="pool-count">0</b> titres</span>
-        </div>
-        <div class="controls">
-          <button class="btn btn-danger" onclick="resetLobby()">🗑️ Vider le salon</button>
-          <button class="btn btn-launch" onclick="startGame()">🚀 Lancer la partie !</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- GAME -->
-    <div id="game-area" class="hidden">
-      <div class="game-layout">
-        <!-- Sidebar score -->
-        <aside class="score-sidebar">
-          <div class="card">
-            <div class="card-title">🏆 Classement</div>
-            <ul id="leaderboard-list"></ul>
-          </div>
-        </aside>
-
-        <!-- Contenu principal -->
-        <div class="game-main">
-          <div class="card" style="text-align:center">
-            <div class="question-counter">
-              <div class="counter-dots" id="counter-dots"></div>
-              <div class="counter-label" id="counter-label">Question 1 / 5</div>
-            </div>
-            <div class="cat-badge-wrap">
-              <div class="cat-badge" id="cat-badge"></div>
-            </div>
-            <div class="timer-wrap">
-              <div id="timer-display">12</div>
-              <div class="timer-bar-bg"><div id="timer-bar" style="width:100%"></div></div>
-            </div>
-            <div id="reveal-wrap" class="hidden" style="margin-top:14px">
-              <button class="btn btn-reveal" onclick="revealResult()">👁️ Révéler la réponse</button>
-            </div>
-          </div>
-
-          <div id="answer-display" class="hidden">
-            <div class="reveal-label">La réponse était…</div>
-            <div class="reveal-answer" id="reveal-answer-text"></div>
-          </div>
-
-          <div class="card">
-            <div class="section-title" id="answers-title">⏳ En attente…</div>
-            <div id="answers-feed"></div>
-          </div>
-
-          <div id="next-wrap" class="hidden">
-            <button class="btn-next-big" onclick="nextRound()">Suivant ➡️</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- PODIUM -->
-    <div id="podium-area" class="hidden">
-      <h2>🏆 FIN DU JEU !</h2>
-      <div class="podium-grid" id="podium-grid"></div>
-      <div class="card" style="margin-top:20px">
-        <div class="card-title">Classement final</div>
-        <ul id="final-leaderboard"></ul>
-      </div>
-      <div class="controls" style="margin-top:24px">
-        <button class="btn btn-launch" onclick="location.reload()">🔄 Rejouer</button>
-      </div>
+  <div class="status-card">
+    <div class="status-icon">⏳</div>
+    <div class="status-label">En attente de la partie…</div>
+    <div class="dots" style="margin-top:14px;">
+      <span></span><span></span><span></span>
     </div>
   </div>
-
-  <!-- ══ TAB EDITEUR ══ -->
-  <div id="tab-editor" class="hidden">
-    <div class="card">
-      <div class="card-title">✏️ Gérer les questions</div>
-      <div class="editor-cat-tabs" id="editor-cat-tabs"></div>
-      <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
-        <button class="btn btn-sm btn-add" onclick="openAddModal()">＋ Ajouter un titre</button>
-      </div>
-      <div id="editor-tracks-list"></div>
-    </div>
-  </div>
+  <div class="sub">L'hôte va lancer la musique !</div>
 </div>
 
-<!-- MODAL -->
-<div class="modal-overlay" id="modal-overlay" onclick="closeModalOnOverlay(event)">
-  <div class="modal">
-    <h3 id="modal-title">Ajouter un titre</h3>
-    <div class="form-row">
-      <label>Catégorie</label>
-      <select class="form-input" id="m-cat"></select>
-    </div>
-    <div class="form-row">
-      <label>Titre (réponse correcte)</label>
-      <input class="form-input" type="text" id="m-titre" placeholder="Ex: Le Roi Lion">
-    </div>
-    <div class="form-row">
-      <label>YouTube Video ID</label>
-      <input class="form-input" type="text" id="m-ytid" placeholder="Ex: 08pZpY_mPto">
-      <small style="color:var(--muted);font-size:.8rem">L'ID se trouve après ?v= dans l'URL YouTube</small>
-    </div>
-    <div class="form-row">
-      <label>Démarrer à (secondes)</label>
-      <input class="form-input" type="number" id="m-start" value="0" min="0">
-    </div>
-    <div class="form-row">
-      <label>3 mauvaises réponses QCM</label>
-      <div class="choix-row"><input class="form-input" type="text" id="m-c1" placeholder="Mauvaise réponse 1"><small>faux</small></div>
-      <div class="choix-row"><input class="form-input" type="text" id="m-c2" placeholder="Mauvaise réponse 2"><small>faux</small></div>
-      <div class="choix-row"><input class="form-input" type="text" id="m-c3" placeholder="Mauvaise réponse 3"><small>faux</small></div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-danger btn-sm" onclick="closeModal()">Annuler</button>
-      <button class="btn btn-primary btn-sm" onclick="saveTrack()">💾 Sauvegarder</button>
-    </div>
+<!-- ══ JEU ══ -->
+<div class="screen hidden" id="screen-game">
+  <div class="player-header">
+    <div class="player-avatar" id="game-avatar">🐱</div>
+    <div class="player-name"  id="game-name">Joueur</div>
+    <div class="score-badge"  id="game-score">0 pt</div>
   </div>
+
+  <div id="free-zone" style="width:100%; max-width:360px; display:flex; flex-direction:column; align-items:center;">
+    <input class="field" type="text" id="answer-input" placeholder="Ta réponse…" autocomplete="off" maxlength="60">
+    <button class="btn btn-send" id="send-btn" onclick="sendAnswer(false)">🚀 VALIDER</button>
+    <div class="divider">ou</div>
+    <button class="btn btn-qcm" onclick="showQCM()">🤔 Je ne sais pas…</button>
+  </div>
+
+  <div id="qcm-zone" style="width:100%; max-width:360px; display:none; flex-direction:column; align-items:center;">
+    <p style="font-weight:800; font-size:1.05rem; margin-bottom:16px; color:var(--muted); text-transform:uppercase; letter-spacing:1px;">Choisis une réponse</p>
+    <div id="qcm-buttons" style="width:100%;"></div>
+    <button class="btn btn-back" onclick="hideQCM()" style="margin-top:8px;">← Retour</button>
+  </div>
+
+  <div id="feedback" class="hidden"></div>
 </div>
 
-<!-- Scripts APRÈS le HTML -->
-<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- ══ TEMPS ÉCOULÉ ══ -->
+<div class="screen hidden" id="screen-timeup">
+  <div class="status-card pop">
+    <div class="status-icon">⏰</div>
+    <div class="status-label">Temps écoulé !</div>
+    <p style="color:var(--muted); margin-top:10px; font-size:0.95rem;">L'hôte va révéler la réponse…</p>
+  </div>
+  <div class="score-badge" id="timeup-score">0 pt</div>
+</div>
+
+<!-- ══ FIN DE JEU ══ -->
+<div class="screen hidden" id="screen-gameover">
+  <div class="big-title">🏆 TERMINÉ !</div>
+  <div class="status-card pop" style="margin-top:20px;">
+    <div class="player-avatar" id="end-avatar" style="font-size:3rem; margin-bottom:10px;">🐱</div>
+    <div class="player-name"   id="end-name" style="margin-bottom:6px;">Joueur</div>
+    <div class="sub">Ton score final :</div>
+    <div class="final-score" id="end-score">0 pt</div>
+  </div>
+  <button class="btn btn-join" onclick="clearSessionAndReload()" style="margin-top:20px; max-width:280px;">🔄 Rejouer</button>
+</div>
+
 <script>
-// ═══════════════════════════════════════
-// FIREBASE
-// ═══════════════════════════════════════
-firebase.initializeApp({
-  apiKey:"AIzaSyC18xshyF3ShbjesR5NsjdmBfAiBaP36BE",
-  authDomain:"blindtestfamille.firebaseapp.com",
-  databaseURL:"https://blindtestfamille-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId:"blindtestfamille",
-  storageBucket:"blindtestfamille.firebasestorage.app",
-  messagingSenderId:"319100843512",
-  appId:"1:319100843512:web:5fb89272cd2131f350920d"
-});
-var db = firebase.database();
+/* ─────────────────────────────────────────
+   FIREBASE
+───────────────────────────────────────── */
+const firebaseConfig = {
+  apiKey: "AIzaSyC18xshyF3ShbjesR5NsjdmBfAiBaP36BE",
+  authDomain: "blindtestfamille.firebaseapp.com",
+  databaseURL: "https://blindtestfamille-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "blindtestfamille",
+  storageBucket: "blindtestfamille.firebasestorage.app",
+  messagingSenderId: "319100843512",
+  appId: "1:319100843512:web:5fb89272cd2131f350920d"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-// ═══════════════════════════════════════
-// CATÉGORIES
-// ═══════════════════════════════════════
-var CATS = [
-  {id:"musique",    label:"Musique",           icon:"🎵"},
-  {id:"film",       label:"Films / Séries",    icon:"🎬"},
-  {id:"pub",        label:"Publicités",         icon:"📺"},
-  {id:"jv",         label:"Jeux Vidéo",         icon:"🎮"},
-  {id:"replique",   label:"Répliques",          icon:"💬"},
-  {id:"anime",      label:"Animés",             icon:"⛩️"},
-  {id:"dessinanim", label:"Dessins Animés",     icon:"🐭"},
-  {id:"disney",     label:"Disney",             icon:"🏰"},
-  {id:"sport",      label:"Sport",              icon:"⚽"},
-  {id:"classique",  label:"Classique",          icon:"🎻"},
-  {id:"annees80",   label:"Années 80-90",       icon:"📼"},
-  {id:"francais",   label:"Chanson Française",  icon:"🇫🇷"},
-  {id:"kpop",       label:"K-Pop / J-Pop",      icon:"🎤"},
-  {id:"comedie",    label:"Comédies Musicales", icon:"🎭"},
-  {id:"animaux",    label:"Cris d'Animaux",     icon:"🐾"},
-];
+/* ─────────────────────────────────────────
+   ÉTAT
+───────────────────────────────────────── */
+let myId     = null;
+let myName   = "";
+let myAvatar = "🐱";
+let myScore  = 0;
+let hasAnswered  = false;
+let currentScreen = 'login';
+let gameStateListener = null;
+let scoreListener = null;
+let isReconnecting = false;
 
-// ═══════════════════════════════════════
-// ÉTAT
-// ═══════════════════════════════════════
-var allTracks=[], gamePlaylist=[], currentIndex=0;
-var player, playerReady=false;
-var timeLeft=12, totalTime=12, timerInterval;
-var currentAnswers={}, playersCache={};
-var selectedCats=new Set();
-var editorCat=CATS[0].id;
-var editingKey=null;
-var tracksWritten=false;
+/* ─────────────────────────────────────────
+   SESSION (localStorage pour reconnexion)
+───────────────────────────────────────── */
+const SESSION_KEY = 'blindtest_session';
 
-// ═══════════════════════════════════════
-// AUDIO GATE + YOUTUBE
-// ═══════════════════════════════════════
-function unlockAudio() {
-  document.getElementById('audio-gate').style.display='none';
-  // Charger l'API YouTube
-  var s=document.createElement('script');
-  s.src='https://www.youtube.com/iframe_api';
-  document.head.appendChild(s);
-  // Générer le QR
-  initQR();
+function saveSession() {
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ id: myId, name: myName, avatar: myAvatar }));
 }
 
-function onYouTubeIframeAPIReady() {
-  player = new YT.Player('yt-player',{
-    height:'90', width:'160',
-    playerVars:{autoplay:1,controls:0},
-    events:{
-      onReady:function(e){
-        playerReady=true;
-        // Déblocage du contexte audio
-        e.target.mute();
-        e.target.playVideo();
-        setTimeout(function(){ e.target.stopVideo(); e.target.unMute(); },400);
+function clearSession() {
+  localStorage.removeItem(SESSION_KEY);
+}
+
+function clearSessionAndReload() {
+  clearSession();
+  location.reload();
+}
+
+async function tryReconnect() {
+  const raw = localStorage.getItem(SESSION_KEY);
+  if (!raw) return false;
+
+  let session;
+  try { session = JSON.parse(raw); } catch { clearSession(); return false; }
+
+  // Vérifier que le joueur existe encore dans Firebase
+  const snap = await db.ref('players/' + session.id).once('value');
+  if (!snap.exists()) {
+    // Le lobby a été vidé entre temps → on efface la session
+    clearSession();
+    return false;
+  }
+
+  // Vérifier que le jeu n'est pas terminé
+  const stateSnap = await db.ref('gameState').once('value');
+  const state = stateSnap.val();
+  if (state && state.gameOver) {
+    // Partie terminée → on laisse re-login
+    clearSession();
+    return false;
+  }
+
+  // Réintégrer
+  myId     = session.id;
+  myName   = session.name;
+  myAvatar = session.avatar;
+
+  // Remettre onDisconnect (sans .remove() — voir note plus bas)
+  db.ref('players/' + myId).onDisconnect().cancel();
+  setupPresence();
+
+  updateDisplayNames();
+  showScreen('screen-waiting');
+  listenToGameState();
+  listenToMyScore();
+  return true;
+}
+
+/* ─────────────────────────────────────────
+   PRÉSENCE — correctif bug onDisconnect
+   On utilise un flag "online" plutôt que
+   supprimer le joueur → pas de perte sur
+   coupure mobile brève
+───────────────────────────────────────── */
+function setupPresence() {
+  const presenceRef = db.ref('players/' + myId + '/online');
+  presenceRef.set(true);
+  presenceRef.onDisconnect().set(false);
+
+  // Détection de reconnexion réseau
+  const connRef = db.ref('.info/connected');
+  connRef.on('value', snap => {
+    if (!myId) return;
+    if (snap.val() === true) {
+      presenceRef.set(true);
+      document.getElementById('reconnect-banner').style.display = 'none';
+      isReconnecting = false;
+    } else {
+      if (!isReconnecting) {
+        isReconnecting = true;
+        document.getElementById('reconnect-banner').style.display = 'block';
       }
     }
   });
 }
 
-function safeLoadVideo(videoId, startSeconds) {
-  var offset=Math.floor(Math.random()*8);
-  var t=(startSeconds||0)+offset;
-  var try_=function(){
-    if(playerReady && player && player.loadVideoById){
-      player.loadVideoById({videoId:videoId, startSeconds:t});
-    } else { setTimeout(try_,300); }
-  };
-  try_();
+/* ─────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────── */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  currentScreen = id;
 }
 
-// ═══════════════════════════════════════
-// QR CODE
-// ═══════════════════════════════════════
-var MANETTE_URL='https://tbamox.github.io/Blindtest/manette.html';
-function initQR() {
-  var el=document.getElementById('qrcode');
-  if(!el) return;
-  if(typeof QRCode==='undefined'){ setTimeout(initQR,150); return; }
-  el.innerHTML='';
-  try { new QRCode(el,{text:MANETTE_URL,width:180,height:180}); } catch(e){}
-  document.getElementById('qr-url-text').textContent=MANETTE_URL;
+function setFeedback(msg, type) {
+  const el = document.getElementById('feedback');
+  el.textContent = msg;
+  el.className = 'fb-' + type;
+  if (msg) {
+    setTimeout(() => { el.className = 'hidden'; el.textContent = ''; }, 3500);
+  }
 }
 
-// ═══════════════════════════════════════
-// TABS
-// ═══════════════════════════════════════
-function switchTab(tab) {
-  document.getElementById('tab-lobby').classList.toggle('hidden', tab!=='lobby');
-  document.getElementById('tab-editor').classList.toggle('hidden', tab!=='editor');
-  document.querySelectorAll('.nav-tab').forEach(function(t,i){
-    t.classList.toggle('active',(i===0&&tab==='lobby')||(i===1&&tab==='editor'));
+function updateDisplayNames() {
+  ['wait','game','end'].forEach(prefix => {
+    const av = document.getElementById(prefix + '-avatar');
+    const nm = document.getElementById(prefix + '-name');
+    if (av) av.textContent = myAvatar;
+    if (nm) nm.textContent = myName;
   });
-  if(tab==='editor') renderEditor();
 }
 
-// ═══════════════════════════════════════
-// FIREBASE TRACKS
-// ═══════════════════════════════════════
-function loadTracks() {
-  db.ref('tracks').on('value', function(snap){
-    var data=snap.val();
-    if(!data || Object.keys(data).length===0) {
-      if(tracksWritten) return;
-      tracksWritten=true;
-      var batch={};
-      DEFAULT_TRACKS.forEach(function(t){
-        var k=db.ref('tracks').push().key;
-        batch[k]=t;
-      });
-      db.ref('tracks').set(batch);
+/* ─────────────────────────────────────────
+   AVATAR
+───────────────────────────────────────── */
+function selectAvatar(el) {
+  document.querySelectorAll('.av-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  myAvatar = el.textContent.trim();
+}
+
+/* ─────────────────────────────────────────
+   JOIN
+───────────────────────────────────────── */
+function joinGame() {
+  myName = document.getElementById('username').value.trim();
+  const errEl = document.getElementById('login-error');
+  if (!myName) { errEl.textContent = "Choisis un pseudo !"; return; }
+  errEl.textContent = "";
+
+  const ref = db.ref('players').push();
+  myId = ref.key;
+  ref.set({ name: myName, score: 0, avatar: myAvatar, online: true });
+
+  saveSession();
+  setupPresence();
+  updateDisplayNames();
+  showScreen('screen-waiting');
+  listenToGameState();
+  listenToMyScore();
+}
+
+/* ─────────────────────────────────────────
+   ÉCOUTE DU SCORE
+───────────────────────────────────────── */
+function listenToMyScore() {
+  if (scoreListener) db.ref('players/' + myId + '/score').off('value', scoreListener);
+  scoreListener = db.ref('players/' + myId + '/score').on('value', snap => {
+    myScore = snap.val() || 0;
+    const label = myScore <= 1 ? 'pt' : 'pts';
+    document.getElementById('game-score').textContent    = myScore + ' ' + label;
+    document.getElementById('timeup-score').textContent  = myScore + ' ' + label;
+    document.getElementById('end-score').textContent     = myScore + ' ' + label;
+  });
+}
+
+/* ─────────────────────────────────────────
+   ÉCOUTE GAME STATE
+───────────────────────────────────────── */
+function listenToGameState() {
+  if (gameStateListener) db.ref('gameState').off('value', gameStateListener);
+  gameStateListener = db.ref('gameState').on('value', snap => {
+    const state = snap.val();
+    if (!state) return;
+
+    if (state.gameOver) {
+      clearSession(); // Fin de partie → on efface la session
+      showScreen('screen-gameover');
       return;
     }
-    tracksWritten=true;
-    allTracks=Object.entries(data).map(function(e){ return Object.assign({},e[1],{_key:e[0]}); });
-    buildCatSelector();
-    renderEditor();
+
+    if (state.accepting === true) {
+      hasAnswered = false;
+      resetAnswerUI();
+      showScreen('screen-game');
+      return;
+    }
+
+    if (state.accepting === false && currentScreen === 'screen-game') {
+      showScreen('screen-timeup');
+    }
   });
 }
 
-// ═══════════════════════════════════════
-// CATEGORY SELECTOR
-// ═══════════════════════════════════════
-function buildCatSelector() {
-  var counts={};
-  allTracks.forEach(function(t){ counts[t.categorie]=(counts[t.categorie]||0)+1; });
-  var html='';
-  CATS.forEach(function(c){
-    var n=counts[c.id]||0; if(!n) return;
-    var sel=selectedCats.has(c.id)?'selected':'';
-    html+='<div class="cat-chip '+sel+'" onclick="toggleCat(\''+c.id+'\',this)">'
-        +'<span class="ci">'+c.icon+'</span><span>'+c.label+'</span>'
-        +'<span class="cc">'+n+' titres</span></div>';
+/* ─────────────────────────────────────────
+   RESET UI
+───────────────────────────────────────── */
+function resetAnswerUI() {
+  hideQCM();
+  document.getElementById('answer-input').value = '';
+  document.getElementById('send-btn').disabled = false;
+  document.getElementById('feedback').className = 'hidden';
+  document.getElementById('feedback').textContent = '';
+  document.querySelectorAll('.btn-choice').forEach(b => {
+    b.classList.remove('correct', 'wrong');
+    b.disabled = false;
   });
-  document.getElementById('cat-selector').innerHTML=html||'<p style="color:var(--muted)">Aucun titre.</p>';
-  updatePool();
 }
 
-function toggleCat(id,el) {
-  if(selectedCats.has(id)){ selectedCats.delete(id); el.classList.remove('selected'); }
-  else { selectedCats.add(id); el.classList.add('selected'); }
-  updatePool();
+/* ─────────────────────────────────────────
+   QCM
+───────────────────────────────────────── */
+function showQCM() {
+  db.ref('gameState').once('value', snap => {
+    const state = snap.val();
+    if (!state || !state.choix || !state.accepting) {
+      setFeedback("Attends que la musique commence !", 'err');
+      return;
+    }
+
+    const container = document.getElementById('qcm-buttons');
+    container.innerHTML = '';
+    state.choix.forEach(option => {
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-choice';
+      btn.style.width = '100%';
+      btn.textContent = option;
+      btn.onclick = () => sendAnswer(true, option, btn, state.solution);
+      container.appendChild(btn);
+    });
+
+    document.getElementById('free-zone').style.display = 'none';
+    document.getElementById('qcm-zone').style.display = 'flex';
+  });
 }
 
-function updatePool() {
-  var n=selectedCats.size===0?allTracks.length:allTracks.filter(function(t){return selectedCats.has(t.categorie);}).length;
-  document.getElementById('pool-count').textContent=n;
+function hideQCM() {
+  document.getElementById('qcm-zone').style.display = 'none';
+  document.getElementById('free-zone').style.display = 'flex';
 }
 
-// ═══════════════════════════════════════
-// JOUEURS
-// ═══════════════════════════════════════
-db.ref('players').on('value',function(snap){
-  playersCache=snap.val()||{};
-  var keys=Object.keys(playersCache);
-  document.getElementById('player-count').textContent=keys.length;
-  var list=document.getElementById('player-list');
-  if(keys.length===0){
-    list.innerHTML='<li class="no-players">En attente de joueurs…</li>';
-    document.getElementById('game-options').classList.add('hidden');
-  } else {
-    document.getElementById('game-options').classList.remove('hidden');
-    list.innerHTML=keys.map(function(id){
-      var p=playersCache[id]; return '<li>'+(p.avatar||'👤')+' '+p.name+'</li>';
-    }).join('');
+/* ─────────────────────────────────────────
+   AUTO-CORRECTION (Levenshtein)
+───────────────────────────────────────── */
+function normalize(str) {
+  return str
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[''´`]/g, "")
+    .replace(/\b(le|la|les|l|un|une|des|the|a|an)\b/g, "")
+    .replace(/[^a-z0-9 ]/g, "")
+    .replace(/\s+/g, " ").trim();
+}
+
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m+1 }, (_, i) =>
+    Array.from({ length: n+1 }, (_, j) => j === 0 ? i : 0)
+  );
+  for (let j = 1; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i-1] === b[j-1]
+        ? dp[i-1][j-1]
+        : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+  return dp[m][n];
+}
+
+function isSimilarEnough(answer, solution) {
+  const a = normalize(answer);
+  const s = normalize(solution);
+  if (!a || !s) return false;
+  if (a === s) return true;
+  const maxLen = Math.max(a.length, s.length);
+  return levenshtein(a, s) / maxLen <= 0.25;
+}
+
+/* ─────────────────────────────────────────
+   ENVOI RÉPONSE
+───────────────────────────────────────── */
+function sendAnswer(isQcm, qcmText, qcmBtn, solution) {
+  if (hasAnswered) return;
+
+  const text = isQcm ? qcmText : document.getElementById('answer-input').value.trim();
+  if (!text) { setFeedback("Tape une réponse !", 'err'); return; }
+
+  db.ref('gameState').once('value', snap => {
+    const state = snap.val();
+    if (!state || state.accepting !== true) {
+      setFeedback("⏳ Trop tard ! Temps écoulé.", 'err');
+      return;
+    }
+
+    hasAnswered = true;
+    document.getElementById('send-btn').disabled = true;
+    document.getElementById('answer-input').value = '';
+
+    if (isQcm) {
+      const isCorrect = text === state.solution;
+      if (qcmBtn) qcmBtn.classList.add(isCorrect ? 'correct' : 'wrong');
+      document.querySelectorAll('.btn-choice').forEach(b => b.disabled = true);
+
+      db.ref('answers/' + myId).set({
+        text: text + " (QCM)",
+        name: myName, avatar: myAvatar,
+        autoChecked: true
+      });
+
+      if (isCorrect) {
+        db.ref('players/' + myId + '/score').transaction(s => (s || 0) + 1);
+        setFeedback("🎯 Bonne réponse ! +1 pt", 'ok');
+      } else {
+        setFeedback(`❌ Faux ! C'était : ${state.solution}`, 'err');
+      }
+
+    } else {
+      const correct = isSimilarEnough(text, state.solution);
+      if (correct) {
+        db.ref('players/' + myId + '/score').transaction(s => (s || 0) + 3);
+        db.ref('answers/' + myId).set({
+          text: text + " (AUTO ✅)",
+          name: myName, avatar: myAvatar,
+          autoChecked: true
+        });
+        setFeedback("🎯 Bonne réponse ! +3 pts", 'ok');
+      } else {
+        db.ref('answers/' + myId).set({
+          text: text,
+          name: myName, avatar: myAvatar,
+          autoChecked: false
+        });
+        setFeedback("✅ Réponse envoyée !", 'sent');
+      }
+      hideQCM();
+    }
+  });
+}
+
+/* ─────────────────────────────────────────
+   CLAVIER
+───────────────────────────────────────── */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    if (currentScreen === 'screen-login') joinGame();
+    else if (currentScreen === 'screen-game') sendAnswer(false);
   }
-  renderLeaderboard();
 });
 
-function renderLeaderboard() {
-  var arr=Object.keys(playersCache).map(function(id){return Object.assign({id:id},playersCache[id]);});
-  arr.sort(function(a,b){return(b.score||0)-(a.score||0);});
-  var M=['🥇','🥈','🥉'],R=['rank-1','rank-2','rank-3'];
-  document.getElementById('leaderboard-list').innerHTML=arr.map(function(p,i){
-    return '<li class="lb-item '+(R[i]||'')+'"><span class="lb-rank">'+(M[i]||(i+1))+'</span>'
-          +'<span class="lb-name">'+(p.avatar||'👤')+' '+p.name+'</span>'
-          +'<span class="lb-score">'+(p.score||0)+' pts</span></li>';
-  }).join('');
-}
-
-function resetLobby() {
-  if(!confirm('Vider le salon et remettre à zéro ?')) return;
-  db.ref('players').remove();
-  db.ref('answers').remove();
-  db.ref('gameState').set({accepting:false});
-}
-
-// ═══════════════════════════════════════
-// RÉPONSES
-// ═══════════════════════════════════════
-db.ref('answers').on('value',function(snap){
-  currentAnswers=snap.val()||{};
-  renderAnswers();
-});
-
-function renderAnswers() {
-  var feed=document.getElementById('answers-feed');
-  var title=document.getElementById('answers-title');
-  var done=(timeLeft<=0);
-  var entries=Object.entries(currentAnswers);
-  var nbP=Object.keys(playersCache).length;
-  title.textContent=done?'✅ '+entries.length+' réponse(s)':'⏳ '+entries.length+' / '+nbP+' ont répondu';
-  feed.innerHTML=entries.map(function(e){
-    var id=e[0],ans=e[1];
-    var isQCM=ans.text&&ans.text.includes('(QCM)');
-    var isAuto=ans.text&&ans.text.includes('(AUTO ✅)');
-    var auto=ans.autoChecked||isQCM||isAuto;
-    var dText=done?'<span class="atext">"'+ans.text+'"</span>':'<span class="pending">📩 Envoyée…</span>';
-    var action='';
-    if(done){ action=auto?'<span class="badge-auto">'+(isQCM?'QCM ✔':'Auto ✔')+'</span>'
-                         :'<button class="btn-point" onclick="givePoints(\''+id+'\',3)">+3 ✅</button>'; }
-    var bc=isAuto?'var(--green)':isQCM?'var(--purple)':'var(--accent)';
-    return '<div class="answer-card" style="border-left-color:'+bc+'"><div>'
-          +'<div class="pname">'+(ans.avatar||'👤')+' '+ans.name+'</div>'+dText+'</div>'+action+'</div>';
-  }).join('');
-}
-
-function givePoints(pid,pts) {
-  db.ref('players/'+pid+'/score').transaction(function(s){return(s||0)+pts;});
-}
-
-// ═══════════════════════════════════════
-// JEU
-// ═══════════════════════════════════════
-function startGame() {
-  var pool=selectedCats.size===0?allTracks.slice():allTracks.filter(function(t){return selectedCats.has(t.categorie);});
-  if(!pool.length){ alert('Aucun titre disponible !'); return; }
-  var nb=Math.min(parseInt(document.getElementById('nb-questions').value)||5, pool.length);
-  gamePlaylist=pool.sort(function(){return .5-Math.random();}).slice(0,nb);
-  currentIndex=0;
-  document.getElementById('setup-area').classList.add('hidden');
-  document.getElementById('game-area').classList.remove('hidden');
-  document.getElementById('main-nav').classList.add('hidden');
-  loadTrack();
-}
-
-function loadTrack() {
-  var track=gamePlaylist[currentIndex];
-  totalTime=12; timeLeft=totalTime;
-
-  var timerEl=document.getElementById('timer-display');
-  var barEl=document.getElementById('timer-bar');
-  timerEl.textContent=timeLeft;
-  timerEl.classList.remove('danger');
-  barEl.style.width='100%';
-  barEl.classList.remove('danger');
-
-  // Compteur
-  document.getElementById('counter-label').textContent='Question '+(currentIndex+1)+' / '+gamePlaylist.length;
-  var dots='';
-  for(var i=0;i<gamePlaylist.length;i++){
-    var cls='counter-dot'; if(i<currentIndex) cls+=' done'; if(i===currentIndex) cls+=' active';
-    dots+='<div class="'+cls+'"></div>';
+/* ─────────────────────────────────────────
+   INIT — tentative de reconnexion d'abord
+───────────────────────────────────────── */
+(async () => {
+  const reconnected = await tryReconnect();
+  if (!reconnected) {
+    showScreen('screen-login');
   }
-  document.getElementById('counter-dots').innerHTML=dots;
-
-  // Badge catégorie
-  var cat=CATS.find(function(c){return c.id===track.categorie;});
-  document.getElementById('cat-badge').textContent=cat?cat.icon+' '+cat.label:'';
-
-  // Reset UI
-  document.getElementById('answer-display').classList.add('hidden');
-  document.getElementById('reveal-wrap').classList.add('hidden');
-  document.getElementById('next-wrap').classList.add('hidden');
-
-  db.ref('answers').remove();
-  db.ref('gameState').set({accepting:true, choix:track.choix, solution:track.titre});
-  safeLoadVideo(track.id, track.start);
-
-  clearInterval(timerInterval);
-  timerInterval=setInterval(function(){
-    timeLeft--;
-    timerEl.textContent=timeLeft;
-    barEl.style.width=((timeLeft/totalTime)*100)+'%';
-    if(timeLeft<=3){ timerEl.classList.add('danger'); barEl.classList.add('danger'); }
-    if(timeLeft<=0){ clearInterval(timerInterval); stopAnswering(); }
-  },1000);
-}
-
-function stopAnswering() {
-  if(playerReady&&player) player.stopVideo();
-  db.ref('gameState').update({accepting:false});
-  document.getElementById('timer-display').textContent='⏰';
-  document.getElementById('reveal-wrap').classList.remove('hidden');
-  renderAnswers();
-}
-
-function revealResult() {
-  var track=gamePlaylist[currentIndex];
-  var cat=CATS.find(function(c){return c.id===track.categorie;});
-  document.getElementById('reveal-answer-text').innerHTML=
-    track.titre+(cat?'<br><small style="font-size:1rem;color:var(--muted)">'+cat.icon+' '+cat.label+'</small>':'');
-  document.getElementById('answer-display').classList.remove('hidden');
-  document.getElementById('reveal-wrap').classList.add('hidden');
-  document.getElementById('next-wrap').classList.remove('hidden');
-}
-
-function nextRound() {
-  currentIndex++;
-  if(currentIndex<gamePlaylist.length) loadTrack(); else showPodium();
-}
-
-function showPodium() {
-  document.getElementById('game-area').classList.add('hidden');
-  document.getElementById('podium-area').classList.remove('hidden');
-  db.ref('gameState').set({accepting:false, gameOver:true});
-  var arr=Object.keys(playersCache).map(function(id){return Object.assign({id:id},playersCache[id]);});
-  arr.sort(function(a,b){return(b.score||0)-(a.score||0);});
-  var po=[1,0,2],bc=['p2','p1','p3'],pm=['🥈','🥇','🥉'];
-  document.getElementById('podium-grid').innerHTML=po.map(function(r,pos){
-    var p=arr[r]; if(!p) return '';
-    return '<div class="podium-step"><div style="font-size:2.5rem">'+(p.avatar||'👤')+'</div>'
-          +'<div style="font-weight:800;font-size:.95rem">'+p.name+'</div>'
-          +'<div style="font-family:Bangers,cursive;font-size:1.4rem;color:var(--accent3)">'+(p.score||0)+' pts</div>'
-          +'<div class="podium-block '+bc[pos]+'">'+pm[pos]+'</div></div>';
-  }).join('');
-  var M=['🥇','🥈','🥉'],R=['rank-1','rank-2','rank-3'];
-  document.getElementById('final-leaderboard').innerHTML=arr.map(function(p,i){
-    return '<li class="lb-item '+(R[i]||'')+'"><span class="lb-rank">'+(M[i]||(i+1))+'</span>'
-          +'<span class="lb-name">'+(p.avatar||'👤')+' '+p.name+'</span>'
-          +'<span class="lb-score">'+(p.score||0)+' pts</span></li>';
-  }).join('');
-}
-
-// ═══════════════════════════════════════
-// ÉDITEUR
-// ═══════════════════════════════════════
-function renderEditor() {
-  var tabsEl=document.getElementById('editor-cat-tabs');
-  tabsEl.innerHTML=CATS.map(function(c){
-    var n=allTracks.filter(function(t){return t.categorie===c.id;}).length;
-    return '<button class="editor-cat-tab '+(c.id===editorCat?'active':'')+'" onclick="setEditorCat(\''+c.id+'\',this)">'+c.icon+' '+c.label+' <span style="opacity:.6;font-size:.8em">('+n+')</span></button>';
-  }).join('');
-  var tracks=allTracks.filter(function(t){return t.categorie===editorCat;});
-  var listEl=document.getElementById('editor-tracks-list');
-  if(!tracks.length){ listEl.innerHTML='<p style="color:var(--muted);text-align:center;padding:20px">Aucun titre. Ajoutez-en un !</p>'; return; }
-  listEl.innerHTML=tracks.map(function(t){
-    return '<div class="track-row"><span title="'+t.titre+'"><strong>'+t.titre+'</strong></span>'
-          +'<span class="track-id">'+t.id+'</span>'
-          +'<div style="display:flex;gap:6px">'
-          +'<button class="btn btn-sm btn-edit" onclick="openEditModal(\''+t._key+'\')">✏️</button>'
-          +'<button class="btn btn-sm btn-del" onclick="deleteTrack(\''+t._key+'\',\''+t.titre.replace(/'/g,"\\'")+'\')" >🗑️</button>'
-          +'</div></div>';
-  }).join('');
-}
-
-function setEditorCat(id,el) {
-  editorCat=id;
-  document.querySelectorAll('.editor-cat-tab').forEach(function(t){t.classList.remove('active');});
-  el.classList.add('active');
-  renderEditor();
-}
-
-// ═══════════════════════════════════════
-// MODAL
-// ═══════════════════════════════════════
-function openModal() { document.getElementById('modal-overlay').classList.add('open'); }
-function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); editingKey=null; }
-function closeModalOnOverlay(e) { if(e.target===document.getElementById('modal-overlay')) closeModal(); }
-
-function fillCatSelect(sel) {
-  document.getElementById('m-cat').innerHTML=CATS.map(function(c){
-    return '<option value="'+c.id+'"'+(c.id===sel?' selected':'')+'>'+c.icon+' '+c.label+'</option>';
-  }).join('');
-}
-
-function openAddModal() {
-  editingKey=null;
-  document.getElementById('modal-title').textContent='Ajouter un titre';
-  fillCatSelect(editorCat);
-  ['m-titre','m-ytid','m-c1','m-c2','m-c3'].forEach(function(id){document.getElementById(id).value='';});
-  document.getElementById('m-start').value='0';
-  openModal();
-}
-
-function openEditModal(key) {
-  editingKey=key;
-  var t=allTracks.find(function(t){return t._key===key;});
-  if(!t) return;
-  document.getElementById('modal-title').textContent='Modifier le titre';
-  fillCatSelect(t.categorie);
-  document.getElementById('m-titre').value=t.titre;
-  document.getElementById('m-ytid').value=t.id;
-  document.getElementById('m-start').value=t.start;
-  var w=(t.choix||[]).filter(function(c){return c!==t.titre;});
-  document.getElementById('m-c1').value=w[0]||'';
-  document.getElementById('m-c2').value=w[1]||'';
-  document.getElementById('m-c3').value=w[2]||'';
-  openModal();
-}
-
-function saveTrack() {
-  var titre=document.getElementById('m-titre').value.trim();
-  var ytid=document.getElementById('m-ytid').value.trim();
-  var start=parseInt(document.getElementById('m-start').value)||0;
-  var cat=document.getElementById('m-cat').value;
-  var w=[document.getElementById('m-c1').value.trim(),document.getElementById('m-c2').value.trim(),document.getElementById('m-c3').value.trim()].filter(Boolean);
-  if(!titre||!ytid){ alert('Titre et ID YouTube obligatoires.'); return; }
-  var choix=[titre].concat(w).sort(function(){return .5-Math.random();});
-  var data={titre:titre,id:ytid,start:start,categorie:cat,choix:choix};
-  if(editingKey) db.ref('tracks/'+editingKey).set(data);
-  else db.ref('tracks').push(data);
-  editorCat=cat;
-  closeModal();
-}
-
-function deleteTrack(key,titre) {
-  if(!confirm('Supprimer "'+titre+'" ?')) return;
-  db.ref('tracks/'+key).remove();
-}
-
-// ═══════════════════════════════════════
-// DEFAULT TRACKS
-// ═══════════════════════════════════════
-var DEFAULT_TRACKS=[
-  // 🎵 MUSIQUE
-  {titre:"Bohemian Rhapsody",categorie:"musique",id:"fJ9rUzIMcZQ",start:0,choix:["Bohemian Rhapsody","We Will Rock You","Don't Stop Me Now","Somebody to Love"]},
-  {titre:"Thriller",categorie:"musique",id:"sOnqjkJTMaA",start:0,choix:["Thriller","Billie Jean","Beat It","Bad"]},
-  {titre:"Smells Like Teen Spirit",categorie:"musique",id:"hTWKbfoikeg",start:0,choix:["Smells Like Teen Spirit","Come As You Are","Heart-Shaped Box","In Bloom"]},
-  {titre:"Sweet Child O' Mine",categorie:"musique",id:"1w7OgIMMRc4",start:0,choix:["Sweet Child O' Mine","November Rain","Paradise City","Welcome to the Jungle"]},
-  {titre:"Uptown Funk",categorie:"musique",id:"OPf0YbXqDm0",start:0,choix:["Uptown Funk","Happy","Blurred Lines","Get Lucky"]},
-  {titre:"Shape of You",categorie:"musique",id:"JGwWNGJdvx8",start:0,choix:["Shape of You","Perfect","Thinking Out Loud","Castle on the Hill"]},
-  {titre:"Despacito",categorie:"musique",id:"kTJczUoc26U",start:0,choix:["Despacito","Bailando","Lean On","Mi Gente"]},
-  {titre:"Blinding Lights",categorie:"musique",id:"4NRXx6U8BKQ",start:0,choix:["Blinding Lights","Save Your Tears","Starboy","Can't Feel My Face"]},
-  {titre:"Rolling in the Deep",categorie:"musique",id:"rYEDA3JcQqw",start:0,choix:["Rolling in the Deep","Someone Like You","Hello","Set Fire to the Rain"]},
-  {titre:"Lose Yourself",categorie:"musique",id:"_Yhyp-_hX2s",start:0,choix:["Lose Yourself","Slim Shady","Without Me","The Real Slim Shady"]},
-  {titre:"Billie Jean",categorie:"musique",id:"Zi_XLOBDo_Y",start:0,choix:["Billie Jean","Beat It","Thriller","Bad"]},
-  {titre:"Hotel California",categorie:"musique",id:"BciS5krYL64",start:0,choix:["Hotel California","Life in the Fast Lane","Desperado","One of These Nights"]},
-  {titre:"Stairway to Heaven",categorie:"musique",id:"QkF3oxziUI4",start:0,choix:["Stairway to Heaven","Kashmir","Black Dog","Whole Lotta Love"]},
-  {titre:"Wonderwall",categorie:"musique",id:"bx1Bh8ZvH84",start:0,choix:["Wonderwall","Don't Look Back in Anger","Champagne Supernova","Live Forever"]},
-  {titre:"Mr. Brightside",categorie:"musique",id:"gGdGFtwCNBE",start:0,choix:["Mr. Brightside","Somebody Told Me","All These Things That I've Done","Smile Like You Mean It"]},
-  {titre:"Toxic",categorie:"musique",id:"LOZuxwVk7TU",start:0,choix:["Toxic","Oops!... I Did It Again","Baby One More Time","Womanizer"]},
-  {titre:"Crazy in Love",categorie:"musique",id:"ViwtNLUqkMY",start:0,choix:["Crazy in Love","Single Ladies","Halo","Irreplaceable"]},
-  {titre:"Since U Been Gone",categorie:"musique",id:"R7UrFYvl5TE",start:0,choix:["Since U Been Gone","Behind These Hazel Eyes","Because of You","Walk Away"]},
-  {titre:"Somebody That I Used to Know",categorie:"musique",id:"8UVNT4wvIGY",start:0,choix:["Somebody That I Used to Know","Eyes Wide Open","Heart's a Mess","Coming Back"]},
-  {titre:"Get Lucky",categorie:"musique",id:"5NV6Rdv1h3Q",start:0,choix:["Get Lucky","Instant Crush","Lose Yourself to Dance","Give Life Back to Music"]},
-  // 🎬 FILMS
-  {titre:"Le Roi Lion",categorie:"film",id:"08pZpY_mPto",start:10,choix:["Le Roi Lion","Aladdin","Mulan","Tarzan"]},
-  {titre:"Star Wars",categorie:"film",id:"EjMNNpIksaI",start:8,choix:["Star Wars","Star Trek","Interstellar","Dune"]},
-  {titre:"Pirates des Caraïbes",categorie:"film",id:"K3pOUvO8qTM",start:0,choix:["Pirates des Caraïbes","Vaiana","Peter Pan","Sinbad"]},
-  {titre:"Harry Potter",categorie:"film",id:"Htaj3o3JD8I",start:0,choix:["Harry Potter","Narnia","Eragon","Willow"]},
-  {titre:"Titanic",categorie:"film",id:"3gK_2XdjOdY",start:0,choix:["Titanic","Forrest Gump","Braveheart","Ghost"]},
-  {titre:"Inception",categorie:"film",id:"YoHD9XEInc0",start:0,choix:["Inception","Interstellar","Tenet","The Matrix"]},
-  {titre:"Jurassic Park",categorie:"film",id:"PJlmYh27MHg",start:0,choix:["Jurassic Park","King Kong","Godzilla","La Momie"]},
-  {titre:"Indiana Jones",categorie:"film",id:"mBBH6IKDOFs",start:0,choix:["Indiana Jones","Tomb Raider","National Treasure","The Mummy"]},
-  {titre:"Interstellar",categorie:"film",id:"UDVtMYqUAyw",start:0,choix:["Interstellar","Inception","Gravity","The Martian"]},
-  {titre:"Game of Thrones",categorie:"film",id:"bjMnJGc5HHo",start:0,choix:["Game of Thrones","The Witcher","House of the Dragon","Vikings"]},
-  {titre:"Stranger Things",categorie:"film",id:"pFS4zaid1t8",start:0,choix:["Stranger Things","Dark","The OA","Black Mirror"]},
-  {titre:"Breaking Bad",categorie:"film",id:"HhesHBpEZhM",start:0,choix:["Breaking Bad","Better Call Saul","Ozark","Narcos"]},
-  {titre:"The Mandalorian",categorie:"film",id:"aOC8E8z_ifw",start:0,choix:["The Mandalorian","Obi-Wan Kenobi","Andor","The Book of Boba Fett"]},
-  {titre:"Avengers",categorie:"film",id:"7yK91c5v-rc",start:0,choix:["Avengers","Captain America","Thor","Iron Man"]},
-  {titre:"Gladiator",categorie:"film",id:"owK1qxDselE",start:0,choix:["Gladiator","Braveheart","300","Troy"]},
-  {titre:"Le Parrain",categorie:"film",id:"1R3V5wGvJWQ",start:0,choix:["Le Parrain","Les Affranchis","Casino","Il était une fois en Amérique"]},
-  {titre:"Batman - Dark Knight",categorie:"film",id:"ZQmOWZzGO9E",start:0,choix:["Batman","Superman","Iron Man","Deadpool"]},
-  {titre:"James Bond - Skyfall",categorie:"film",id:"DeumyOzKqgI",start:0,choix:["Skyfall","Casino Royale","GoldenEye","Spectre"]},
-  {titre:"La La Land",categorie:"film",id:"0pdqf4P9MB8",start:0,choix:["La La Land","Whiplash","Moulin Rouge","Chicago"]},
-  {titre:"Schindler's List",categorie:"film",id:"4-_eOAJb9lE",start:0,choix:["Schindler's List","Saving Private Ryan","The Pianist","Life is Beautiful"]},
-  // 🎮 JEUX VIDÉO
-  {titre:"Super Mario Bros",categorie:"jv",id:"wGX4obVl64w",start:0,choix:["Super Mario Bros","Donkey Kong","Kirby","Yoshi's Island"]},
-  {titre:"Tetris",categorie:"jv",id:"NmCCQxVBfyM",start:0,choix:["Tetris","Pac-Man","Pong","Snake"]},
-  {titre:"Legend of Zelda",categorie:"jv",id:"0_7X3nFebZA",start:0,choix:["The Legend of Zelda","Metroid","Star Fox","Kirby"]},
-  {titre:"Minecraft",categorie:"jv",id:"Dg0IjOX0Nbc",start:0,choix:["Minecraft","Terraria","Fortnite","Roblox"]},
-  {titre:"Final Fantasy VII",categorie:"jv",id:"GMsnKtfcqUU",start:0,choix:["Final Fantasy VII","Chrono Trigger","Secret of Mana","Kingdom Hearts"]},
-  {titre:"Undertale - Megalovania",categorie:"jv",id:"0FCvzsVlXpQ",start:0,choix:["Undertale","Hollow Knight","Cuphead","Celeste"]},
-  {titre:"Halo - Main Theme",categorie:"jv",id:"0-l4P1LAlAw",start:0,choix:["Halo","Destiny","Call of Duty","Gears of War"]},
-  {titre:"Sonic the Hedgehog",categorie:"jv",id:"xSRMclMj-Lk",start:0,choix:["Sonic","Crash Bandicoot","Spyro","Rayman"]},
-  {titre:"Doom - BFG Division",categorie:"jv",id:"nqFsXAlhPn8",start:0,choix:["Doom","Quake","Wolfenstein","Duke Nukem"]},
-  {titre:"Pokémon - Intro",categorie:"jv",id:"JuYeHPFR3f0",start:0,choix:["Pokémon","Digimon World","Yo-kai Watch","Temtem"]},
-  {titre:"God of War",categorie:"jv",id:"NQ6cWA1hjcY",start:0,choix:["God of War","Assassin's Creed","Devil May Cry","Bayonetta"]},
-  {titre:"The Last of Us",categorie:"jv",id:"XczBHgkR5iA",start:0,choix:["The Last of Us","Resident Evil","Dead Space","Silent Hill"]},
-  {titre:"Animal Crossing",categorie:"jv",id:"ZMzXmLMSWbk",start:0,choix:["Animal Crossing","Stardew Valley","Harvest Moon","My Time at Portia"]},
-  {titre:"Skyrim - Dragonborn",categorie:"jv",id:"9MwMF2so7hs",start:0,choix:["Skyrim","Oblivion","Morrowind","Dragon Age"]},
-  {titre:"GTA San Andreas",categorie:"jv",id:"dJEY3KSzqF8",start:0,choix:["GTA San Andreas","GTA Vice City","GTA V","Saints Row"]},
-  {titre:"Cyberpunk 2077",categorie:"jv",id:"OsQEuEgKRSI",start:0,choix:["Cyberpunk 2077","Deus Ex","Disco Elysium","Outer Worlds"]},
-  {titre:"Kirby's Dream Land",categorie:"jv",id:"pCEGLlFuetg",start:0,choix:["Kirby","Yoshi","Toad","Pikmin"]},
-  {titre:"Among Us",categorie:"jv",id:"8kDeVLEtbY0",start:0,choix:["Among Us","Fall Guys","Goose Game","Party Animals"]},
-  {titre:"Fortnite",categorie:"jv",id:"bZz0QLWG5LU",start:0,choix:["Fortnite","Apex Legends","PUBG","Warzone"]},
-  {titre:"FIFA - Anthem",categorie:"jv",id:"gqaXTZnPhqQ",start:0,choix:["FIFA","PES","eFootball","Rocket League"]},
-  // 🐭 DESSINS ANIMÉS
-  {titre:"Toy Story",categorie:"dessinanim",id:"NK-VMBHlHoY",start:0,choix:["Toy Story","Monstres et Cie","Cars","1001 Pattes"]},
-  {titre:"Shrek",categorie:"dessinanim",id:"l5QiEBSJGQ8",start:0,choix:["Shrek","Kung Fu Panda","Madagascar","Bee Movie"]},
-  {titre:"Les Aristochats",categorie:"dessinanim",id:"hpgBK_68Xwk",start:0,choix:["Les Aristochats","Bambi","Pinocchio","Dumbo"]},
-  {titre:"Bob l'éponge",categorie:"dessinanim",id:"Fpy4kxb3E7M",start:0,choix:["Bob l'éponge","Tom et Jerry","Scooby-Doo","Looney Tunes"]},
-  {titre:"Tom et Jerry",categorie:"dessinanim",id:"1WJlbFRxrE4",start:0,choix:["Tom et Jerry","Looney Tunes","Tex Avery","Oggy et les Cafards"]},
-  {titre:"Les Simpsons",categorie:"dessinanim",id:"LXDXFPZ2MBQ",start:0,choix:["Les Simpsons","Futurama","Family Guy","American Dad"]},
-  {titre:"Rick et Morty",categorie:"dessinanim",id:"kAfOOFMobC4",start:0,choix:["Rick et Morty","Solar Opposites","Futurama","Gravity Falls"]},
-  {titre:"Kung Fu Panda",categorie:"dessinanim",id:"wTZ3O45UrI0",start:0,choix:["Kung Fu Panda","Shrek","Madagascar","Les Croods"]},
-  {titre:"Les Tortues Ninja",categorie:"dessinanim",id:"rLHi5J4OAPU",start:0,choix:["Les Tortues Ninja","Power Rangers","Biker Mice","Street Sharks"]},
-  {titre:"Lucky Luke",categorie:"dessinanim",id:"VjFcmUNVYJg",start:0,choix:["Lucky Luke","Astérix","Tintin","Les Dalton"]},
-  {titre:"Inspecteur Gadget",categorie:"dessinanim",id:"p5AcGnCVPE8",start:0,choix:["Inspecteur Gadget","Les Schtroumpfs","Danger Mouse","Ulysses 31"]},
-  {titre:"Phinéas et Ferb",categorie:"dessinanim",id:"NkQiQOLbwdI",start:0,choix:["Phinéas et Ferb","Gravity Falls","Star vs. les Forces du Mal","Amphibia"]},
-  {titre:"Avatar - Le Dernier Maître de l'Air",categorie:"dessinanim",id:"d1EnW4eXOjY",start:0,choix:["Avatar","Korra","Wakfu","Steven Universe"]},
-  {titre:"He-Man",categorie:"dessinanim",id:"ZoOEcMVoBCo",start:0,choix:["He-Man","SilverHawks","ThunderCats","Conan l'Aventurier"]},
-  {titre:"Scooby-Doo",categorie:"dessinanim",id:"YiPBpYdPpME",start:0,choix:["Scooby-Doo","Shaggy","Fred","Daphné"]},
-  {titre:"Looney Tunes",categorie:"dessinanim",id:"sOVRlBhYG8c",start:0,choix:["Looney Tunes","Merrie Melodies","Tom et Jerry","Tex Avery"]},
-  {titre:"Peppa Pig",categorie:"dessinanim",id:"rCZnLtaHJOI",start:0,choix:["Peppa Pig","Bluey","Ben & Holly","Bing"]},
-  {titre:"Paw Patrol",categorie:"dessinanim",id:"5BF9gqm0hPI",start:0,choix:["Paw Patrol","Dino Ranch","Abby Hatcher","Ricky Zoom"]},
-  {titre:"Miraculous Ladybug",categorie:"dessinanim",id:"9lEHbm6rBwY",start:0,choix:["Miraculous Ladybug","Winx Club","W.I.T.C.H.","Totally Spies"]},
-  {titre:"Dora l'Exploratrice",categorie:"dessinanim",id:"4oRWaAGBGSQ",start:0,choix:["Dora l'Exploratrice","Peppa Pig","Bluey","Miraculous"]},
-  // 🏰 DISNEY
-  {titre:"Circle of Life - Le Roi Lion",categorie:"disney",id:"GibiNy4d4gc",start:0,choix:["Le Roi Lion","La Belle et la Bête","Aladdin","Mulan"]},
-  {titre:"Under the Sea - La Petite Sirène",categorie:"disney",id:"GC_mV1IpjY4",start:0,choix:["La Petite Sirène","Pocahontas","Atlantide","Lilo & Stitch"]},
-  {titre:"Be Our Guest - La Belle et la Bête",categorie:"disney",id:"SMXQ3A0GKWI",start:0,choix:["La Belle et la Bête","Cendrillon","Blanche-Neige","La Belle au Bois Dormant"]},
-  {titre:"A Whole New World - Aladdin",categorie:"disney",id:"hZ1Rb9hC4jU",start:0,choix:["Aladdin","Mulan","Tarzan","Hercule"]},
-  {titre:"Let It Go - La Reine des Neiges",categorie:"disney",id:"L0MK7qz13bU",start:0,choix:["La Reine des Neiges","Raiponce","Vaiana","Wish"]},
-  {titre:"Hakuna Matata - Le Roi Lion",categorie:"disney",id:"xB5ceArudum",start:0,choix:["Le Roi Lion","Dumbo","Bambi","Pinocchio"]},
-  {titre:"Colors of the Wind - Pocahontas",categorie:"disney",id:"CpjpkM8WBYI",start:0,choix:["Pocahontas","Atlantide","Mulan","Frère des Ours"]},
-  {titre:"I'll Make a Man Out of You - Mulan",categorie:"disney",id:"ZSS5dEeMX64",start:0,choix:["Mulan","Hercule","Tarzan","Hunchback"]},
-  {titre:"How Far I'll Go - Vaiana",categorie:"disney",id:"cPAbx5B_UQE",start:0,choix:["Vaiana","La Reine des Neiges","Raiponce","Encanto"]},
-  {titre:"We Don't Talk About Bruno - Encanto",categorie:"disney",id:"bvWRMAU6V-c",start:0,choix:["Encanto","Coco","Raya","Soul"]},
-  {titre:"Part of Your World - La Petite Sirène",categorie:"disney",id:"vBZ4LQYQ1Bg",start:0,choix:["La Petite Sirène","La Belle et la Bête","Cendrillon","Raiponce"]},
-  {titre:"You've Got a Friend in Me - Toy Story",categorie:"disney",id:"6-OqDFIKuV0",start:0,choix:["Toy Story","Cars","Monstres et Cie","1001 Pattes"]},
-  {titre:"Remember Me - Coco",categorie:"disney",id:"XBgMHPbOuAI",start:0,choix:["Coco","Soul","Encanto","Raya"]},
-  {titre:"I See the Light - Raiponce",categorie:"disney",id:"KW-jNGFIFTQ",start:0,choix:["Raiponce","La Reine des Neiges","Vaiana","Wish"]},
-  {titre:"Reflection - Mulan",categorie:"disney",id:"kKMle5sAFKE",start:0,choix:["Mulan","Pocahontas","Hercule","Atlantide"]},
-  {titre:"Go the Distance - Hercule",categorie:"disney",id:"6BFuCBzFT9k",start:0,choix:["Hercule","Mulan","Aladdin","Tarzan"]},
-  {titre:"Strangers Like Me - Tarzan",categorie:"disney",id:"gyMHqJy7bYE",start:0,choix:["Tarzan","Le Roi Lion","Hercule","La Petite Sirène"]},
-  {titre:"Into the Unknown - Reine des Neiges 2",categorie:"disney",id:"zFg7KYtmTMU",start:0,choix:["La Reine des Neiges 2","La Reine des Neiges","Wish","Raiponce"]},
-  {titre:"Touch the Sky - Brave",categorie:"disney",id:"m2B-Vs6-Qqw",start:0,choix:["Brave","Rebelle","Mérida","Moana"]},
-  {titre:"Lava - Court-métrage Pixar",categorie:"disney",id:"pyNSCdkQv2c",start:0,choix:["Lava","Soul","Coco","Brave"]},
-  // ⛩️ ANIMÉS
-  {titre:"Dragon Ball Z",categorie:"anime",id:"JQeOy0eGfGk",start:0,choix:["Dragon Ball Z","Naruto","One Piece","Bleach"]},
-  {titre:"Naruto",categorie:"anime",id:"DquviEJ-9rY",start:0,choix:["Naruto","Dragon Ball","Sword Art Online","Attack on Titan"]},
-  {titre:"One Piece",categorie:"anime",id:"LL9-StMPqKo",start:0,choix:["One Piece","Fairy Tail","Hunter x Hunter","My Hero Academia"]},
-  {titre:"Sailor Moon",categorie:"anime",id:"VrGZA7jxFUI",start:0,choix:["Sailor Moon","Cardcaptor Sakura","Tokyo Mew Mew","Magic Knight Rayearth"]},
-  {titre:"Pokémon",categorie:"anime",id:"5y-wGgXMeo0",start:0,choix:["Pokémon","Digimon","Yu-Gi-Oh","Beyblade"]},
-  {titre:"Neon Genesis Evangelion",categorie:"anime",id:"YOJsGAXFUCo",start:0,choix:["Evangelion","Cowboy Bebop","FLCL","Trigun"]},
-  {titre:"Attack on Titan",categorie:"anime",id:"gPSIboXzqUY",start:0,choix:["Attack on Titan","Demon Slayer","Jujutsu Kaisen","Chainsaw Man"]},
-  {titre:"Demon Slayer",categorie:"anime",id:"ppSspPvMeTU",start:0,choix:["Demon Slayer","My Hero Academia","Jujutsu Kaisen","Black Clover"]},
-  {titre:"My Hero Academia",categorie:"anime",id:"cGgJPkgKwBo",start:0,choix:["My Hero Academia","Black Clover","Fairy Tail","Naruto"]},
-  {titre:"Fullmetal Alchemist Brotherhood",categorie:"anime",id:"HbcFWi0dBiM",start:0,choix:["Fullmetal Alchemist","Bleach","Sword Art Online","Code Geass"]},
-  {titre:"Death Note",categorie:"anime",id:"t8cp-oNMEnc",start:0,choix:["Death Note","Code Geass","Steins;Gate","Paranoia Agent"]},
-  {titre:"Cowboy Bebop",categorie:"anime",id:"vHeF4qSoqNA",start:0,choix:["Cowboy Bebop","Trigun","Outlaw Star","Black Lagoon"]},
-  {titre:"Hunter x Hunter",categorie:"anime",id:"I5a1eFPSPfA",start:0,choix:["Hunter x Hunter","Fairy Tail","One Piece","Bleach"]},
-  {titre:"Bleach",categorie:"anime",id:"BBTLO-kCDI0",start:0,choix:["Bleach","Naruto","One Piece","Dragon Ball"]},
-  {titre:"Fairy Tail",categorie:"anime",id:"mJPbRfbeGy4",start:0,choix:["Fairy Tail","One Piece","Naruto","Bleach"]},
-  {titre:"Dragon Ball",categorie:"anime",id:"dBfzQf4pqEo",start:0,choix:["Dragon Ball","Dragon Ball Z","Dragon Ball GT","Dragon Ball Super"]},
-  {titre:"Saint Seiya",categorie:"anime",id:"m7JtVDLRjME",start:0,choix:["Saint Seiya","Goldorak","Albator","Ken le Survivant"]},
-  {titre:"Yu-Gi-Oh",categorie:"anime",id:"OLW0k-iGQzA",start:0,choix:["Yu-Gi-Oh","Pokémon","Digimon","Beyblade"]},
-  {titre:"Spirited Away - Joe Hisaishi",categorie:"anime",id:"GH31_oXuq4M",start:0,choix:["Le Voyage de Chihiro","Princesse Mononoké","Nausicaä","Château Ambulant"]},
-  {titre:"Jujutsu Kaisen",categorie:"anime",id:"Vd3_8RaxoKU",start:0,choix:["Jujutsu Kaisen","Demon Slayer","Chainsaw Man","Spy x Family"]},
-  // 📼 ANNÉES 80-90
-  {titre:"Take On Me",categorie:"annees80",id:"djV11Xbc914",start:0,choix:["Take On Me","The Final Countdown","Don't You Want Me","Wake Me Up Before You Go-Go"]},
-  {titre:"I Will Always Love You",categorie:"annees80",id:"3JWTaaS7LdU",start:0,choix:["I Will Always Love You","My Heart Will Go On","Nothing Compares 2 U","One Moment in Time"]},
-  {titre:"Africa",categorie:"annees80",id:"FTQbiNvZqaY",start:0,choix:["Africa","Rosanna","Hold the Line","I'll Be Over You"]},
-  {titre:"Sweet Dreams",categorie:"annees80",id:"qkBMCwPWyGg",start:0,choix:["Sweet Dreams","Here Comes the Rain Again","Thorn in My Side","Would I Lie to You?"]},
-  {titre:"Girls Just Want to Have Fun",categorie:"annees80",id:"PIb6AZdTr-A",start:0,choix:["Girls Just Want to Have Fun","Time After Time","True Colors","She Bop"]},
-  {titre:"Livin' on a Prayer",categorie:"annees80",id:"lDK9QqIzhwk",start:0,choix:["Livin' on a Prayer","You Give Love a Bad Name","Wanted Dead or Alive","Bad Medicine"]},
-  {titre:"Don't Stop Believin'",categorie:"annees80",id:"1k8craCGpgs",start:0,choix:["Don't Stop Believin'","Any Way You Want It","Separate Ways","Faithfully"]},
-  {titre:"Walking on Sunshine",categorie:"annees80",id:"iPUmE-tne5U",start:0,choix:["Walking on Sunshine","I'm Still Standing","Crocodile Rock","Saturday Night's Alright"]},
-  {titre:"99 Luftballons",categorie:"annees80",id:"La4Dcd1aUcI",start:0,choix:["99 Luftballons","Rock Me Amadeus","Major Tom","Über den Wolken"]},
-  {titre:"Jump - Van Halen",categorie:"annees80",id:"SwYN7mTi6HM",start:0,choix:["Jump","Hot for Teacher","Panama","Eruption"]},
-  {titre:"Every Breath You Take",categorie:"annees80",id:"OMOGaugKpzs",start:0,choix:["Every Breath You Take","Roxanne","Don't Stand So Close to Me","Message in a Bottle"]},
-  {titre:"Karma Chameleon",categorie:"annees80",id:"JmcA9LIIXWw",start:0,choix:["Karma Chameleon","Do You Really Want to Hurt Me","Church of the Poison Mind","It's a Miracle"]},
-  {titre:"Come On Eileen",categorie:"annees80",id:"GnJL2vQJDmo",start:0,choix:["Come On Eileen","Jackie Wilson Said","Geno","Too-Rye-Ay"]},
-  {titre:"Blue (Da Ba Dee)",categorie:"annees80",id:"zA52uNzx7Y4",start:0,choix:["Blue (Da Ba Dee)","Barbie Girl","Mambo No. 5","Who Let the Dogs Out"]},
-  {titre:"Macarena",categorie:"annees80",id:"XiBYM6g8Tck",start:0,choix:["Macarena","La Bamba","Lambada","Bamboleo"]},
-  {titre:"Wake Me Up Before You Go-Go",categorie:"annees80",id:"pIR40h3DFdU",start:0,choix:["Wake Me Up Before You Go-Go","Careless Whisper","Faith","Father Figure"]},
-  {titre:"Hungry Like the Wolf",categorie:"annees80",id:"oOg5n_bBg5Y",start:0,choix:["Hungry Like the Wolf","Rio","Planet Earth","Union of the Snake"]},
-  {titre:"Losing My Religion",categorie:"annees80",id:"xwtdhWltSIg",start:0,choix:["Losing My Religion","Everybody Hurts","Man on the Moon","Nightswimming"]},
-  {titre:"Don't You Want Me",categorie:"annees80",id:"uPudE8nDog0",start:0,choix:["Don't You Want Me","Together in Electric Dreams","Love Action","The Lebanon"]},
-  {titre:"Waterloo - ABBA",categorie:"annees80",id:"Sj_9CiNkkn4",start:0,choix:["Waterloo","Dancing Queen","Mamma Mia","Fernando"]},
-  // 🇫🇷 CHANSON FRANÇAISE
-  {titre:"La Vie en Rose",categorie:"francais",id:"NKE_6WixyZA",start:0,choix:["La Vie en Rose","Non je ne regrette rien","Hymne à l'amour","Milord"]},
-  {titre:"Alors on danse",categorie:"francais",id:"ReFAGOoYZdk",start:0,choix:["Alors on danse","Formidable","Tous les mêmes","Papaoutai"]},
-  {titre:"Je veux",categorie:"francais",id:"AZRK8pFJADQ",start:0,choix:["Je veux","Chandelier","Les yeux de la mama","Eblouie par la nuit"]},
-  {titre:"Formidable",categorie:"francais",id:"4E8cDHQVB5A",start:0,choix:["Formidable","Alors on danse","Papaoutai","Tous les mêmes"]},
-  {titre:"Papaoutai",categorie:"francais",id:"oiKj0Z_Xnjc",start:0,choix:["Papaoutai","Formidable","Alors on danse","Ta fête"]},
-  {titre:"La Bohème",categorie:"francais",id:"5LFECeKQlqw",start:0,choix:["La Bohème","Ma liberté de penser","Alexandrie Alexandra","Les Cornichons"]},
-  {titre:"Les Champs-Élysées",categorie:"francais",id:"R6UqBRNS0Kk",start:0,choix:["Les Champs-Élysées","Alexandrie Alexandra","Emmène-moi","Le Lundi au soleil"]},
-  {titre:"Je t'aime moi non plus",categorie:"francais",id:"e7PpPMvicM8",start:0,choix:["Je t'aime moi non plus","La Javanaise","Les Filles","Bonnie and Clyde"]},
-  {titre:"Alexandrie Alexandra",categorie:"francais",id:"cRuZIWKCKnQ",start:0,choix:["Alexandrie Alexandra","Aline","Les Cornichons","Le Lundi au soleil"]},
-  {titre:"Ne me quitte pas",categorie:"francais",id:"Bkpnt6TNQTE",start:0,choix:["Ne me quitte pas","Amsterdam","Les Bourgeois","La Chanson des vieux amants"]},
-  {titre:"Dernière danse",categorie:"francais",id:"p-HLD9jGMGk",start:0,choix:["Dernière danse","Ainsi bas la vida","Oops I Did It Again","Chandelier"]},
-  {titre:"Antisocial",categorie:"francais",id:"6iqrNqxEzCw",start:0,choix:["Antisocial","Oh bien sûr","Daddy's Cash","Fils de l'adversité"]},
-  {titre:"Mon amie la rose",categorie:"francais",id:"mxdvHfH9rEg",start:0,choix:["Mon amie la rose","La Vie en Rose","Milord","Les feuilles mortes"]},
-  {titre:"La Bamba",categorie:"francais",id:"xz6ZMlTSmD0",start:0,choix:["La Bamba","Los Lobos","Macarena","Bamboleo"]},
-  {titre:"Rockollection",categorie:"francais",id:"A_KJEnQQ9lY",start:0,choix:["Rockollection","L'avventura","Ces gens-là","Amsterdam"]},
-  {titre:"L'Aziza",categorie:"francais",id:"XPzLDPp5Abs",start:0,choix:["L'Aziza","On va s'aimer","Quelque chose de Tennessee","Laura"]},
-  {titre:"L'Envie",categorie:"francais",id:"gFtaH9PMWFM",start:0,choix:["L'Envie","Laura","L'Aziza","Quelque chose de Tennessee"]},
-  {titre:"Les Cornichons",categorie:"francais",id:"M6HkPiWppkM",start:0,choix:["Les Cornichons","Alexandrie Alexandra","La Bamba","Tout le monde fait pareil"]},
-  {titre:"Je veux du soleil",categorie:"francais",id:"BumI5gQtJuw",start:0,choix:["Je veux du soleil","Soleil","L'été indien","Tombé du ciel"]},
-  {titre:"Le Lundi au soleil",categorie:"francais",id:"1sJCN0BNZWQ",start:0,choix:["Le Lundi au soleil","Les Champs-Élysées","Alexandrie Alexandra","Aline"]},
-  // 🎻 CLASSIQUE
-  {titre:"La Lettre à Élise",categorie:"classique",id:"_mVW8tgGY_w",start:0,choix:["La Lettre à Élise","Clair de Lune","Gymnopédie n°1","Sonate au Clair de Lune"]},
-  {titre:"Beethoven - 5ème Symphonie",categorie:"classique",id:"_4IRMYuE1hI",start:0,choix:["5ème Symphonie","9ème Symphonie","Sonate Pathétique","Ode à la Joie"]},
-  {titre:"La Chevauchée des Walkyries",categorie:"classique",id:"GGu1C0YZUTM",start:0,choix:["La Chevauchée des Walkyries","Carmina Burana","Also Sprach Zarathustra","Le Lac des Cygnes"]},
-  {titre:"Carmina Burana - O Fortuna",categorie:"classique",id:"GXFSK6Xz0x0",start:0,choix:["Carmina Burana","Requiem - Mozart","Stabat Mater","Les Quatre Saisons"]},
-  {titre:"Les Quatre Saisons - Vivaldi",categorie:"classique",id:"GRxofEmo3HA",start:0,choix:["Les Quatre Saisons","La Tempête","L'Estro Armonico","Laudate Pueri"]},
-  {titre:"Clair de Lune - Debussy",categorie:"classique",id:"CvFH_6DNRCY",start:0,choix:["Clair de Lune","Gymnopédie n°1","La Cathédrale Engloutie","Arabesque n°1"]},
-  {titre:"Gymnopédie n°1 - Satie",categorie:"classique",id:"S-Xm7s9eGxU",start:0,choix:["Gymnopédie n°1","Gnossienne n°1","Gymnopédie n°3","Je te veux"]},
-  {titre:"Canon en Ré - Pachelbel",categorie:"classique",id:"NlprozGcs98",start:0,choix:["Canon en Ré","Toccata et Fugue","Le Messie","Water Music"]},
-  {titre:"Toccata et Fugue - Bach",categorie:"classique",id:"ho9rZjlsyYY",start:0,choix:["Toccata et Fugue","Canon en Ré","Brandenburg","Le Clavier Bien Tempéré"]},
-  {titre:"Ode à la Joie - Beethoven",categorie:"classique",id:"_-P-HxTtlpQ",start:0,choix:["Ode à la Joie","Symphonie du Nouveau Monde","Bolero","Le Beau Danube Bleu"]},
-  {titre:"Boléro - Ravel",categorie:"classique",id:"3-wmjBPMGoo",start:0,choix:["Boléro","La Valse","Pavane","Daphnis et Chloé"]},
-  {titre:"Le Lac des Cygnes",categorie:"classique",id:"9cJPj_JCqmM",start:0,choix:["Le Lac des Cygnes","La Belle au Bois Dormant","Casse-Noisette","La Symphonie Pathétique"]},
-  {titre:"Also Sprach Zarathustra",categorie:"classique",id:"ETveS23djXM",start:0,choix:["Also Sprach Zarathustra","Don Quichotte","Ein Heldenleben","Till Eulenspiegel"]},
-  {titre:"Requiem - Mozart",categorie:"classique",id:"sPlhKP0nZII",start:0,choix:["Requiem","Symphonie n°40","La Flûte Enchantée","Don Giovanni"]},
-  {titre:"1812 Ouverture",categorie:"classique",id:"VbxgYliBkRU",start:0,choix:["1812 Ouverture","Capriccio Italien","Marche Slave","Sérénade pour cordes"]},
-  {titre:"Le Beau Danube Bleu",categorie:"classique",id:"cKkDMiGUbUw",start:0,choix:["Le Beau Danube Bleu","Radetzky March","Tritsch-Tratsch Polka","An der schönen blauen Donau"]},
-  {titre:"Nessun Dorma - Puccini",categorie:"classique",id:"cWc7vYjgnTs",start:0,choix:["Nessun Dorma","O Sole Mio","La Traviata","Caro Mio Ben"]},
-  {titre:"Printemps - Les Quatre Saisons",categorie:"classique",id:"e3nSvIiBNFo",start:0,choix:["Printemps","Été","Automne","Hiver"]},
-  {titre:"Casse-Noisette - Fée Dragée",categorie:"classique",id:"uD3oATVXGSc",start:0,choix:["Casse-Noisette","Le Lac des Cygnes","La Belle au Bois Dormant","Roméo et Juliette"]},
-  {titre:"La Flûte Enchantée - Mozart",categorie:"classique",id:"sAh4eNblW0Q",start:0,choix:["La Flûte Enchantée","Don Giovanni","Le Mariage de Figaro","Così fan tutte"]},
-  // ⚽ SPORT
-  {titre:"UEFA Champions League",categorie:"sport",id:"wFMPTEHnmXs",start:0,choix:["UEFA Champions League","Coupe du Monde","Roland Garros","Tour de France"]},
-  {titre:"WWE - Intro",categorie:"sport",id:"aVMWBRMEk7U",start:0,choix:["WWE","UFC","NBA","NFL"]},
-  {titre:"Formule 1 - Theme",categorie:"sport",id:"XNs8LdgV5mE",start:0,choix:["Formule 1","MotoGP","NASCAR","WRC"]},
-  {titre:"Wimbledon - Theme",categorie:"sport",id:"S3WDzLzuvvo",start:0,choix:["Wimbledon","Roland Garros","US Open","Australian Open"]},
-  {titre:"Olympic Fanfare",categorie:"sport",id:"4-5LLlStEBQ",start:0,choix:["Jeux Olympiques","Jeux Paralympiques","Commonwealth Games","Jeux Panasiatiques"]},
-  {titre:"Tour de France - Theme",categorie:"sport",id:"9tUVB2kXETo",start:0,choix:["Tour de France","Giro d'Italia","Vuelta","Paris-Roubaix"]},
-  {titre:"NBA on NBC",categorie:"sport",id:"GDnasxhgp5I",start:0,choix:["NBA","WNBA","NCAA","EuroLeague"]},
-  {titre:"Waka Waka - Coupe du Monde 2010",categorie:"sport",id:"pRpeEdMmmQ0",start:0,choix:["Waka Waka","The Cup of Life","Wavin Flag","Give Me Freedom"]},
-  {titre:"Roland Garros - Theme",categorie:"sport",id:"EMw3ZU7jkck",start:0,choix:["Roland Garros","Wimbledon","US Open","Australian Open"]},
-  {titre:"Eye of the Tiger - Rocky",categorie:"sport",id:"btPJPFnesV4",start:0,choix:["Rocky","Creed","Southpaw","Bleed for This"]},
-  {titre:"ESPN SportsCenter",categorie:"sport",id:"cSGCm1lHJRw",start:0,choix:["ESPN","Sky Sports","Eurosport","Canal+"]},
-  {titre:"Golf - The Masters",categorie:"sport",id:"EHmJcCdxMWA",start:0,choix:["Augusta Masters","US Open Golf","The Open","Ryder Cup"]},
-  {titre:"Rugby - Sweet Chariot",categorie:"sport",id:"RJw3i144XNY",start:0,choix:["Swing Low Sweet Chariot","Bread of Heaven","Flower of Scotland","Fields of Athenry"]},
-  {titre:"Coupe du Monde 1998",categorie:"sport",id:"ILgXkUiABss",start:0,choix:["France 98","Italie 90","Mexique 86","Espagne 82"]},
-  {titre:"Eurosport - Theme",categorie:"sport",id:"MFpBwZnMNsk",start:0,choix:["Eurosport","Sky Sports","ESPN","beIN Sports"]},
-  {titre:"Monday Night Football",categorie:"sport",id:"dXjk3YBKaZA",start:0,choix:["Monday Night Football","Sunday Night Football","Thursday Night Football","NFL Network"]},
-  {titre:"Ligue 1 - Theme",categorie:"sport",id:"VdE1ieAEPjM",start:0,choix:["Ligue 1","Premier League","La Liga","Serie A"]},
-  {titre:"NBC Sports - NFL",categorie:"sport",id:"F_6_h_VZZBI",start:0,choix:["NFL","NBA","MLB","NHL"]},
-  {titre:"Tour de France - Eurosport Intro",categorie:"sport",id:"3LVXV28VFGU",start:0,choix:["Tour de France","Paris-Nice","Critérium du Dauphiné","Milan-San Remo"]},
-  {titre:"Cricket - The Ashes",categorie:"sport",id:"4cRLIPNzN2E",start:0,choix:["Cricket","Polo","Croquet","Softball"]},
-  // 📺 PUBLICITÉS
-  {titre:"Évian",categorie:"pub",id:"XQcVllWpwGs",start:0,choix:["Évian","Volvic","Badoit","Contrex"]},
-  {titre:"Coca-Cola - Holidays",categorie:"pub",id:"v2P-55T-_Bc",start:0,choix:["Coca-Cola","Pepsi","Fanta","Sprite"]},
-  {titre:"McDonald's - I'm Lovin' It",categorie:"pub",id:"GXZX4-mYXRw",start:0,choix:["McDonald's","Burger King","Quick","KFC"]},
-  {titre:"Nike - Just Do It",categorie:"pub",id:"Ly_H8dmifdQ",start:0,choix:["Nike","Adidas","Puma","Reebok"]},
-  {titre:"Intel Inside",categorie:"pub",id:"5HBNi4ZpliE",start:0,choix:["Intel","AMD","NVIDIA","ARM"]},
-  {titre:"Haribo - Les enfants adorent",categorie:"pub",id:"bA9koRqILiI",start:0,choix:["Haribo","Lutti","Carambar","Chupa Chups"]},
-  {titre:"Orangina - Secouez-moi",categorie:"pub",id:"l0nYePMaUYE",start:0,choix:["Orangina","Fanta","Tropico","Pulco"]},
-  {titre:"Nescafé - Good morning",categorie:"pub",id:"YBuBQVEEiK4",start:0,choix:["Nescafé","Ricoré","Illy","Lavazza"]},
-  {titre:"Milka - Tendresse",categorie:"pub",id:"4gx66p4WS1Q",start:0,choix:["Milka","Kinder","Ferrero","Nestlé"]},
-  {titre:"Danette - On se lève tous pour",categorie:"pub",id:"9vQCgYDXrGg",start:0,choix:["Danette","Danone","Yoplait","Nestlé"]},
-  {titre:"Loto - Et si c'était vous",categorie:"pub",id:"YSKdSHHouAI",start:0,choix:["FDJ","PMU","Betclic","Winamax"]},
-  {titre:"SNCF - Voyager c'est bien",categorie:"pub",id:"cbCOXc3cHAc",start:0,choix:["SNCF","Eurostar","Thalys","Ouigo"]},
-  {titre:"Orange - Le futur",categorie:"pub",id:"4G1TMGFEdAk",start:0,choix:["Orange","SFR","Bouygues","Free"]},
-  {titre:"Renault - Createur d'automobiles",categorie:"pub",id:"8GNjRXc8QHE",start:0,choix:["Renault","Peugeot","Citroën","Volkswagen"]},
-  {titre:"Old Spice",categorie:"pub",id:"owGykVbfgUE",start:0,choix:["Old Spice","Axe","Gillette","Dove"]},
-  {titre:"Kinder Surprise",categorie:"pub",id:"JsLGpAuAFZQ",start:0,choix:["Kinder","Milka","Kit Kat","Bounty"]},
-  {titre:"Apple - Think Different",categorie:"pub",id:"nmwXdGm89Tk",start:0,choix:["Apple","Microsoft","IBM","Dell"]},
-  {titre:"AXA - Assureur & Banquier",categorie:"pub",id:"yNMSJHB5JiA",start:0,choix:["AXA","Allianz","Maif","Groupama"]},
-  {titre:"BNP Paribas",categorie:"pub",id:"Z2D3RI3JZUQ",start:0,choix:["BNP Paribas","Crédit Agricole","Société Générale","LCL"]},
-  {titre:"Géant Casino",categorie:"pub",id:"Cw1jkn7A92s",start:0,choix:["Géant Casino","Carrefour","Leclerc","Auchan"]},
-  // 🎤 K-POP
-  {titre:"Dynamite - BTS",categorie:"kpop",id:"gdZLi9oWNZg",start:0,choix:["BTS","BLACKPINK","EXO","TWICE"]},
-  {titre:"Kill This Love - BLACKPINK",categorie:"kpop",id:"2S24-y0Ij3Y",start:0,choix:["BLACKPINK","TWICE","aespa","IVE"]},
-  {titre:"Gee - Girls' Generation",categorie:"kpop",id:"U1yMWBJanJM",start:0,choix:["Girls' Generation","KARA","Wonder Girls","4Minute"]},
-  {titre:"Gangnam Style - PSY",categorie:"kpop",id:"9bZkp7q19f0",start:0,choix:["PSY","CL","G-Dragon","Taeyang"]},
-  {titre:"DNA - BTS",categorie:"kpop",id:"MBdVXkSdhwU",start:0,choix:["BTS","GOT7","MONSTA X","SHINee"]},
-  {titre:"DDU-DU DDU-DU - BLACKPINK",categorie:"kpop",id:"IHNzOHi8sJs",start:0,choix:["BLACKPINK","TWICE","Red Velvet","aespa"]},
-  {titre:"FANCY - TWICE",categorie:"kpop",id:"kOHB85mXBuw",start:0,choix:["TWICE","BLACKPINK","IZ*ONE","MAMAMOO"]},
-  {titre:"Next Level - aespa",categorie:"kpop",id:"4TWR90KJl84",start:0,choix:["aespa","BLACKPINK","TWICE","IVE"]},
-  {titre:"FAKE LOVE - BTS",categorie:"kpop",id:"7C2z4GqqS5E",start:0,choix:["BTS","EXO","NCT","ATEEZ"]},
-  {titre:"Ring Ding Dong - SHINee",categorie:"kpop",id:"tKCe5dSRMXA",start:0,choix:["SHINee","EXO","Super Junior","f(x)"]},
-  {titre:"Growl - EXO",categorie:"kpop",id:"d3vHNNdHGpM",start:0,choix:["EXO","SHINee","TVXQ","Super Junior"]},
-  {titre:"Sorry Sorry - Super Junior",categorie:"kpop",id:"Vkfpi2H8tOE",start:0,choix:["Super Junior","TVXQ","SHINee","2PM"]},
-  {titre:"Butter - BTS",categorie:"kpop",id:"WMweEpGlu_U",start:0,choix:["BTS","SEVENTEEN","MONSTA X","NCT 127"]},
-  {titre:"Pink Venom - BLACKPINK",categorie:"kpop",id:"gQlMMD8auMs",start:0,choix:["BLACKPINK","aespa","TWICE","LE SSERAFIM"]},
-  {titre:"Attention - NewJeans",categorie:"kpop",id:"fECPSGkbGwg",start:0,choix:["NewJeans","IVE","aespa","LE SSERAFIM"]},
-  {titre:"Cupid - FIFTY FIFTY",categorie:"kpop",id:"_5MVTQ_PVDY",start:0,choix:["FIFTY FIFTY","IVE","NewJeans","aespa"]},
-  {titre:"Electric Shock - f(x)",categorie:"kpop",id:"RcNmbbkpBcE",start:0,choix:["f(x)","SHINee","EXO","TVXQ"]},
-  {titre:"Mirotic - TVXQ",categorie:"kpop",id:"t_Z3pjLsM8Q",start:0,choix:["TVXQ","Super Junior","SHINee","2PM"]},
-  {titre:"SOLO - JENNIE",categorie:"kpop",id:"P1bGp_4s7os",start:0,choix:["JENNIE","ROSÉ","LISA","JISOO"]},
-  {titre:"Bling Bling - IKON",categorie:"kpop",id:"5GmRKjHbZTw",start:0,choix:["IKON","WINNER","BIGBANG","iKON"]},
-  // 🎭 COMÉDIES MUSICALES
-  {titre:"Summer Nights - Grease",categorie:"comedie",id:"uo6dbtMuFJY",start:0,choix:["Grease","Saturday Night Fever","Dirty Dancing","Footloose"]},
-  {titre:"Mamma Mia",categorie:"comedie",id:"unfzfe8f9NI",start:0,choix:["Mamma Mia","Grease","Chicago","Cabaret"]},
-  {titre:"The Phantom of the Opera",categorie:"comedie",id:"wBvCMGAokm8",start:0,choix:["Le Fantôme de l'Opéra","Les Misérables","Cats","Starlight Express"]},
-  {titre:"I Dreamed a Dream - Les Misérables",categorie:"comedie",id:"XG-OzQVwFKc",start:0,choix:["Les Misérables","Le Fantôme de l'Opéra","Miss Saigon","Chess"]},
-  {titre:"Memory - Cats",categorie:"comedie",id:"H4-kkFKxHiA",start:0,choix:["Cats","Le Fantôme de l'Opéra","Starlight Express","Aspects of Love"]},
-  {titre:"Defying Gravity - Wicked",categorie:"comedie",id:"vAn3Vv0qoR0",start:0,choix:["Wicked","Hamilton","Dear Evan Hansen","Spring Awakening"]},
-  {titre:"Alexander Hamilton",categorie:"comedie",id:"VhinPd5RRJw",start:0,choix:["Hamilton","Hairspray","Rent","Hair"]},
-  {titre:"One Day More - Les Misérables",categorie:"comedie",id:"pG6kYcQcaZ8",start:0,choix:["Les Misérables","Le Fantôme de l'Opéra","Miss Saigon","Aspects of Love"]},
-  {titre:"Don't Cry for Me Argentina - Evita",categorie:"comedie",id:"heFfd0YIBIY",start:0,choix:["Evita","Chicago","Grease","Cabaret"]},
-  {titre:"All That Jazz - Chicago",categorie:"comedie",id:"k3MqLhBHMus",start:0,choix:["Chicago","Cabaret","Evita","Nine"]},
-  {titre:"Seasons of Love - Rent",categorie:"comedie",id:"hj7LRuusFqo",start:0,choix:["Rent","Grease","Footloose","Hair"]},
-  {titre:"The Music of the Night",categorie:"comedie",id:"VmEUnlKPDiY",start:0,choix:["Le Fantôme de l'Opéra","Les Misérables","Cats","Sunset Boulevard"]},
-  {titre:"Willkommen - Cabaret",categorie:"comedie",id:"V7pHMSIKDU0",start:0,choix:["Cabaret","Chicago","Evita","Grease"]},
-  {titre:"Beauty and the Beast Musical",categorie:"comedie",id:"qeXQ2dJq9dk",start:0,choix:["La Belle et la Bête","Aladdin","Le Roi Lion","Cendrillon"]},
-  {titre:"Electricity - Billy Elliot",categorie:"comedie",id:"wgvQfA3FhHI",start:0,choix:["Billy Elliot","Matilda","School of Rock","Newsies"]},
-  {titre:"Circle of Life - Roi Lion Musical",categorie:"comedie",id:"1hd2XIJM_yM",start:0,choix:["Le Roi Lion","Aladdin","La Belle et la Bête","Frozen"]},
-  {titre:"Be More Chill",categorie:"comedie",id:"eKFmrSQhFA4",start:0,choix:["Be More Chill","Dear Evan Hansen","Heathers","Mean Girls"]},
-  {titre:"What's Up - Newsies",categorie:"comedie",id:"BCXT5V8mtkQ",start:0,choix:["Newsies","Billy Elliot","Matilda","School of Rock"]},
-  {titre:"Send in the Clowns",categorie:"comedie",id:"v7TBJkBf5RI",start:0,choix:["A Little Night Music","Company","Follies","Pacific Overtures"]},
-  {titre:"What I Did for Love - A Chorus Line",categorie:"comedie",id:"_0FLbJPBXpg",start:0,choix:["A Chorus Line","Cabaret","Chicago","42nd Street"]},
-  // 🐾 CRIS D'ANIMAUX
-  {titre:"Lion",categorie:"animaux",id:"2YwVkGgOAuA",start:2,choix:["Lion","Tigre","Léopard","Jaguar"]},
-  {titre:"Loup",categorie:"animaux",id:"TxMgj_-HLhk",start:0,choix:["Loup","Renard","Chacal","Coyote"]},
-  {titre:"Éléphant",categorie:"animaux",id:"KDhTMkp2Rkg",start:0,choix:["Éléphant","Rhinocéros","Hippopotame","Girafe"]},
-  {titre:"Dauphin",categorie:"animaux",id:"kvpqLRNFMrQ",start:0,choix:["Dauphin","Orque","Baleine","Phoque"]},
-  {titre:"Gorille",categorie:"animaux",id:"pMuLnAe6rvM",start:0,choix:["Gorille","Chimpanzé","Orang-Outan","Bonobo"]},
-  {titre:"Baleine",categorie:"animaux",id:"Z3SYjJdJn7E",start:0,choix:["Baleine","Orque","Dauphin","Lamantin"]},
-  {titre:"Grenouille",categorie:"animaux",id:"s0OOYJ5YRNE",start:0,choix:["Grenouille","Crapaud","Salamandre","Triton"]},
-  {titre:"Hibou",categorie:"animaux",id:"FPlcWbtBR0g",start:0,choix:["Hibou","Chouette","Aigle","Faucon"]},
-  {titre:"Renard",categorie:"animaux",id:"m3_DY9HWPF8",start:0,choix:["Renard","Loup","Chacal","Coyote"]},
-  {titre:"Ours",categorie:"animaux",id:"lhEjCYvKEFQ",start:0,choix:["Ours","Grizzly","Panda","Ours Polaire"]},
-  {titre:"Tigre",categorie:"animaux",id:"k04EiJaRPxY",start:0,choix:["Tigre","Lion","Léopard","Guépard"]},
-  {titre:"Crocodile",categorie:"animaux",id:"r37hMoaWS9M",start:0,choix:["Crocodile","Alligator","Caïman","Varan"]},
-  {titre:"Cheval",categorie:"animaux",id:"XlGHMJS8rNg",start:0,choix:["Cheval","Âne","Zèbre","Poney"]},
-  {titre:"Vache",categorie:"animaux",id:"tBTjJN7tOMg",start:0,choix:["Vache","Bison","Buffle","Yak"]},
-  {titre:"Coq",categorie:"animaux",id:"c7jGRVBEMag",start:0,choix:["Coq","Poule","Faisan","Dindon"]},
-  {titre:"Corbeau",categorie:"animaux",id:"Q88kKEH0JKU",start:0,choix:["Corbeau","Pie","Geai","Choucas"]},
-  {titre:"Perroquet",categorie:"animaux",id:"bFG7Jq0aRaw",start:0,choix:["Perroquet","Perruche","Cacatoès","Ara"]},
-  {titre:"Otarie",categorie:"animaux",id:"OPArpGMH_pA",start:0,choix:["Otarie","Phoque","Morse","Lamantin"]},
-  {titre:"Hyène",categorie:"animaux",id:"7F4_GPs6hNg",start:0,choix:["Hyène","Chacal","Lycaon","Suricates"]},
-  {titre:"Pingouin",categorie:"animaux",id:"qmQIVSy4o64",start:0,choix:["Pingouin","Manchot","Albatros","Macareux"]},
-  // 💬 RÉPLIQUES
-  {titre:"Terminator - I'll be back",categorie:"replique",id:"Lq3PthkXwF8",start:2,choix:["Terminator","Robocop","Predator","Total Recall"]},
-  {titre:"Star Wars - May the Force",categorie:"replique",id:"7kAeGQkZ0YU",start:0,choix:["Star Wars","Star Trek","Interstellar","Dune"]},
-  {titre:"Le Parrain - Make him an offer",categorie:"replique",id:"NqyGAKMrFWY",start:0,choix:["Le Parrain","Scarface","Les Affranchis","Casino"]},
-  {titre:"Forrest Gump - Life is like chocolates",categorie:"replique",id:"CJHjOB_rgow",start:0,choix:["Forrest Gump","Cast Away","Philadelphia","The Green Mile"]},
-  {titre:"Joker - Why so serious",categorie:"replique",id:"6mJGBBtBbqo",start:0,choix:["Joker","Batman Begins","The Dark Knight","Batman Forever"]},
-  {titre:"Scarface - Say hello",categorie:"replique",id:"LKHzWj1VXDQ",start:0,choix:["Scarface","The Godfather","Goodfellas","Casino"]},
-  {titre:"Matrix - Red pill blue pill",categorie:"replique",id:"zE7PKRjrid4",start:0,choix:["Matrix","Inception","Dark City","eXistenZ"]},
-  {titre:"Shrek - Ogres are like onions",categorie:"replique",id:"pPvSXk3rVJ4",start:0,choix:["Shrek","Donkey","Fiona","Lord Farquaad"]},
-  {titre:"Toy Story - To infinity and beyond",categorie:"replique",id:"EFpDOunM3i4",start:0,choix:["Toy Story","Cars","Monstres et Cie","Ratatouille"]},
-  {titre:"Titanic - King of the world",categorie:"replique",id:"cHBl7Sa_l_s",start:0,choix:["Titanic","The Revenant","Inception","Shutter Island"]},
-  {titre:"Shining - Here's Johnny",categorie:"replique",id:"9xkKQhJuFkA",start:0,choix:["Shining","Psycho","Halloween","Nightmare on Elm Street"]},
-  {titre:"E.T. - Phone home",categorie:"replique",id:"ZCmgm1QQYQA",start:0,choix:["E.T.","Close Encounters","Contact","Signs"]},
-  {titre:"Home Alone - Kevin!",categorie:"replique",id:"ypXdDIxNrM4",start:0,choix:["Home Alone","Home Alone 2","Problem Child","Richie Rich"]},
-  {titre:"Taxi Driver - You talkin to me",categorie:"replique",id:"0bVp_I0c7fM",start:0,choix:["Taxi Driver","Raging Bull","Mean Streets","Goodfellas"]},
-  {titre:"Apollo 13 - Houston we have a problem",categorie:"replique",id:"g2yrJSBmXGE",start:0,choix:["Apollo 13","Gravity","The Martian","Interstellar"]},
-  {titre:"Finding Nemo - Just keep swimming",categorie:"replique",id:"GLxCiZ9qcXw",start:0,choix:["Le Monde de Nemo","Le Monde de Dory","Surf's Up","Shark Tale"]},
-  {titre:"Lion King - Hakuna Matata",categorie:"replique",id:"dWyaRGx3JZk",start:0,choix:["Le Roi Lion","Aladdin","Shrek","Mulan"]},
-  {titre:"Mean Girls - It's so fetch",categorie:"replique",id:"jjT8EMvbf1g",start:0,choix:["Mean Girls","Legally Blonde","Clueless","Bring It On"]},
-  {titre:"Dirty Harry - Do you feel lucky",categorie:"replique",id:"tBxNoOkqPMo",start:0,choix:["Dirty Harry","Bullitt","The French Connection","Serpico"]},
-  {titre:"Spiderman - Great power",categorie:"replique",id:"A4qPFhj8v7E",start:0,choix:["Spider-Man","Superman","Batman","Iron Man"]},
-];
-
-// ═══════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════
-loadTracks();
+})();
 </script>
 </body>
 </html>
