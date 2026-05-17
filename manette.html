@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-  <style> 
+  <style>
     :root {
       --bg:       #07090f;
       --surface:  #0e1420;
@@ -342,7 +342,7 @@
   <div id="qcm-zone" style="width:100%; max-width:360px; display:none; flex-direction:column; align-items:center;">
     <p style="font-weight:800; font-size:1.05rem; margin-bottom:16px; color:var(--muted); text-transform:uppercase; letter-spacing:1px;">Choisis une réponse</p>
     <div id="qcm-buttons" style="width:100%;"></div>
-    <button class="btn btn-back" onclick="hideQCM()" style="margin-top:8px;">← Retour</button>
+    <button class="btn btn-back" id="btn-back-qcm" onclick="hideQCM()" style="margin-top:8px;">← Retour</button>
   </div>
 
   <div id="feedback" class="hidden"></div>
@@ -588,6 +588,8 @@ function listenToGameState() {
    RESET UI
 ───────────────────────────────────────── */
 function resetAnswerUI() {
+  qcmViewed = false;
+  document.getElementById('btn-back-qcm').style.display = 'block';
   hideQCM();
   document.getElementById('answer-input').value = '';
   document.getElementById('send-btn').disabled = false;
@@ -600,8 +602,11 @@ function resetAnswerUI() {
 }
 
 /* ─────────────────────────────────────────
+/* ─────────────────────────────────────────
    QCM
 ───────────────────────────────────────── */
+let qcmViewed = false; // true dès que les options ont été affichées
+
 function showQCM() {
   db.ref('gameState').once('value', snap => {
     const state = snap.val();
@@ -609,6 +614,10 @@ function showQCM() {
       setFeedback("Attends que la musique commence !", 'err');
       return;
     }
+
+    // Marquer comme vu — le retour sera bloqué
+    qcmViewed = true;
+    document.getElementById('btn-back-qcm').style.display = 'none';
 
     const container = document.getElementById('qcm-buttons');
     container.innerHTML = '';
@@ -627,6 +636,8 @@ function showQCM() {
 }
 
 function hideQCM() {
+  // Bloquer le retour si les options ont déjà été vues
+  if (qcmViewed) return;
   document.getElementById('qcm-zone').style.display = 'none';
   document.getElementById('free-zone').style.display = 'flex';
 }
@@ -699,8 +710,8 @@ function sendAnswer(isQcm, qcmText, qcmBtn, solution) {
       });
 
       if (isCorrect) {
-        db.ref('players/' + myId + '/score').transaction(s => (s || 0) + 1);
-        setFeedback("🎯 Bonne réponse ! +1 pt", 'ok');
+        db.ref('players/' + myId + '/score').transaction(s => (s || 0) + 3);
+        setFeedback("🎯 Bonne réponse ! +3 pts", 'ok');
       } else {
         setFeedback(`❌ Faux ! C'était : ${state.solution}`, 'err');
       }
