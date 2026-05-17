@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8"> 
+<meta charset="UTF-8">
 <title>Blind Test — Salon</title>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -354,8 +354,9 @@ var db = firebase.database();
 // ═══════════════════════════════════════
 var CATS = [
   {id:"musique",    label:"Musique",           icon:"🎵"},
-  {id:"film",       label:"Films / Séries",    icon:"🎬"},
-  {id:"pub",        label:"Publicités",         icon:"📺"},
+  {id:"film",       label:"Films",             icon:"🎬"},
+  {id:"serie",      label:"Séries TV",         icon:"📺"},
+  {id:"pub",        label:"Publicités",         icon:"🛒"},
   {id:"jv",         label:"Jeux Vidéo",         icon:"🎮"},
   {id:"replique",   label:"Répliques",          icon:"💬"},
   {id:"anime",      label:"Animés",             icon:"⛩️"},
@@ -364,7 +365,7 @@ var CATS = [
   {id:"sport",      label:"Sport",              icon:"⚽"},
   {id:"classique",  label:"Classique",          icon:"🎻"},
   {id:"annees80",   label:"Années 80-90",       icon:"📼"},
-  {id:"francais",   label:"Chanson Française",  icon:"FR"},
+  {id:"francais",   label:"Chanson Française",  icon:"🎙️"},
   {id:"kpop",       label:"K-Pop / J-Pop",      icon:"🎤"},
   {id:"comedie",    label:"Comédies Musicales", icon:"🎭"},
   {id:"animaux",    label:"Cris d'Animaux",     icon:"🐾"},
@@ -615,6 +616,9 @@ function loadTrack() {
   document.getElementById('answer-display').classList.add('hidden');
   document.getElementById('reveal-wrap').classList.add('hidden');
   document.getElementById('next-wrap').classList.add('hidden');
+  // Cacher le player YouTube
+  var wrap=document.getElementById('yt-player-wrap');
+  wrap.style.cssText='position:fixed;bottom:-9999px;right:-9999px;width:1px;height:1px;overflow:hidden;pointer-events:none;opacity:0';
 
   db.ref('answers').remove();
   db.ref('gameState').set({accepting:true, choix:track.choix, solution:track.titre});
@@ -631,11 +635,12 @@ function loadTrack() {
 }
 
 function stopAnswering() {
-  if(playerReady&&player) player.stopVideo();
+  if(playerReady&&player) player.pauseVideo();
   db.ref('gameState').update({accepting:false});
   document.getElementById('timer-display').textContent='⏰';
-  document.getElementById('reveal-wrap').classList.remove('hidden');
   renderAnswers();
+  // Révélation automatique après 1.5s
+  setTimeout(function(){ revealResult(); }, 1500);
 }
 
 function revealResult() {
@@ -646,6 +651,10 @@ function revealResult() {
   document.getElementById('answer-display').classList.remove('hidden');
   document.getElementById('reveal-wrap').classList.add('hidden');
   document.getElementById('next-wrap').classList.remove('hidden');
+  // Afficher le player YouTube avec la vidéo pour montrer les images
+  var wrap=document.getElementById('yt-player-wrap');
+  wrap.style.cssText='position:fixed;bottom:20px;right:20px;z-index:50;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.7);width:280px;height:158px';
+  if(playerReady&&player) player.playVideo();
 }
 
 function nextRound() {
@@ -787,7 +796,7 @@ var DEFAULT_TRACKS=[
   {titre:"Since U Been Gone",categorie:"musique",id:"R7UrFYvl5TE",start:0,choix:["Since U Been Gone","Behind These Hazel Eyes","Because of You","Walk Away"]},
   {titre:"Somebody That I Used to Know",categorie:"musique",id:"8UVNT4wvIGY",start:0,choix:["Somebody That I Used to Know","Eyes Wide Open","Heart's a Mess","Coming Back"]},
   {titre:"Get Lucky",categorie:"musique",id:"5NV6Rdv1h3Q",start:0,choix:["Get Lucky","Instant Crush","Lose Yourself to Dance","Give Life Back to Music"]},
-  // 🎬 FILMS — bandes originales souvent libres de droits ou sur chaînes officielles
+  // 🎬 FILMS
   {titre:"Le Roi Lion",categorie:"film",id:"08pZpY_mPto",start:10,choix:["Le Roi Lion","Aladdin","Mulan","Tarzan"]},
   {titre:"Star Wars",categorie:"film",id:"EjMNNpIksaI",start:8,choix:["Star Wars","Star Trek","Interstellar","Dune"]},
   {titre:"Pirates des Caraïbes",categorie:"film",id:"K3pOUvO8qTM",start:0,choix:["Pirates des Caraïbes","Vaiana","Peter Pan","Sinbad"]},
@@ -797,10 +806,6 @@ var DEFAULT_TRACKS=[
   {titre:"Jurassic Park",categorie:"film",id:"PJlmYh27MHg",start:0,choix:["Jurassic Park","King Kong","Godzilla","La Momie"]},
   {titre:"Indiana Jones",categorie:"film",id:"mBBH6IKDOFs",start:0,choix:["Indiana Jones","Tomb Raider","National Treasure","The Mummy"]},
   {titre:"Interstellar",categorie:"film",id:"UDVtMYqUAyw",start:0,choix:["Interstellar","Inception","Gravity","The Martian"]},
-  {titre:"Game of Thrones",categorie:"film",id:"bjMnJGc5HHo",start:0,choix:["Game of Thrones","The Witcher","House of the Dragon","Vikings"]},
-  {titre:"Stranger Things",categorie:"film",id:"pFS4zaid1t8",start:0,choix:["Stranger Things","Dark","The OA","Black Mirror"]},
-  {titre:"Breaking Bad",categorie:"film",id:"HhesHBpEZhM",start:0,choix:["Breaking Bad","Better Call Saul","Ozark","Narcos"]},
-  {titre:"The Mandalorian",categorie:"film",id:"aOC8E8z_ifw",start:0,choix:["The Mandalorian","Obi-Wan Kenobi","Andor","The Book of Boba Fett"]},
   {titre:"Avengers",categorie:"film",id:"7yK91c5v-rc",start:0,choix:["Avengers","Captain America","Thor","Iron Man"]},
   {titre:"Gladiator",categorie:"film",id:"owK1qxDselE",start:0,choix:["Gladiator","Braveheart","300","Troy"]},
   {titre:"Le Parrain",categorie:"film",id:"1R3V5wGvJWQ",start:0,choix:["Le Parrain","Les Affranchis","Casino","Il était une fois en Amérique"]},
@@ -808,6 +813,31 @@ var DEFAULT_TRACKS=[
   {titre:"James Bond - Skyfall",categorie:"film",id:"DeumyOzKqgI",start:0,choix:["Skyfall","Casino Royale","GoldenEye","Spectre"]},
   {titre:"La La Land",categorie:"film",id:"0pdqf4P9MB8",start:0,choix:["La La Land","Whiplash","Moulin Rouge","Chicago"]},
   {titre:"Schindler's List",categorie:"film",id:"4-_eOAJb9lE",start:0,choix:["Schindler's List","Saving Private Ryan","The Pianist","Life is Beautiful"]},
+  {titre:"Le Seigneur des Anneaux",categorie:"film",id:"V75dKBMxBFs",start:0,choix:["Le Seigneur des Anneaux","Le Hobbit","Narnia","Eragon"]},
+  {titre:"Forrest Gump",categorie:"film",id:"4sHMFHOz7Wo",start:0,choix:["Forrest Gump","Cast Away","Philadelphia","The Green Mile"]},
+  {titre:"Spider-Man",categorie:"film",id:"LZPFCfCMJmI",start:0,choix:["Spider-Man","Superman","Batman","Iron Man"]},
+  {titre:"Retour vers le Futur",categorie:"film",id:"qvsgGtivCgs",start:0,choix:["Retour vers le Futur","Terminator","RoboCop","Total Recall"]},
+  // 📺 SERIES TV
+  {titre:"Game of Thrones",categorie:"serie",id:"bjMnJGc5HHo",start:0,choix:["Game of Thrones","The Witcher","House of the Dragon","Vikings"]},
+  {titre:"Stranger Things",categorie:"serie",id:"pFS4zaid1t8",start:0,choix:["Stranger Things","Dark","The OA","Black Mirror"]},
+  {titre:"Breaking Bad",categorie:"serie",id:"HhesHBpEZhM",start:0,choix:["Breaking Bad","Better Call Saul","Ozark","Narcos"]},
+  {titre:"The Mandalorian",categorie:"serie",id:"aOC8E8z_ifw",start:0,choix:["The Mandalorian","Obi-Wan Kenobi","Andor","The Book of Boba Fett"]},
+  {titre:"Friends",categorie:"serie",id:"OtOMOjhVKjE",start:0,choix:["Friends","How I Met Your Mother","The Big Bang Theory","Seinfeld"]},
+  {titre:"The Office",categorie:"serie",id:"LHBsLpLLygo",start:0,choix:["The Office","Parks and Recreation","Brooklyn Nine-Nine","30 Rock"]},
+  {titre:"Peaky Blinders",categorie:"serie",id:"7gqOFfNkKaM",start:0,choix:["Peaky Blinders","Boardwalk Empire","Narcos","Taboo"]},
+  {titre:"Squid Game",categorie:"serie",id:"oqxAJKy0ii4",start:0,choix:["Squid Game","Alice in Borderland","Sweet Home","Kingdom"]},
+  {titre:"The Last of Us - Serie",categorie:"serie",id:"55QSlIBgBKY",start:0,choix:["The Last of Us","The Walking Dead","Station Eleven","Y The Last Man"]},
+  {titre:"Sherlock BBC",categorie:"serie",id:"Gvav4Qbk8UM",start:0,choix:["Sherlock","Hercule Poirot","Monk","Elementary"]},
+  {titre:"La Casa de Papel",categorie:"serie",id:"RJl3dWkuoZE",start:0,choix:["La Casa de Papel","Suburra","Gomorra","Gangs of London"]},
+  {titre:"Westworld",categorie:"serie",id:"EGy0Aox8coo",start:0,choix:["Westworld","Black Mirror","Devs","Humans"]},
+  {titre:"Chernobyl",categorie:"serie",id:"s9APLXM9Ei8",start:0,choix:["Chernobyl","The Terror","Pandemic","Years and Years"]},
+  {titre:"Succession",categorie:"serie",id:"OD5KKBgFaSc",start:0,choix:["Succession","Billions","Ozark","Yellowstone"]},
+  {titre:"The Boys",categorie:"serie",id:"M88oBmMSMkE",start:0,choix:["The Boys","Invincible","The Umbrella Academy","Jupiter's Legacy"]},
+  {titre:"Dark",categorie:"serie",id:"rrwycJ08PSA",start:0,choix:["Dark","Mindhunter","Dark Waters","Taboo"]},
+  {titre:"Arcane",categorie:"serie",id:"fxJFMnPgMbQ",start:0,choix:["Arcane","Castlevania","Blood of Zeus","The Witcher: Nightmare of the Wolf"]},
+  {titre:"Wednesday",categorie:"serie",id:"Di310o0GqkE",start:0,choix:["Wednesday","La Famille Addams","Sabrina","Haunting of Hill House"]},
+  {titre:"The Crown",categorie:"serie",id:"JWtnJjn6ng0",start:0,choix:["The Crown","Downton Abbey","Victoria","The Tudors"]},
+  {titre:"Lupin",categorie:"serie",id:"ga_SaFHPdWM",start:0,choix:["Lupin","Sherlock","Mindhunter","Narcos"]},
   // 🎮 JEUX VIDÉO — généralement libres via chaînes officielles Nintendo/etc
   {titre:"Super Mario Bros",categorie:"jv",id:"wGX4obVl64w",start:0,choix:["Super Mario Bros","Donkey Kong","Kirby","Yoshi's Island"]},
   {titre:"Tetris",categorie:"jv",id:"NmCCQxVBfyM",start:0,choix:["Tetris","Pac-Man","Pong","Snake"]},
