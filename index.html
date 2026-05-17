@@ -53,6 +53,17 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .num-input{font-size:1.1rem;width:70px;border-radius:8px;background:var(--bg);color:white;border:1px solid var(--border);padding:8px 10px;font-family:'Nunito',sans-serif;font-weight:700;text-align:center}
 .pool-info{font-size:.9rem;color:var(--muted);font-style:italic}
 .pool-info b{color:var(--accent3)}
+.time-estimate{
+  margin-left:auto;
+  font-family:'Bangers',cursive;
+  font-size:1.3rem;
+  letter-spacing:1.5px;
+  color:var(--purple);
+  background:rgba(168,85,247,.1);
+  border:1px solid rgba(168,85,247,.3);
+  border-radius:50px;
+  padding:5px 16px;
+}
 
 /* BUTTONS */
 .btn{display:inline-flex;align-items:center;gap:6px;font-family:'Nunito',sans-serif;font-size:1rem;font-weight:800;border:none;border-radius:10px;padding:12px 24px;cursor:pointer;transition:transform .15s,filter .15s}
@@ -212,8 +223,9 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
         <div class="cat-grid" id="cat-selector"><p style="color:var(--muted);font-style:italic;font-size:.9rem">Chargement…</p></div>
         <div class="options-row">
           <label for="nb-questions">Questions :</label>
-          <input type="number" id="nb-questions" value="10" min="1" max="100" class="num-input">
+          <input type="number" id="nb-questions" value="10" min="1" max="100" class="num-input" oninput="updateTimeEstimate()">
           <span class="pool-info">Pool : <b id="pool-count">0</b> titres</span>
+          <span class="time-estimate" id="time-estimate">⏱️ ~5 min</span>
         </div>
         <div class="controls">
           <button class="btn btn-danger" onclick="resetLobby()">🗑️ Vider le salon</button>
@@ -369,6 +381,8 @@ var CATS = [
   {id:"kpop",       label:"K-Pop / J-Pop",      icon:"🎤"},
   {id:"comedie",    label:"Comédies Musicales", icon:"🎭"},
   {id:"animaux",    label:"Cris d'Animaux",     icon:"🐾"},
+  {id:"rock",       label:"Rock",               icon:"🎸"},
+  {id:"annees2000", label:"Années 2000-2010",   icon:"💿"},
 ];
 
 // ═══════════════════════════════════════
@@ -499,6 +513,20 @@ function toggleCat(id,el) {
 function updatePool() {
   var n=selectedCats.size===0?allTracks.length:allTracks.filter(function(t){return selectedCats.has(t.categorie);}).length;
   document.getElementById('pool-count').textContent=n;
+  updateTimeEstimate();
+}
+
+function updateTimeEstimate() {
+  var nb=parseInt(document.getElementById('nb-questions').value)||10;
+  // ~30s par question (12s musique + 5s révélation + 13s transition/discussion)
+  var totalSec=nb*30;
+  var h=Math.floor(totalSec/3600);
+  var m=Math.floor((totalSec%3600)/60);
+  var label;
+  if(h>0) label='⏱️ ~'+h+'h'+String(m).padStart(2,'0');
+  else label='⏱️ ~'+m+' min';
+  var el=document.getElementById('time-estimate');
+  if(el) el.textContent=label;
 }
 
 // ═══════════════════════════════════════
@@ -964,6 +992,49 @@ var DEFAULT_TRACKS=[
   {titre:"Les Cornichons",categorie:"francais",id:"M6HkPiWppkM",start:0,choix:["Les Cornichons","Alexandrie Alexandra","La Bamba","Tout le monde fait pareil"]},
   {titre:"Je veux du soleil",categorie:"francais",id:"BumI5gQtJuw",start:0,choix:["Je veux du soleil","Soleil","L'été indien","Tombé du ciel"]},
   {titre:"Le Lundi au soleil",categorie:"francais",id:"1sJCN0BNZWQ",start:0,choix:["Le Lundi au soleil","Les Champs-Élysées","Alexandrie Alexandra","Aline"]},
+  {titre:"La Bamba",categorie:"francais",id:"xz6ZMlTSmD0",start:0,choix:["La Bamba","Los Lobos","Macarena","Bamboleo"]},
+  // 🎸 ROCK
+  {titre:"AC/DC",categorie:"rock",id:"pAgnJDJN4VA",start:0,choix:["AC/DC","Guns N' Roses","Metallica","Aerosmith"]},
+  {titre:"Nirvana",categorie:"rock",id:"hTWKbfoikeg",start:0,choix:["Nirvana","Pearl Jam","Soundgarden","Alice in Chains"]},
+  {titre:"Led Zeppelin",categorie:"rock",id:"QkF3oxziUI4",start:0,choix:["Led Zeppelin","Deep Purple","Black Sabbath","The Who"]},
+  {titre:"Queen",categorie:"rock",id:"fJ9rUzIMcZQ",start:0,choix:["Queen","David Bowie","Elton John","Freddie Mercury"]},
+  {titre:"Guns N' Roses",categorie:"rock",id:"o1tj2zJ2Wvg",start:0,choix:["Guns N' Roses","Metallica","Bon Jovi","Aerosmith"]},
+  {titre:"The Rolling Stones",categorie:"rock",id:"O4irXQhgMqg",start:0,choix:["The Rolling Stones","The Beatles","The Kinks","The Animals"]},
+  {titre:"Metallica",categorie:"rock",id:"CD-E1gVkJYw",start:0,choix:["Metallica","Slayer","Pantera","Megadeth"]},
+  {titre:"Green Day",categorie:"rock",id:"Yk0NJOv4O_M",start:0,choix:["Green Day","Blink-182","Sum 41","Simple Plan"]},
+  {titre:"Red Hot Chili Peppers",categorie:"rock",id:"GLvohMXgcBo",start:0,choix:["Red Hot Chili Peppers","Foo Fighters","Pearl Jam","Stone Temple Pilots"]},
+  {titre:"Foo Fighters",categorie:"rock",id:"eBG7P-K3r3Y",start:0,choix:["Foo Fighters","Nirvana","The Smashing Pumpkins","Bush"]},
+  {titre:"The White Stripes",categorie:"rock",id:"0J2QdDbelmY",start:0,choix:["The White Stripes","The Strokes","The Black Keys","Arctic Monkeys"]},
+  {titre:"Arctic Monkeys",categorie:"rock",id:"bpOSxM0rNPM",start:0,choix:["Arctic Monkeys","The Strokes","Interpol","Franz Ferdinand"]},
+  {titre:"Radiohead",categorie:"rock",id:"XFkzRNyygfk",start:0,choix:["Radiohead","Oasis","Blur","Pulp"]},
+  {titre:"U2",categorie:"rock",id:"ujNeHIo1sAA",start:0,choix:["U2","Simple Minds","Depeche Mode","The Cure"]},
+  {titre:"The Doors",categorie:"rock",id:"iv8GW1GaoIc",start:0,choix:["The Doors","Jefferson Airplane","Grateful Dead","Jimi Hendrix"]},
+  {titre:"David Bowie",categorie:"rock",id:"e9LRDjPfVmA",start:0,choix:["David Bowie","Iggy Pop","Lou Reed","T. Rex"]},
+  {titre:"Pink Floyd",categorie:"rock",id:"x-xTttimcNk",start:0,choix:["Pink Floyd","Yes","Genesis","King Crimson"]},
+  {titre:"Muse",categorie:"rock",id:"Xsp3_a-PMTw",start:0,choix:["Muse","Placebo","Coldplay","Radiohead"]},
+  {titre:"System of a Down",categorie:"rock",id:"CSvFpBOe8eY",start:0,choix:["System of a Down","Linkin Park","Slipknot","Korn"]},
+  {titre:"Linkin Park",categorie:"rock",id:"eVTXPUF4Oz4",start:0,choix:["Linkin Park","System of a Down","Slipknot","Korn"]},
+  // 💿 ANNÉES 2000-2010
+  {titre:"Gnarls Barkley",categorie:"annees2000",id:"bu0qZiMl33I",start:0,choix:["Gnarls Barkley","Outkast","Kanye West","T.I."]},
+  {titre:"Outkast",categorie:"annees2000",id:"PWgvGjAhvIw",start:0,choix:["Outkast","Gnarls Barkley","Ludacris","Lil Jon"]},
+  {titre:"Usher",categorie:"annees2000",id:"GxBSyx85Kp8",start:0,choix:["Usher","Lil Jon","Ludacris","Chris Brown"]},
+  {titre:"50 Cent",categorie:"annees2000",id:"5qm8PH4xAss",start:0,choix:["50 Cent","Eminem","Jay-Z","DMX"]},
+  {titre:"Eminem",categorie:"annees2000",id:"_Yhyp-_hX2s",start:0,choix:["Eminem","50 Cent","D12","Obie Trice"]},
+  {titre:"U2",categorie:"annees2000",id:"co6WMzDOh1o",start:0,choix:["U2","Coldplay","Snow Patrol","Keane"]},
+  {titre:"Coldplay",categorie:"annees2000",id:"RB-RcX5DS5A",start:0,choix:["Coldplay","Radiohead","Travis","Keane"]},
+  {titre:"Britney Spears",categorie:"annees2000",id:"LOZuxwVk7TU",start:0,choix:["Britney Spears","Christina Aguilera","Destiny's Child","Hilary Duff"]},
+  {titre:"Shakira",categorie:"annees2000",id:"Dut6PKkMEqQ",start:0,choix:["Shakira","Jennifer Lopez","Beyoncé","Rihanna"]},
+  {titre:"Kelly Clarkson",categorie:"annees2000",id:"R7UrFYvl5TE",start:0,choix:["Kelly Clarkson","Avril Lavigne","Pink","Alanis Morissette"]},
+  {titre:"Outkast",categorie:"annees2000",id:"MYxAiGFbGEg",start:0,choix:["Outkast","Andre 3000","Big Boi","Goodie Mob"]},
+  {titre:"Linkin Park",categorie:"annees2000",id:"kXYiU_JCYtU",start:0,choix:["Linkin Park","My Chemical Romance","Fall Out Boy","Paramore"]},
+  {titre:"The Killers",categorie:"annees2000",id:"gGdGFtwCNBE",start:0,choix:["The Killers","Franz Ferdinand","Interpol","The Strokes"]},
+  {titre:"Lady Gaga",categorie:"annees2000",id:"bESGLojNYSo",start:0,choix:["Lady Gaga","Ke$ha","Katy Perry","Rihanna"]},
+  {titre:"Beyoncé",categorie:"annees2000",id:"4m1EFMoRFvY",start:0,choix:["Beyoncé","Rihanna","Mary J. Blige","Alicia Keys"]},
+  {titre:"Rihanna",categorie:"annees2000",id:"CvBfHwUxHIk",start:0,choix:["Rihanna","Beyoncé","Nelly Furtado","Ciara"]},
+  {titre:"Justin Timberlake",categorie:"annees2000",id:"3gOHFoMFhiY",start:0,choix:["Justin Timberlake","Pharrell Williams","Timbaland","Nelly"]},
+  {titre:"Gotye",categorie:"annees2000",id:"8UVNT4wvIGY",start:0,choix:["Gotye","Kimbra","Passenger","Bon Iver"]},
+  {titre:"Adele",categorie:"annees2000",id:"rYEDA3JcQqw",start:0,choix:["Adele","Amy Winehouse","Duffy","Paloma Faith"]},
+  {titre:"Jay-Z",categorie:"annees2000",id:"SJ_9CiNkkn4",start:0,choix:["Jay-Z","Kanye West","Lil Wayne","Drake"]},
   // 🎻 CLASSIQUE
   {titre:"La Lettre à Élise",categorie:"classique",id:"_mVW8tgGY_w",start:0,choix:["La Lettre à Élise","Clair de Lune","Gymnopédie n°1","Sonate au Clair de Lune"]},
   {titre:"5ème Symphonie",categorie:"classique",id:"_4IRMYuE1hI",start:0,choix:["5ème Symphonie","9ème Symphonie","Sonate Pathétique","Ode à la Joie"]},
