@@ -321,9 +321,9 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       <input class="form-input" type="text" id="m-titre" placeholder="Ex: Le Roi Lion">
     </div>
     <div class="form-row">
-      <label>YouTube Video ID</label>
-      <input class="form-input" type="text" id="m-ytid" placeholder="Ex: 08pZpY_mPto">
-      <small style="color:var(--muted);font-size:.8rem">L'ID se trouve après ?v= dans l'URL YouTube</small>
+      <label>Lien YouTube (URL ou ID)</label>
+      <input class="form-input" type="text" id="m-ytid" placeholder="https://www.youtube.com/watch?v=... ou ID seul">
+      <small style="color:var(--muted);font-size:.8rem">Colle le lien YouTube directement — l'ID est extrait automatiquement</small>
     </div>
     <div class="form-row">
       <label>Démarrer à (secondes)</label>
@@ -426,12 +426,38 @@ function onYouTubeIframeAPIReady() {
   });
 }
 
+// ═══════════════════════════════════════
+// YOUTUBE ID EXTRACTION
+// Accepte : URL complète, URL courte (youtu.be), embed URL, ou ID seul
+// ═══════════════════════════════════════
+function extractYouTubeId(input) {
+  if (!input) return '';
+  input = input.trim();
+  // URL complète : youtube.com/watch?v=ID ou youtube.com/watch?v=ID&...
+  var m = input.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+  if (m) return m[1];
+  // URL courte : youtu.be/ID
+  m = input.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+  if (m) return m[1];
+  // URL embed : youtube.com/embed/ID
+  m = input.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
+  if (m) return m[1];
+  // URL shorts : youtube.com/shorts/ID
+  m = input.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/);
+  if (m) return m[1];
+  // ID seul (11 caractères alphanumériques)
+  if (/^[a-zA-Z0-9_-]{11}$/.test(input)) return input;
+  // Si rien ne matche, retourner tel quel (l'utilisateur verra l'erreur)
+  return input;
+}
+
 function safeLoadVideo(videoId, startSeconds) {
+  var cleanId = extractYouTubeId(videoId);
   var offset=Math.floor(Math.random()*8);
   var t=(startSeconds||0)+offset;
   var try_=function(){
     if(playerReady && player && player.loadVideoById){
-      player.loadVideoById({videoId:videoId, startSeconds:t});
+      player.loadVideoById({videoId:cleanId, startSeconds:t});
     } else { setTimeout(try_,300); }
   };
   try_();
@@ -781,7 +807,8 @@ function openEditModal(key) {
 
 function saveTrack() {
   var titre=document.getElementById('m-titre').value.trim();
-  var ytid=document.getElementById('m-ytid').value.trim();
+  var ytraw=document.getElementById('m-ytid').value.trim();
+  var ytid=extractYouTubeId(ytraw);
   var start=parseInt(document.getElementById('m-start').value)||0;
   var cat=document.getElementById('m-cat').value;
   var w=[document.getElementById('m-c1').value.trim(),document.getElementById('m-c2').value.trim(),document.getElementById('m-c3').value.trim()].filter(Boolean);
