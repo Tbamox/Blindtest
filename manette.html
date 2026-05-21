@@ -710,8 +710,8 @@ function sendAnswer(isQcm, qcmText, qcmBtn, solution) {
       });
 
       if (isCorrect) {
-        db.ref('players/' + myId + '/score').transaction(s => (s || 0) + 3);
-        setFeedback("🎯 Bonne réponse ! +3 pts", 'ok');
+        db.ref('players/' + myId + '/score').transaction(s => (s || 0) + 1);
+        setFeedback("🎯 Bonne réponse ! +1 pt", 'ok');
       } else {
         setFeedback(`❌ Faux ! C'était : ${state.solution}`, 'err');
       }
