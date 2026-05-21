@@ -99,7 +99,9 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .question-counter{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:12px}
 .counter-dots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
 .counter-dot{width:11px;height:11px;border-radius:50%;background:var(--border);transition:background .4s,transform .3s}
-.counter-dot.done{background:var(--muted)}
+.counter-dot.quiz-dot{ background:rgba(168,85,247,.3); }
+.counter-dot.quiz-dot.active{ background:var(--purple); box-shadow:0 0 8px rgba(168,85,247,.6); }
+.counter-dot.quiz-dot.done{ background:rgba(168,85,247,.5); }
 .counter-dot.active{background:var(--accent3);transform:scale(1.4);box-shadow:0 0 8px rgba(255,217,61,.5)}
 .counter-label{font-family:'Bangers',cursive;font-size:1.6rem;letter-spacing:2px;color:var(--accent3)}
 
@@ -174,6 +176,34 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 /* HIDDEN YT - invisible mais audio actif */
 #yt-player-wrap{position:fixed;bottom:-9999px;right:-9999px;width:1px;height:1px;overflow:hidden;pointer-events:none;opacity:0}
 
+/* ── Quiz intercalé ── */
+.quiz-interlude-box{
+  background:rgba(168,85,247,.06);
+  border:1px solid rgba(168,85,247,.25);
+  border-radius:12px;
+  padding:16px 18px;
+  margin-bottom:18px;
+}
+.quiz-interlude-header{ display:flex; align-items:center; }
+.toggle-label{
+  display:flex; align-items:center; gap:12px;
+  font-weight:800; font-size:1rem; cursor:pointer; user-select:none;
+}
+.toggle-label input[type=checkbox]{ display:none; }
+.toggle-track{
+  width:46px; height:26px; background:var(--border);
+  border-radius:99px; position:relative; transition:background .25s; flex-shrink:0;
+}
+.toggle-thumb{
+  position:absolute; top:3px; left:3px;
+  width:20px; height:20px; background:#fff;
+  border-radius:50%; transition:transform .25s;
+  box-shadow:0 1px 4px rgba(0,0,0,.3);
+}
+.toggle-label input:checked + .toggle-track{ background:var(--purple); }
+.toggle-label input:checked + .toggle-track .toggle-thumb{ transform:translateX(20px); }
+.quiz-interlude-options{ border-top:1px solid rgba(168,85,247,.2); padding-top:14px; margin-top:14px; }
+
 .hidden{display:none!important}
 @media(max-width:700px){.game-layout{grid-template-columns:1fr}.score-sidebar{position:static}}
 </style>
@@ -182,20 +212,9 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 
 <!-- AUDIO GATE -->
 <div id="audio-gate">
-  <h1>🎮 SOIRÉE JEU</h1>
-  <p>Choisissez votre mode de jeu</p>
-  <div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center;margin-top:8px">
-    <button onclick="unlockAudio('blindtest')" style="font-family:'Nunito',sans-serif;font-size:1.2rem;font-weight:900;background:linear-gradient(135deg,#ffd93d,#ff6b6b);color:#000;border:none;border-radius:14px;padding:22px 40px;cursor:pointer;box-shadow:0 0 30px rgba(255,217,61,.4);display:flex;flex-direction:column;align-items:center;gap:8px">
-      <span style="font-size:2.5rem">🎵</span>
-      <span>BLIND TEST</span>
-      <span style="font-size:.8rem;opacity:.7;font-weight:600">Trouve la musique</span>
-    </button>
-    <button onclick="unlockAudio('quiz')" style="font-family:'Nunito',sans-serif;font-size:1.2rem;font-weight:900;background:linear-gradient(135deg,#a855f7,#6d28d9);color:#fff;border:none;border-radius:14px;padding:22px 40px;cursor:pointer;box-shadow:0 0 30px rgba(168,85,247,.4);display:flex;flex-direction:column;align-items:center;gap:8px">
-      <span style="font-size:2.5rem">🧠</span>
-      <span>QUIZ</span>
-      <span style="font-size:.8rem;opacity:.7;font-weight:600">Culture générale</span>
-    </button>
-  </div>
+  <h1>🎵 BLIND TEST</h1>
+  <p>Cliquez pour activer le son et accéder au salon</p>
+  <button onclick="unlockAudio()">🔊 Démarrer</button>
 </div>
 
 <!-- YT Player caché -->
@@ -209,98 +228,8 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 
   <!-- NAV -->
   <div class="nav-tabs" id="main-nav">
-    <button class="nav-tab active" onclick="switchTab('lobby')">🎮 Blind Test</button>
-    <button class="nav-tab" onclick="switchTab('quiz-lobby')">🧠 Quiz</button>
+    <button class="nav-tab active" onclick="switchTab('lobby')">🎮 Salon</button>
     <button class="nav-tab" onclick="switchTab('editor')">✏️ Éditeur</button>
-  </div>
-
-  <!-- ══ TAB QUIZ LOBBY ══ -->
-  <div id="tab-quiz-lobby" class="hidden">
-    <div id="quiz-setup-area">
-      <div class="card">
-        <div class="card-title">📱 Scanner pour rejoindre</div>
-        <div class="qr-wrap">
-          <div id="qrcode2"></div>
-          <span class="qr-url">tbamox.github.io/Blindtest/manette.html</span>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">👥 Joueurs (<span id="quiz-player-count">0</span>)</div>
-        <ul id="quiz-player-list"><li class="no-players">En attente de joueurs…</li></ul>
-      </div>
-      <div id="quiz-options" class="card hidden">
-        <div class="card-title">🎯 Catégories Quiz</div>
-        <div class="cat-grid" id="quiz-cat-selector"></div>
-        <div class="options-row">
-          <label for="quiz-nb-questions">Questions :</label>
-          <input type="number" id="quiz-nb-questions" value="10" min="1" max="100" class="num-input" oninput="updateQuizTimeEstimate()">
-          <span class="pool-info">Pool : <b id="quiz-pool-count">0</b> questions</span>
-          <span class="time-estimate" id="quiz-time-estimate">⏱️ ~5 min</span>
-        </div>
-        <div class="controls">
-          <button class="btn btn-danger" onclick="resetLobby()">🗑️ Vider le salon</button>
-          <button class="btn btn-launch" onclick="startQuiz()">🚀 Lancer le Quiz !</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- QUIZ GAME -->
-    <div id="quiz-game-area" class="hidden">
-      <div class="game-layout">
-        <aside class="score-sidebar">
-          <div class="card">
-            <div class="card-title">🏆 Classement</div>
-            <ul id="quiz-leaderboard-list"></ul>
-          </div>
-        </aside>
-        <div class="game-main">
-          <div class="card">
-            <div class="question-counter">
-              <div class="counter-dots" id="quiz-counter-dots"></div>
-              <div class="counter-label" id="quiz-counter-label">Question 1 / 10</div>
-            </div>
-            <div class="cat-badge-wrap">
-              <div class="cat-badge" id="quiz-cat-badge"></div>
-            </div>
-            <!-- La question -->
-            <div id="quiz-question-box" style="text-align:center;padding:20px 10px">
-              <div id="quiz-question-text" style="font-family:'Nunito',sans-serif;font-size:1.3rem;font-weight:800;color:var(--text);line-height:1.4"></div>
-            </div>
-            <div class="timer-wrap">
-              <div id="quiz-timer-display">20</div>
-              <div class="timer-bar-bg"><div id="quiz-timer-bar" style="width:100%"></div></div>
-            </div>
-            <div id="quiz-reveal-wrap" class="hidden" style="margin-top:14px;text-align:center">
-              <button class="btn btn-reveal" onclick="revealQuizResult()">👁️ Révéler la réponse</button>
-            </div>
-          </div>
-          <div id="quiz-answer-display" class="hidden">
-            <div class="reveal-label">La réponse était…</div>
-            <div class="reveal-answer" id="quiz-reveal-answer-text"></div>
-          </div>
-          <div class="card">
-            <div class="section-title" id="quiz-answers-title">⏳ En attente…</div>
-            <div id="quiz-answers-feed"></div>
-          </div>
-          <div id="quiz-next-wrap" class="hidden">
-            <button class="btn-next-big" onclick="nextQuizRound()">Suivant ➡️</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- QUIZ PODIUM -->
-    <div id="quiz-podium-area" class="hidden">
-      <h2>🏆 FIN DU QUIZ !</h2>
-      <div class="podium-grid" id="quiz-podium-grid"></div>
-      <div class="card" style="margin-top:20px">
-        <div class="card-title">Classement final</div>
-        <ul id="quiz-final-leaderboard"></ul>
-      </div>
-      <div class="controls" style="margin-top:24px">
-        <button class="btn btn-launch" onclick="location.reload()">🔄 Rejouer</button>
-      </div>
-    </div>
   </div>
 
   <!-- ══ TAB LOBBY ══ -->
@@ -320,14 +249,34 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       </div>
 
       <div id="game-options" class="card hidden">
-        <div class="card-title">🎯 Catégories</div>
+        <div class="card-title">🎯 Catégories Blind Test</div>
         <div class="cat-grid" id="cat-selector"><p style="color:var(--muted);font-style:italic;font-size:.9rem">Chargement…</p></div>
         <div class="options-row">
-          <label for="nb-questions">Questions :</label>
+          <label for="nb-questions">Extraits :</label>
           <input type="number" id="nb-questions" value="10" min="1" max="100" class="num-input" oninput="updateTimeEstimate()">
           <span class="pool-info">Pool : <b id="pool-count">0</b> titres</span>
           <span class="time-estimate" id="time-estimate">⏱️ ~5 min</span>
         </div>
+
+        <!-- Option Quiz intercalé -->
+        <div class="quiz-interlude-box" id="quiz-interlude-box">
+          <div class="quiz-interlude-header">
+            <label class="toggle-label">
+              <input type="checkbox" id="quiz-interlude-toggle" onchange="toggleQuizInterlude()">
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              <span>🧠 Intercaler des questions Quiz</span>
+            </label>
+          </div>
+          <div class="quiz-interlude-options hidden" id="quiz-interlude-options">
+            <div class="options-row" style="margin-top:12px;margin-bottom:0">
+              <label for="quiz-freq" style="font-size:.9rem;color:var(--muted)">1 question quiz tous les</label>
+              <input type="number" id="quiz-freq" value="5" min="1" max="20" class="num-input" style="width:60px">
+              <span style="color:var(--muted);font-size:.9rem">extraits</span>
+            </div>
+            <div class="cat-grid" id="quiz-interlude-cats" style="margin-top:12px;margin-bottom:0"></div>
+          </div>
+        </div>
+
         <div class="controls">
           <button class="btn btn-danger" onclick="resetLobby()">🗑️ Vider le salon</button>
           <button class="btn btn-launch" onclick="startGame()">🚀 Lancer la partie !</button>
@@ -355,6 +304,10 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
             </div>
             <div class="cat-badge-wrap">
               <div class="cat-badge" id="cat-badge"></div>
+            </div>
+            <!-- Bandeau Quiz intercalé (visible seulement pendant un quiz) -->
+            <div id="quiz-interlude-banner" class="hidden" style="margin:8px 0 4px">
+              <div id="quiz-interlude-question" style="font-family:'Nunito',sans-serif;font-size:1.2rem;font-weight:800;color:var(--text);line-height:1.4;padding:12px 8px;background:rgba(168,85,247,.08);border-radius:10px;border:1px solid rgba(168,85,247,.2)"></div>
             </div>
             <div class="timer-wrap">
               <div id="timer-display">12</div>
@@ -731,11 +684,66 @@ function givePoints(pid,pts) {
 // ═══════════════════════════════════════
 // JEU
 // ═══════════════════════════════════════
+// ── Quiz intercalé ──
+var quizInterlaceEnabled = false;
+var selectedInterlaceCats = new Set();
+var currentItemIsQuiz = false;
+
+function toggleQuizInterlude() {
+  quizInterlaceEnabled = document.getElementById('quiz-interlude-toggle').checked;
+  document.getElementById('quiz-interlude-options').classList.toggle('hidden', !quizInterlaceEnabled);
+  if (quizInterlaceEnabled) buildInterlaceCatSelector();
+}
+
+function buildInterlaceCatSelector() {
+  if (!allQuizQuestions.length) return;
+  var counts={};
+  allQuizQuestions.forEach(function(q){ counts[q.cat]=(counts[q.cat]||0)+1; });
+  var html='';
+  QUIZ_CATS.forEach(function(c){
+    var n=counts[c.id]||0; if(!n) return;
+    var sel=selectedInterlaceCats.has(c.id)?'selected':'';
+    html+='<div class="cat-chip '+sel+'" onclick="toggleInterlaceCat(\''+c.id+'\',this)">'
+        +'<span class="ci">'+c.icon+'</span><span>'+c.label+'</span>'
+        +'<span class="cc">'+n+' q.</span></div>';
+  });
+  document.getElementById('quiz-interlude-cats').innerHTML=html;
+}
+
+function toggleInterlaceCat(id,el) {
+  if(selectedInterlaceCats.has(id)){ selectedInterlaceCats.delete(id); el.classList.remove('selected'); }
+  else { selectedInterlaceCats.add(id); el.classList.add('selected'); }
+}
+
+function buildMixedPlaylist(musicPool, quizPool, freq) {
+  var music=musicPool.sort(function(){return .5-Math.random();});
+  var quiz=quizPool.sort(function(){return .5-Math.random();});
+  var mixed=[]; var qi=0;
+  for(var i=0;i<music.length;i++){
+    mixed.push({type:'music', data:music[i]});
+    if((i+1)%freq===0 && qi<quiz.length){
+      mixed.push({type:'quiz', data:quiz[qi++]});
+    }
+  }
+  return mixed;
+}
+
 function startGame() {
   var pool=selectedCats.size===0?allTracks.slice():allTracks.filter(function(t){return selectedCats.has(t.categorie);});
   if(!pool.length){ alert('Aucun titre disponible !'); return; }
-  var nb=Math.min(parseInt(document.getElementById('nb-questions').value)||5, pool.length);
-  gamePlaylist=pool.sort(function(){return .5-Math.random();}).slice(0,nb);
+  var nb=Math.min(parseInt(document.getElementById('nb-questions').value)||10, pool.length);
+  var musicPool=pool.sort(function(){return .5-Math.random();}).slice(0,nb);
+
+  if(quizInterlaceEnabled && allQuizQuestions.length) {
+    var freq=parseInt(document.getElementById('quiz-freq').value)||5;
+    var qPool=selectedInterlaceCats.size===0
+      ? allQuizQuestions.slice()
+      : allQuizQuestions.filter(function(q){return selectedInterlaceCats.has(q.cat);});
+    gamePlaylist=buildMixedPlaylist(musicPool, qPool, freq);
+  } else {
+    gamePlaylist=musicPool.map(function(t){return {type:'music',data:t};});
+  }
+
   currentIndex=0;
   document.getElementById('setup-area').classList.add('hidden');
   document.getElementById('game-area').classList.remove('hidden');
@@ -744,8 +752,11 @@ function startGame() {
 }
 
 function loadTrack() {
-  var track=gamePlaylist[currentIndex];
-  totalTime=12; timeLeft=totalTime;
+  var item=gamePlaylist[currentIndex];
+  currentItemIsQuiz=(item.type==='quiz');
+
+  totalTime=currentItemIsQuiz?20:12;
+  timeLeft=totalTime;
 
   var timerEl=document.getElementById('timer-display');
   var barEl=document.getElementById('timer-bar');
@@ -754,62 +765,98 @@ function loadTrack() {
   barEl.style.width='100%';
   barEl.classList.remove('danger');
 
-  // Compteur
-  document.getElementById('counter-label').textContent='Question '+(currentIndex+1)+' / '+gamePlaylist.length;
+  // Compteur (dots colorés différemment pour les quiz)
+  document.getElementById('counter-label').textContent=(currentItemIsQuiz?'🧠 ':'🎵 ')+'Question '+(currentIndex+1)+' / '+gamePlaylist.length;
   var dots='';
   for(var i=0;i<gamePlaylist.length;i++){
-    var cls='counter-dot'; if(i<currentIndex) cls+=' done'; if(i===currentIndex) cls+=' active';
+    var isQ=gamePlaylist[i].type==='quiz';
+    var cls='counter-dot'+(isQ?' quiz-dot':'');
+    if(i<currentIndex) cls+=' done';
+    if(i===currentIndex) cls+=' active';
     dots+='<div class="'+cls+'"></div>';
   }
   document.getElementById('counter-dots').innerHTML=dots;
 
-  // Badge catégorie
-  var cat=CATS.find(function(c){return c.id===track.categorie;});
-  document.getElementById('cat-badge').textContent=cat?cat.icon+' '+cat.label:'';
+  // Badge catégorie + affichage de la question si quiz
+  var banner=document.getElementById('quiz-interlude-banner');
+  if(currentItemIsQuiz){
+    var q=item.data;
+    var qcat=QUIZ_CATS.find(function(c){return c.id===q.cat;});
+    document.getElementById('cat-badge').textContent=qcat?qcat.icon+' '+qcat.label:'🧠 Quiz';
+    document.getElementById('quiz-interlude-question').textContent=q.q;
+    banner.classList.remove('hidden');
+    // Cacher le player YouTube
+    var wrap=document.getElementById('yt-player-wrap');
+    wrap.style.cssText='position:fixed;bottom:-9999px;right:-9999px;width:1px;height:1px;overflow:hidden;pointer-events:none;opacity:0';
+  } else {
+    var track=item.data;
+    var cat=CATS.find(function(c){return c.id===track.categorie;});
+    document.getElementById('cat-badge').textContent=cat?cat.icon+' '+cat.label:'';
+    banner.classList.add('hidden');
+    // Cacher le player YouTube
+    var wrap=document.getElementById('yt-player-wrap');
+    wrap.style.cssText='position:fixed;bottom:-9999px;right:-9999px;width:1px;height:1px;overflow:hidden;pointer-events:none;opacity:0';
+  }
 
   // Reset UI
   document.getElementById('answer-display').classList.add('hidden');
   document.getElementById('reveal-wrap').classList.add('hidden');
   document.getElementById('next-wrap').classList.add('hidden');
-  // Cacher le player YouTube
-  var wrap=document.getElementById('yt-player-wrap');
-  wrap.style.cssText='position:fixed;bottom:-9999px;right:-9999px;width:1px;height:1px;overflow:hidden;pointer-events:none;opacity:0';
 
   db.ref('answers').remove();
-  db.ref('gameState').set({accepting:true, choix:track.choix, solution:track.titre});
-  safeLoadVideo(track.id, track.start);
+  if(currentItemIsQuiz){
+    var q=item.data;
+    db.ref('gameState').set({accepting:true, choix:q.choix, solution:q.r, mode:'quiz'});
+  } else {
+    var track=item.data;
+    db.ref('gameState').set({accepting:true, choix:track.choix, solution:track.titre, mode:'music'});
+    safeLoadVideo(track.id, track.start);
+  }
 
   clearInterval(timerInterval);
   timerInterval=setInterval(function(){
     timeLeft--;
     timerEl.textContent=timeLeft;
     barEl.style.width=((timeLeft/totalTime)*100)+'%';
-    if(timeLeft<=3){ timerEl.classList.add('danger'); barEl.classList.add('danger'); }
+    var danger=currentItemIsQuiz?5:3;
+    if(timeLeft<=danger){ timerEl.classList.add('danger'); barEl.classList.add('danger'); }
     if(timeLeft<=0){ clearInterval(timerInterval); stopAnswering(); }
   },1000);
 }
 
 function stopAnswering() {
-  if(playerReady&&player) player.pauseVideo();
+  if(!currentItemIsQuiz && playerReady && player) player.pauseVideo();
   db.ref('gameState').update({accepting:false});
   document.getElementById('timer-display').textContent='⏰';
   renderAnswers();
-  // Révélation automatique après 1.5s
   setTimeout(function(){ revealResult(); }, 1500);
 }
 
 function revealResult() {
-  var track=gamePlaylist[currentIndex];
-  var cat=CATS.find(function(c){return c.id===track.categorie;});
+  var item=gamePlaylist[currentIndex];
+  var titre, catLabel;
+  if(currentItemIsQuiz){
+    var q=item.data;
+    titre=q.r;
+    var qcat=QUIZ_CATS.find(function(c){return c.id===q.cat;});
+    catLabel=qcat?qcat.icon+' '+qcat.label:'';
+  } else {
+    var track=item.data;
+    titre=track.titre;
+    var cat=CATS.find(function(c){return c.id===track.categorie;});
+    catLabel=cat?cat.icon+' '+cat.label:'';
+  }
   document.getElementById('reveal-answer-text').innerHTML=
-    track.titre+(cat?'<br><small style="font-size:1rem;color:var(--muted)">'+cat.icon+' '+cat.label+'</small>':'');
+    titre+'<br><small style="font-size:1rem;color:var(--muted)">'+catLabel+'</small>';
   document.getElementById('answer-display').classList.remove('hidden');
   document.getElementById('reveal-wrap').classList.add('hidden');
   document.getElementById('next-wrap').classList.remove('hidden');
-  // Afficher le player YouTube avec la vidéo pour montrer les images
-  var wrap=document.getElementById('yt-player-wrap');
-  wrap.style.cssText='position:fixed;bottom:20px;right:20px;z-index:50;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.7);width:280px;height:158px';
-  if(playerReady&&player) player.playVideo();
+  // Afficher le player YouTube seulement pour les musiques
+  if(!currentItemIsQuiz){
+    var wrap=document.getElementById('yt-player-wrap');
+    wrap.style.cssText='position:fixed;bottom:20px;right:20px;z-index:50;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.7);width:280px;height:158px';
+    if(playerReady&&player) player.playVideo();
+  }
 }
 
 function nextRound() {
@@ -1313,554 +1360,10 @@ var DEFAULT_TRACKS=[
 ];
 
 // ═══════════════════════════════════════
-// MODE SELECTION
+// INIT
 // ═══════════════════════════════════════
-var currentMode = 'blindtest'; // 'blindtest' | 'quiz'
-
-function unlockAudio(mode) {
-  currentMode = mode;
-  document.getElementById('audio-gate').style.display='none';
-  if (mode === 'blindtest') {
-    // Charger YouTube pour le blind test
-    var s=document.createElement('script');
-    s.src='https://www.youtube.com/iframe_api';
-    document.head.appendChild(s);
-    switchTab('lobby');
-  } else {
-    switchTab('quiz-lobby');
-  }
-  initQR();
-  initQR2();
-}
-
-function initQR2() {
-  var el=document.getElementById('qrcode2');
-  if(!el) return;
-  if(typeof QRCode==='undefined'){ setTimeout(initQR2,150); return; }
-  el.innerHTML='';
-  try { new QRCode(el,{text:MANETTE_URL,width:160,height:160}); } catch(e){}
-}
-
-// ═══════════════════════════════════════
-// CATÉGORIES QUIZ
-// ═══════════════════════════════════════
-var QUIZ_CATS = [
-  {id:"cinema",    label:"Cinéma",           icon:"🎬"},
-  {id:"geographie",label:"Géographie",       icon:"🌍"},
-  {id:"histoire",  label:"Histoire",         icon:"📜"},
-  {id:"science",   label:"Sciences",         icon:"🔬"},
-  {id:"sport_q",   label:"Sport",            icon:"⚽"},
-  {id:"animaux_q", label:"Animaux",          icon:"🦁"},
-  {id:"gastronomie",label:"Gastronomie",     icon:"🍽️"},
-  {id:"jv_q",      label:"Jeux Vidéo",       icon:"🎮"},
-  {id:"musique_q", label:"Musique",          icon:"🎵"},
-  {id:"serie_q",   label:"Séries & Films",   icon:"📺"},
-  {id:"people",    label:"People & Célébrités",icon:"⭐"},
-  {id:"insolite",  label:"Insolite",         icon:"🤪"},
-];
-
-// ═══════════════════════════════════════
-// QUESTIONS PAR DÉFAUT
-// ═══════════════════════════════════════
-var DEFAULT_QUIZ = [
-  // 🎬 CINÉMA
-  {q:"Comment s'appelle la moissonneuse-batteuse dans Cars ?",r:"Frank",cat:"cinema",choix:["Frank","Buck","Mack","Chick"]},
-  {q:"Quel est le vrai nom de Batman ?",r:"Bruce Wayne",cat:"cinema",choix:["Bruce Wayne","Clark Kent","Peter Parker","Tony Stark"]},
-  {q:"Dans Titanic, quel objet Rose jette-t-elle à la fin ?",r:"Le collier",cat:"cinema",choix:["Le collier","La bague","Le bracelet","La montre"]},
-  {q:"Qui joue Jack dans Titanic ?",r:"Leonardo DiCaprio",cat:"cinema",choix:["Leonardo DiCaprio","Brad Pitt","Tom Hanks","Johnny Depp"]},
-  {q:"Dans Shrek, quel est le prénom de la princesse ?",r:"Fiona",cat:"cinema",choix:["Fiona","Aurora","Cendrillon","Belle"]},
-  {q:"Quel est le nom du jouet cowboy dans Toy Story ?",r:"Woody",cat:"cinema",choix:["Woody","Buzz","Rex","Ham"]},
-  {q:"Dans Le Roi Lion, qui tue Mufasa ?",r:"Scar",cat:"cinema",choix:["Scar","Simba","Ed","Shenzi"]},
-  {q:"Combien y a-t-il de Horcruxes dans Harry Potter ?",r:"7",cat:"cinema",choix:["7","6","8","5"]},
-  {q:"Dans Jurassic Park, quel dinosaure crache du venin ?",r:"Dilophosaure",cat:"cinema",choix:["Dilophosaure","Vélociraptor","T-Rex","Triceratops"]},
-  {q:"Quel acteur joue Iron Man ?",r:"Robert Downey Jr.",cat:"cinema",choix:["Robert Downey Jr.","Chris Evans","Chris Hemsworth","Mark Ruffalo"]},
-  {q:"Dans Vaiana, comment s'appelle le demi-dieu ?",r:"Maui",cat:"cinema",choix:["Maui","Tamatoa","Te Kā","Te Fiti"]},
-  {q:"Dans Inception, quelle est la totem de Cobb ?",r:"La toupie",cat:"cinema",choix:["La toupie","Le dé","La bille","La pièce"]},
-  {q:"Combien d'Infinity Stones y a-t-il dans Marvel ?",r:"6",cat:"cinema",choix:["6","5","7","4"]},
-  {q:"Dans Frozen, quelle est la sœur ainée d'Elsa ?",r:"Anna",cat:"cinema",choix:["Anna","Kristoff","Olaf","Sven"]},
-  {q:"Quel réalisateur a fait La Liste de Schindler ?",r:"Steven Spielberg",cat:"cinema",choix:["Steven Spielberg","Martin Scorsese","Christopher Nolan","Ridley Scott"]},
-  {q:"Dans Pirates des Caraïbes, quel est le nom du bateau de Jack Sparrow ?",r:"Le Black Pearl",cat:"cinema",choix:["Le Black Pearl","Le Flying Dutchman","L'Interceptor","Le Queen Anne's Revenge"]},
-  {q:"Dans Pulp Fiction, quel est le nom du personnage de John Travolta ?",r:"Vincent Vega",cat:"cinema",choix:["Vincent Vega","Jules Winnfield","Butch Coolidge","The Gimp"]},
-  {q:"Combien de fois Léonardo DiCaprio a-t-il gagné l'Oscar ?",r:"1",cat:"cinema",choix:["1","2","3","0"]},
-  {q:"Dans Spirited Away, en quoi la mère de Chihiro est-elle transformée ?",r:"Un cochon",cat:"cinema",choix:["Un cochon","Une grenouille","Un cheval","Un poulet"]},
-  {q:"Dans Coco, quel musicien Miguel admire-t-il ?",r:"Ernesto de la Cruz",cat:"cinema",choix:["Ernesto de la Cruz","Héctor","Chicharrón","Dante"]},
-  // 🌍 GÉOGRAPHIE
-  {q:"Quelle est la capitale de l'Australie ?",r:"Canberra",cat:"geographie",choix:["Canberra","Sydney","Melbourne","Brisbane"]},
-  {q:"Quel est le plus grand pays du monde ?",r:"La Russie",cat:"geographie",choix:["La Russie","Le Canada","Les États-Unis","La Chine"]},
-  {q:"Dans quel pays se trouve le Mont Everest ?",r:"Népal",cat:"geographie",choix:["Népal","Tibet","Inde","Bhoutan"]},
-  {q:"Combien de pays y a-t-il dans l'Union Européenne ?",r:"27",cat:"geographie",choix:["27","28","25","30"]},
-  {q:"Quel fleuve traverse Paris ?",r:"La Seine",cat:"geographie",choix:["La Seine","La Loire","Le Rhône","La Garonne"]},
-  {q:"Quelle est la plus grande île du monde ?",r:"Le Groenland",cat:"geographie",choix:["Le Groenland","La Nouvelle-Guinée","Bornéo","Madagascar"]},
-  {q:"Quelle est la capitale du Brésil ?",r:"Brasilia",cat:"geographie",choix:["Brasilia","Rio de Janeiro","São Paulo","Salvador"]},
-  {q:"Quel est le plus long fleuve du monde ?",r:"Le Nil",cat:"geographie",choix:["Le Nil","L'Amazone","Le Yangtsé","Le Mississippi"]},
-  {q:"Sur quel continent se trouve l'Égypte ?",r:"Afrique",cat:"geographie",choix:["Afrique","Asie","Europe","Moyen-Orient"]},
-  {q:"Quelle mer sépare l'Europe de l'Afrique du Nord ?",r:"La mer Méditerranée",cat:"geographie",choix:["La mer Méditerranée","La mer Rouge","La mer Noire","L'Atlantique"]},
-  {q:"Quel est le plus petit pays du monde ?",r:"Le Vatican",cat:"geographie",choix:["Le Vatican","Monaco","Saint-Marin","Liechtenstein"]},
-  {q:"Quelle est la capitale du Japon ?",r:"Tokyo",cat:"geographie",choix:["Tokyo","Osaka","Kyoto","Hiroshima"]},
-  {q:"Dans quel pays se trouve la Tour de Pise ?",r:"Italie",cat:"geographie",choix:["Italie","Espagne","France","Portugal"]},
-  {q:"Combien de départements y a-t-il en France métropolitaine ?",r:"96",cat:"geographie",choix:["96","95","101","100"]},
-  {q:"Quel océan se trouve entre l'Amérique et l'Europe ?",r:"L'Atlantique",cat:"geographie",choix:["L'Atlantique","Le Pacifique","L'Indien","L'Arctique"]},
-  {q:"Quelle est la capitale de l'Argentine ?",r:"Buenos Aires",cat:"geographie",choix:["Buenos Aires","Santiago","Lima","Montevideo"]},
-  {q:"Quel est le désert le plus chaud du monde ?",r:"Le Sahara",cat:"geographie",choix:["Le Sahara","Le Namib","Le Kalahari","L'Atacama"]},
-  {q:"Dans quel pays se trouve la Grande Barrière de Corail ?",r:"Australie",cat:"geographie",choix:["Australie","Nouvelle-Zélande","Indonésie","Philippines"]},
-  {q:"Quelle ville est surnommée 'La ville lumière' ?",r:"Paris",cat:"geographie",choix:["Paris","New York","Milan","Vienna"]},
-  {q:"Combien y a-t-il de continents sur Terre ?",r:"7",cat:"geographie",choix:["7","6","5","8"]},
-  // 📜 HISTOIRE
-  {q:"En quelle année a eu lieu la Révolution française ?",r:"1789",cat:"histoire",choix:["1789","1776","1799","1804"]},
-  {q:"Qui était le premier président des États-Unis ?",r:"George Washington",cat:"histoire",choix:["George Washington","Abraham Lincoln","Thomas Jefferson","Benjamin Franklin"]},
-  {q:"En quelle année s'est terminée la Seconde Guerre mondiale ?",r:"1945",cat:"histoire",choix:["1945","1944","1946","1943"]},
-  {q:"Qui a découvert l'Amérique en 1492 ?",r:"Christophe Colomb",cat:"histoire",choix:["Christophe Colomb","Amerigo Vespucci","Vasco de Gama","Ferdinand Magellan"]},
-  {q:"Quel empire était dirigé par Jules César ?",r:"L'Empire romain",cat:"histoire",choix:["L'Empire romain","L'Empire grec","L'Empire carthaginois","L'Empire perse"]},
-  {q:"En quelle année est tombé le mur de Berlin ?",r:"1989",cat:"histoire",choix:["1989","1991","1987","1990"]},
-  {q:"Qui a peint la Joconde ?",r:"Léonard de Vinci",cat:"histoire",choix:["Léonard de Vinci","Michel-Ange","Raphaël","Botticelli"]},
-  {q:"Quelle reine d'Égypte était célèbre pour sa beauté ?",r:"Cléopâtre",cat:"histoire",choix:["Cléopâtre","Néfertiti","Hatchepsout","Isis"]},
-  {q:"En quelle année a eu lieu le premier alunissage ?",r:"1969",cat:"histoire",choix:["1969","1968","1971","1972"]},
-  {q:"Qui était Napoléon Bonaparte ?",r:"Empereur de France",cat:"histoire",choix:["Empereur de France","Roi de France","Premier ministre","Général républicain"]},
-  {q:"Quel scientifique a découvert la gravité ?",r:"Isaac Newton",cat:"histoire",choix:["Isaac Newton","Albert Einstein","Galilée","Archimède"]},
-  {q:"En quelle année a débuté la Première Guerre mondiale ?",r:"1914",cat:"histoire",choix:["1914","1916","1912","1918"]},
-  {q:"Qui a inventé l'imprimerie ?",r:"Gutenberg",cat:"histoire",choix:["Gutenberg","Edison","da Vinci","Archimède"]},
-  {q:"Quel pays a envoyé le premier homme dans l'espace ?",r:"L'URSS",cat:"histoire",choix:["L'URSS","Les États-Unis","La France","La Chine"]},
-  {q:"Quel est le nom du premier homme dans l'espace ?",r:"Youri Gagarine",cat:"histoire",choix:["Youri Gagarine","Neil Armstrong","Buzz Aldrin","Alan Shepard"]},
-  {q:"En quelle année Christophe Colomb a-t-il découvert l'Amérique ?",r:"1492",cat:"histoire",choix:["1492","1498","1486","1502"]},
-  {q:"Qui était le roi de France pendant la Révolution ?",r:"Louis XVI",cat:"histoire",choix:["Louis XVI","Louis XIV","Louis XV","Charles X"]},
-  {q:"Quel traité a mis fin à la Première Guerre mondiale ?",r:"Le traité de Versailles",cat:"histoire",choix:["Le traité de Versailles","Le traité de Paris","Le traité de Berlin","L'armistice"]},
-  {q:"En quelle année l'Union soviétique s'est-elle effondrée ?",r:"1991",cat:"histoire",choix:["1991","1989","1993","1988"]},
-  {q:"Qui a théorisé la relativité ?",r:"Albert Einstein",cat:"histoire",choix:["Albert Einstein","Isaac Newton","Niels Bohr","Max Planck"]},
-  // 🔬 SCIENCES
-  {q:"Quel est le symbole chimique de l'or ?",r:"Au",cat:"science",choix:["Au","Or","Ag","Gd"]},
-  {q:"Combien y a-t-il d'os dans le corps humain adulte ?",r:"206",cat:"science",choix:["206","208","212","198"]},
-  {q:"Quelle planète est la plus proche du Soleil ?",r:"Mercure",cat:"science",choix:["Mercure","Vénus","Mars","Terre"]},
-  {q:"Quel est l'élément le plus abondant dans l'univers ?",r:"L'hydrogène",cat:"science",choix:["L'hydrogène","L'hélium","L'oxygène","Le carbone"]},
-  {q:"À quelle vitesse se propage la lumière (environ) ?",r:"300 000 km/s",cat:"science",choix:["300 000 km/s","150 000 km/s","100 000 km/s","500 000 km/s"]},
-  {q:"Quel est le plus grand organe du corps humain ?",r:"La peau",cat:"science",choix:["La peau","Le foie","Le cœur","Les poumons"]},
-  {q:"Combien de chromosomes possède l'être humain ?",r:"46",cat:"science",choix:["46","48","44","23"]},
-  {q:"Quelle est la formule chimique de l'eau ?",r:"H2O",cat:"science",choix:["H2O","CO2","NaCl","O2"]},
-  {q:"Quel est le plus petit os du corps humain ?",r:"L'étrier",cat:"science",choix:["L'étrier","Le marteau","L'enclume","Le capitatum"]},
-  {q:"Combien de planètes y a-t-il dans le système solaire ?",r:"8",cat:"science",choix:["8","9","7","10"]},
-  {q:"Quel gaz représente environ 78% de l'atmosphère terrestre ?",r:"L'azote",cat:"science",choix:["L'azote","L'oxygène","Le CO2","L'argon"]},
-  {q:"À quelle température l'eau bout-elle à pression normale ?",r:"100°C",cat:"science",choix:["100°C","90°C","110°C","95°C"]},
-  {q:"Quel est l'animal le plus rapide sur terre ?",r:"Le guépard",cat:"science",choix:["Le guépard","Le lion","L'antilope","Le faucon"]},
-  {q:"Combien de dents a un adulte ?",r:"32",cat:"science",choix:["32","28","30","34"]},
-  {q:"Quel est le métal le plus conducteur de l'électricité ?",r:"L'argent",cat:"science",choix:["L'argent","Le cuivre","L'or","L'aluminium"]},
-  {q:"Quel organe filtre le sang dans le corps humain ?",r:"Les reins",cat:"science",choix:["Les reins","Le foie","Le cœur","La rate"]},
-  {q:"Combien de vertèbres compte la colonne vertébrale humaine ?",r:"33",cat:"science",choix:["33","32","34","30"]},
-  {q:"Qu'est-ce que l'ADN ?",r:"Acide désoxyribonucléique",cat:"science",choix:["Acide désoxyribonucléique","Acide ribonucléique","Adénosine triphosphate","Acide aminé"]},
-  {q:"Quel est le point de fusion du fer ?",r:"1538°C",cat:"science",choix:["1538°C","1200°C","2000°C","800°C"]},
-  {q:"Combien de secondes y a-t-il dans une heure ?",r:"3600",cat:"science",choix:["3600","360","600","7200"]},
-  // ⚽ SPORT
-  {q:"Combien de joueurs y a-t-il dans une équipe de football ?",r:"11",cat:"sport_q",choix:["11","10","12","9"]},
-  {q:"Dans quel pays a eu lieu la Coupe du Monde 2018 ?",r:"Russie",cat:"sport_q",choix:["Russie","Qatar","Brésil","Allemagne"]},
-  {q:"Quel pays a remporté le plus de Coupes du Monde de football ?",r:"Brésil",cat:"sport_q",choix:["Brésil","Allemagne","Italie","Argentine"]},
-  {q:"Combien de sets faut-il gagner pour remporter Wimbledon (en simple hommes) ?",r:"3",cat:"sport_q",choix:["3","2","4","5"]},
-  {q:"Quel est le surnom de Michael Jordan ?",r:"Air Jordan",cat:"sport_q",choix:["Air Jordan","Magic","The Dream","The Answer"]},
-  {q:"Combien de points vaut un panier à 3 points au basketball ?",r:"3",cat:"sport_q",choix:["3","2","4","1"]},
-  {q:"Quel est le sport le plus populaire au monde ?",r:"Le football",cat:"sport_q",choix:["Le football","Le cricket","Le basketball","Le tennis"]},
-  {q:"Qui a remporté le plus de titres en Grand Chelem au tennis ?",r:"Novak Djokovic",cat:"sport_q",choix:["Novak Djokovic","Rafael Nadal","Roger Federer","Pete Sampras"]},
-  {q:"Dans quel sport utilise-t-on une crosse ?",r:"Le hockey",cat:"sport_q",choix:["Le hockey","Le lacrosse","Le polo","Les deux premiers"]},
-  {q:"Combien de grammes pèse une balle de tennis ?",r:"56,7g",cat:"sport_q",choix:["56,7g","58g","52g","60g"]},
-  {q:"Quel athlète a remporté 9 médailles d'or olympiques aux JO de 2008 et 2012 ?",r:"Usain Bolt",cat:"sport_q",choix:["Usain Bolt","Michael Phelps","Carl Lewis","Asafa Powell"]},
-  {q:"Combien de joueurs y a-t-il dans une équipe de rugby à XV ?",r:"15",cat:"sport_q",choix:["15","14","13","16"]},
-  {q:"Quelle équipe a remporté le plus de Champions League ?",r:"Real Madrid",cat:"sport_q",choix:["Real Madrid","FC Barcelone","AC Milan","Liverpool"]},
-  {q:"Dans quel sport parle-t-on de 'smash' ?",r:"Le badminton / tennis",cat:"sport_q",choix:["Le badminton / tennis","Le volleyball","Le squash","Tous ces sports"]},
-  {q:"Combien de tours y a-t-il dans le Tour de France ?",r:"21 étapes",cat:"sport_q",choix:["21 étapes","20 étapes","23 étapes","18 étapes"]},
-  {q:"En quelle année les premiers Jeux Olympiques modernes ont-ils eu lieu ?",r:"1896",cat:"sport_q",choix:["1896","1900","1888","1904"]},
-  {q:"Quel est le surnom de l'équipe de France de football ?",r:"Les Bleus",cat:"sport_q",choix:["Les Bleus","Les Coqs","Les Tricolores","Les Gaulois"]},
-  {q:"Dans quelle ville se trouve le stade de Wembley ?",r:"Londres",cat:"sport_q",choix:["Londres","Manchester","Birmingham","Liverpool"]},
-  {q:"Quel est le record du monde du 100m ?",r:"9,58 secondes",cat:"sport_q",choix:["9,58 secondes","9,63 secondes","9,72 secondes","9,81 secondes"]},
-  {q:"Combien de joueurs peut-on aligner sur un terrain de baseball ?",r:"9",cat:"sport_q",choix:["9","10","8","11"]},
-  // 🦁 ANIMAUX
-  {q:"Quel est l'animal terrestre le plus lourd ?",r:"L'éléphant",cat:"animaux_q",choix:["L'éléphant","Le rhinocéros","L'hippopotame","La girafe"]},
-  {q:"Combien de pattes a une araignée ?",r:"8",cat:"animaux_q",choix:["8","6","10","4"]},
-  {q:"Quel est l'oiseau qui ne peut pas voler le plus grand ?",r:"L'autruche",cat:"animaux_q",choix:["L'autruche","Le manchot","L'émeu","Le kiwi"]},
-  {q:"Combien de cœurs a un poulpe ?",r:"3",cat:"animaux_q",choix:["3","1","2","4"]},
-  {q:"Quel est l'animal marin le plus grand ?",r:"La baleine bleue",cat:"animaux_q",choix:["La baleine bleue","Le requin baleine","Le calmar géant","L'orque"]},
-  {q:"Quel est le seul mammifère qui peut voler ?",r:"La chauve-souris",cat:"animaux_q",choix:["La chauve-souris","L'écureuil volant","Le galago","Le draco"]},
-  {q:"Combien de temps un escargot peut-il dormir ?",r:"3 ans",cat:"animaux_q",choix:["3 ans","6 mois","1 an","5 ans"]},
-  {q:"Quel est l'animal le plus venimeux du monde ?",r:"La méduse boîte",cat:"animaux_q",choix:["La méduse boîte","Le cobra","La mamba noire","Le fugu"]},
-  {q:"Combien de cervicales a une girafe ?",r:"7",cat:"animaux_q",choix:["7","10","14","6"]},
-  {q:"Quel est le nom du bébé kangourou ?",r:"Joey",cat:"animaux_q",choix:["Joey","Kit","Pup","Cub"]},
-  {q:"Quel animal a le plus grand cerveau par rapport à son corps ?",r:"Le dauphin",cat:"animaux_q",choix:["Le dauphin","Le chimpanzé","Le perroquet","L'éléphant"]},
-  {q:"Combien d'yeux a une abeille ?",r:"5",cat:"animaux_q",choix:["5","2","4","6"]},
-  {q:"Quel est le nom du groupe de lions ?",r:"Une troupe",cat:"animaux_q",choix:["Une troupe","Un troupeau","Une meute","Un clan"]},
-  {q:"Quel animal peut rester le plus longtemps sans eau ?",r:"Le chameau",cat:"animaux_q",choix:["Le chameau","Le dromadaire","Le rat kangourou","Le lézard thorny devil"]},
-  {q:"Combien de dents a un requin blanc adulte ?",r:"300",cat:"animaux_q",choix:["300","100","200","50"]},
-  {q:"Quel est le reptile le plus long du monde ?",r:"Le python réticulé",cat:"animaux_q",choix:["Le python réticulé","L'anaconda","Le boa constrictor","Le crocodile marin"]},
-  {q:"Combien de bras a une étoile de mer classique ?",r:"5",cat:"animaux_q",choix:["5","4","6","8"]},
-  {q:"Quel est l'animal le plus rapide du monde ?",r:"Le faucon pèlerin",cat:"animaux_q",choix:["Le faucon pèlerin","Le guépard","L'aigle","Le martin-pêcheur"]},
-  {q:"Combien de litres de lait une vache produit-elle par jour en moyenne ?",r:"25 litres",cat:"animaux_q",choix:["25 litres","10 litres","50 litres","5 litres"]},
-  {q:"Quel est le seul animal qui ne peut pas reculer ?",r:"Le kangourou",cat:"animaux_q",choix:["Le kangourou","L'éléphant","Le crocodile","La girafe"]},
-  // 🍽️ GASTRONOMIE
-  {q:"Quelle est la principale épice du curry ?",r:"Le curcuma",cat:"gastronomie",choix:["Le curcuma","Le cumin","Le paprika","Le safran"]},
-  {q:"Dans quel pays est né le croissant ?",r:"Autriche",cat:"gastronomie",choix:["Autriche","France","Hongrie","Allemagne"]},
-  {q:"Quel fromage est utilisé dans le tiramisu traditionnel ?",r:"Le mascarpone",cat:"gastronomie",choix:["Le mascarpone","La ricotta","Le cream cheese","Le brie"]},
-  {q:"Combien de litres de lait faut-il pour faire 1 kg de beurre ?",r:"20 litres",cat:"gastronomie",choix:["20 litres","10 litres","5 litres","30 litres"]},
-  {q:"Quel pays consomme le plus de chocolat par habitant ?",r:"La Suisse",cat:"gastronomie",choix:["La Suisse","La Belgique","L'Allemagne","Les États-Unis"]},
-  {q:"Quelle est la base de la sauce hollandaise ?",r:"Le beurre clarifié",cat:"gastronomie",choix:["Le beurre clarifié","L'huile d'olive","La crème","Le lard"]},
-  {q:"De quel pays est originaire la pizza Margherita ?",r:"Italie",cat:"gastronomie",choix:["Italie","France","Grèce","Espagne"]},
-  {q:"Quel est l'ingrédient principal de la guacamole ?",r:"L'avocat",cat:"gastronomie",choix:["L'avocat","La tomate","L'oignon","Le piment"]},
-  {q:"Dans quelle ville est née la fondue savoyarde ?",r:"En Savoie",cat:"gastronomie",choix:["En Savoie","En Suisse","À Lyon","À Genève"]},
-  {q:"Quel est le vin le plus produit en France ?",r:"Le bordeaux",cat:"gastronomie",choix:["Le bordeaux","Le bourgogne","Le champagne","La côte du Rhône"]},
-  {q:"Combien de temps faut-il pour cuire un œuf à la coque ?",r:"3 minutes",cat:"gastronomie",choix:["3 minutes","5 minutes","2 minutes","7 minutes"]},
-  {q:"Quel légume est la base d'une ratatouille ?",r:"Plusieurs légumes",cat:"gastronomie",choix:["Plusieurs légumes","L'aubergine","La courgette","La tomate"]},
-  {q:"De quelle fleur est extrait le safran ?",r:"Le crocus",cat:"gastronomie",choix:["Le crocus","La rose","Le jasmin","La lavande"]},
-  {q:"Quel est le premier producteur mondial de café ?",r:"Le Brésil",cat:"gastronomie",choix:["Le Brésil","La Colombie","L'Éthiopie","Le Vietnam"]},
-  {q:"Quel est l'ingrédient secret du Coca-Cola ?",r:"Inconnu",cat:"gastronomie",choix:["Inconnu","La coca","La caféine","La vanille"]},
-  {q:"Combien de grammes de sucre y a-t-il dans un Coca-Cola 33cl ?",r:"35g",cat:"gastronomie",choix:["35g","20g","50g","15g"]},
-  {q:"Quel est le fromage le plus consommé au monde ?",r:"La mozzarella",cat:"gastronomie",choix:["La mozzarella","Le cheddar","Le brie","L'emmental"]},
-  {q:"Dans quelle cuisine utilise-t-on du miso ?",r:"La cuisine japonaise",cat:"gastronomie",choix:["La cuisine japonaise","La cuisine coréenne","La cuisine chinoise","La cuisine thaïlandaise"]},
-  {q:"Quel est le plat national de l'Espagne ?",r:"La paella",cat:"gastronomie",choix:["La paella","La tortilla","Le gazpacho","Le cocido"]},
-  {q:"Quel est le composant principal du pain ?",r:"La farine",cat:"gastronomie",choix:["La farine","Le sel","L'eau","La levure"]},
-  // 🎮 JEUX VIDÉO
-  {q:"Comment s'appelle la princesse dans Super Mario ?",r:"Peach",cat:"jv_q",choix:["Peach","Zelda","Samus","Rosalina"]},
-  {q:"Quel est le vrai nom de Link dans Zelda ?",r:"Link",cat:"jv_q",choix:["Link","Zelda","Ganon","Rauru"]},
-  {q:"Dans quel jeu trouve-t-on le personnage Master Chief ?",r:"Halo",cat:"jv_q",choix:["Halo","Call of Duty","Gears of War","Destiny"]},
-  {q:"Quel est le premier jeu vidéo de l'histoire ?",r:"Pong",cat:"jv_q",choix:["Pong","Space Invaders","Pac-Man","Tennis for Two"]},
-  {q:"Combien de Pokémon de base y a-t-il dans la 1ère génération ?",r:"151",cat:"jv_q",choix:["151","150","152","149"]},
-  {q:"Dans Minecraft, quel est le boss final ?",r:"L'Ender Dragon",cat:"jv_q",choix:["L'Ender Dragon","Le Wither","L'Elder Guardian","Le Warden"]},
-  {q:"Quel est le studio derrière Grand Theft Auto ?",r:"Rockstar Games",cat:"jv_q",choix:["Rockstar Games","Naughty Dog","Ubisoft","EA"]},
-  {q:"Quel est le vrai nom du personnage Solid Snake ?",r:"David",cat:"jv_q",choix:["David","Jack","Raiden","Venom"]},
-  {q:"Dans Fortnite, combien de joueurs commencent une partie classique ?",r:"100",cat:"jv_q",choix:["100","50","150","75"]},
-  {q:"Quel est le premier Pokémon du Pokédex national ?",r:"Bulbizarre",cat:"jv_q",choix:["Bulbizarre","Carapuce","Salamèche","Ronflex"]},
-  {q:"Dans quel jeu trouve-t-on les personnages Crash et Coco ?",r:"Crash Bandicoot",cat:"jv_q",choix:["Crash Bandicoot","Jak and Daxter","Ratchet & Clank","Spyro"]},
-  {q:"Quel est le nom du cheval de Link dans Zelda ?",r:"Epona",cat:"jv_q",choix:["Epona","Aragon","Shadowmere","Roach"]},
-  {q:"Dans Undertale, quel est le vrai nom du joueur ?",r:"Frisk",cat:"jv_q",choix:["Frisk","Chara","Flowey","Sans"]},
-  {q:"Quelle est la phrase emblématique de GLaDOS dans Portal ?",r:"The cake is a lie",cat:"jv_q",choix:["The cake is a lie","We do what we must","Still alive","Hello"]},
-  {q:"Dans League of Legends, combien de joueurs y a-t-il par équipe ?",r:"5",cat:"jv_q",choix:["5","4","6","3"]},
-  {q:"Quel jeu a popularisé le genre Battle Royale ?",r:"PUBG",cat:"jv_q",choix:["PUBG","Fortnite","Warzone","Apex"]},
-  {q:"Dans GTA San Andreas, quel est le vrai nom de CJ ?",r:"Carl Johnson",cat:"jv_q",choix:["Carl Johnson","Carl James","Carlos Johnson","Carl Jackson"]},
-  {q:"Quel est le plus grand monde ouvert de l'histoire du jeu vidéo ?",r:"No Man's Sky",cat:"jv_q",choix:["No Man's Sky","Minecraft","GTA V","Cyberpunk 2077"]},
-  {q:"Dans Among Us, combien y a-t-il d'imposteurs maximum ?",r:"3",cat:"jv_q",choix:["3","2","4","1"]},
-  {q:"Quel est le nom du village dans Animal Crossing ?",r:"Ça dépend du joueur",cat:"jv_q",choix:["Ça dépend du joueur","Florizon","Islevent","Nookington"]},
-  // 🎵 MUSIQUE
-  {q:"Quel groupe a chanté 'Bohemian Rhapsody' ?",r:"Queen",cat:"musique_q",choix:["Queen","Led Zeppelin","The Beatles","David Bowie"]},
-  {q:"Quel est le vrai nom d'Eminem ?",r:"Marshall Mathers",cat:"musique_q",choix:["Marshall Mathers","Curtis Jackson","Shawn Carter","Calvin Broadus"]},
-  {q:"Combien de Grammy Awards a remporté Beyoncé ?",r:"32",cat:"musique_q",choix:["32","28","25","40"]},
-  {q:"Quel instrument joue clairement Jimi Hendrix ?",r:"La guitare",cat:"musique_q",choix:["La guitare","La basse","La batterie","Le piano"]},
-  {q:"Dans quel pays est né le reggae ?",r:"Jamaïque",cat:"musique_q",choix:["Jamaïque","Cuba","Trinidad","Barbade"]},
-  {q:"Quel est le vrai nom de Lady Gaga ?",r:"Stefani Germanotta",cat:"musique_q",choix:["Stefani Germanotta","Robyn Fenty","Melissa Jefferson","Demi Moore"]},
-  {q:"Combien de membres compte le groupe BTS ?",r:"7",cat:"musique_q",choix:["7","5","6","8"]},
-  {q:"Qui a composé la Symphonie du Nouveau Monde ?",r:"Dvořák",cat:"musique_q",choix:["Dvořák","Beethoven","Mozart","Brahms"]},
-  {q:"Quel est le titre de la 1ère chanson de Britney Spears ?",r:"...Baby One More Time",cat:"musique_q",choix:["...Baby One More Time","Toxic","Oops!...","Circus"]},
-  {q:"Quel groupe a composé la musique de Thriller ?",r:"Michael Jackson",cat:"musique_q",choix:["Michael Jackson","Quincy Jones","Rod Temperton","Les trois réponses"]},
-  {q:"Combien de notes y a-t-il dans une gamme majeure ?",r:"7",cat:"musique_q",choix:["7","8","12","5"]},
-  {q:"Quel est le vrai nom de Lorde ?",r:"Ella Yelich-O'Connor",cat:"musique_q",choix:["Ella Yelich-O'Connor","Billie Eilish","Lana Del Rey","Halsey"]},
-  {q:"Dans quel pays est né Elvis Presley ?",r:"États-Unis",cat:"musique_q",choix:["États-Unis","Canada","Angleterre","Australie"]},
-  {q:"Quel groupe français a popularisé la French Touch ?",r:"Daft Punk",cat:"musique_q",choix:["Daft Punk","Justice","Cassius","Air"]},
-  {q:"Combien de cordes a une guitare classique ?",r:"6",cat:"musique_q",choix:["6","4","5","7"]},
-  {q:"Quel est le batteur des Beatles ?",r:"Ringo Starr",cat:"musique_q",choix:["Ringo Starr","John Lennon","Paul McCartney","George Harrison"]},
-  {q:"Quel est le vrai nom de Stromae ?",r:"Paul Van Haver",cat:"musique_q",choix:["Paul Van Haver","Paul Kalkbrenner","Paul Barrier","Paul Henri"]},
-  {q:"Qui a écrit 'La Marseillaise' ?",r:"Rouget de Lisle",cat:"musique_q",choix:["Rouget de Lisle","Napoléon","Voltaire","Robespierre"]},
-  {q:"Combien de singles a sorti Adele sur son album '21' ?",r:"5",cat:"musique_q",choix:["5","3","7","4"]},
-  {q:"Quel instrument joue Yann Tiersen ?",r:"Le piano",cat:"musique_q",choix:["Le piano","La guitare","L'accordéon","Les trois"]},
-  // 📺 SÉRIES & FILMS
-  {q:"Dans Game of Thrones, qui dit 'Winter is coming' ?",r:"Les Stark",cat:"serie_q",choix:["Les Stark","Les Lannister","Les Baratheon","Les Targaryen"]},
-  {q:"Dans Friends, quel est le métier de Ross ?",r:"Paléontologue",cat:"serie_q",choix:["Paléontologue","Acteur","Chef cuisinier","Architecte"]},
-  {q:"Dans Breaking Bad, comment s'appelle l'alter ego de Walter White ?",r:"Heisenberg",cat:"serie_q",choix:["Heisenberg","Walt Jr.","Saul","Mike"]},
-  {q:"Combien de saisons compte La Casa de Papel ?",r:"5",cat:"serie_q",choix:["5","4","6","3"]},
-  {q:"Dans Stranger Things, dans quelle ville se passe l'histoire ?",r:"Hawkins",cat:"serie_q",choix:["Hawkins","Springfield","Derry","Castle Rock"]},
-  {q:"Dans The Office, quelle entreprise vend de la papeterie ?",r:"Dunder Mifflin",cat:"serie_q",choix:["Dunder Mifflin","Sabre","Michael Scott Paper","Staples"]},
-  {q:"Quel acteur joue Walter White dans Breaking Bad ?",r:"Bryan Cranston",cat:"serie_q",choix:["Bryan Cranston","Aaron Paul","Bob Odenkirk","Dean Norris"]},
-  {q:"Combien de saisons compte Game of Thrones ?",r:"8",cat:"serie_q",choix:["8","7","9","6"]},
-  {q:"Dans Squid Game, quel est le numéro du personnage principal ?",r:"456",cat:"serie_q",choix:["456","001","067","218"]},
-  {q:"Dans The Mandalorian, comment s'appelle le bébé Yoda ?",r:"Grogu",cat:"serie_q",choix:["Grogu","Din Djarin","Cara Dune","Kuiil"]},
-  {q:"Dans Sherlock BBC, qui joue Sherlock Holmes ?",r:"Benedict Cumberbatch",cat:"serie_q",choix:["Benedict Cumberbatch","Martin Freeman","Mark Gatiss","Andrew Scott"]},
-  {q:"Quelle est la série Netflix la plus regardée de tous les temps ?",r:"Squid Game",cat:"serie_q",choix:["Squid Game","Stranger Things","Wednesday","Bridgerton"]},
-  {q:"Dans Arcane, dans quelle ville vit Jinx ?",r:"Zaun",cat:"serie_q",choix:["Zaun","Piltover","Noxus","Demacia"]},
-  {q:"Combien de saisons compte Breaking Bad ?",r:"5",cat:"serie_q",choix:["5","4","6","7"]},
-  {q:"Dans Wednesday, dans quelle école est Wednesday ?",r:"Nevermore Academy",cat:"serie_q",choix:["Nevermore Academy","Hogwarts","Blackwood Academy","Brakebills"]},
-  {q:"Qui joue le rôle de Daenerys dans Game of Thrones ?",r:"Emilia Clarke",cat:"serie_q",choix:["Emilia Clarke","Sophie Turner","Maisie Williams","Natalie Dormer"]},
-  {q:"Dans Dark, combien de cycles temporels y a-t-il ?",r:"3",cat:"serie_q",choix:["3","2","4","1"]},
-  {q:"Dans Succession, quel est le nom de la famille ?",r:"Roy",cat:"serie_q",choix:["Roy","Roys","Royale","Royce"]},
-  {q:"Quel acteur joue Lupin dans la série Netflix ?",r:"Omar Sy",cat:"serie_q",choix:["Omar Sy","Tahar Rahim","Roschdy Zem","Ramzy Bedia"]},
-  {q:"Dans Peaky Blinders, dans quelle ville se déroule l'histoire ?",r:"Birmingham",cat:"serie_q",choix:["Birmingham","Manchester","Londres","Liverpool"]},
-  // ⭐ PEOPLE & CÉLÉBRITÉS
-  {q:"Quel est le vrai prénom de Coluche ?",r:"Michel",cat:"people",choix:["Michel","Jean","Pierre","François"]},
-  {q:"Dans quel pays est né Cristiano Ronaldo ?",r:"Portugal",cat:"people",choix:["Portugal","Espagne","Brésil","Argentine"]},
-  {q:"Quel est le vrai nom de Voltaire ?",r:"François-Marie Arouet",cat:"people",choix:["François-Marie Arouet","Jean-Baptiste Poquelin","Jean-Baptiste Racine","Denis Diderot"]},
-  {q:"Quel est le nom de naissance de Marilyn Monroe ?",r:"Norma Jeane Mortenson",cat:"people",choix:["Norma Jeane Mortenson","Marilyn Baker","Jean Monroe","Norma Monroe"]},
-  {q:"Quel est le pays d'origine de Zlatan Ibrahimovic ?",r:"Suède",cat:"people",choix:["Suède","Bosnie","Croatie","Serbie"]},
-  {q:"Quel est le vrai prénom de Stromae ?",r:"Paul",cat:"people",choix:["Paul","Pierre","Jean","Marc"]},
-  {q:"Qui est la personne la plus suivie sur Instagram ?",r:"Cristiano Ronaldo",cat:"people",choix:["Cristiano Ronaldo","Lionel Messi","Kylie Jenner","Selena Gomez"]},
-  {q:"Quel est le vrai nom de Cardi B ?",r:"Belcalis Almanzar",cat:"people",choix:["Belcalis Almanzar","Nicki Minaj","Cardona Belcalis","Belcalis Brown"]},
-  {q:"Dans quel pays est née Rihanna ?",r:"Barbade",cat:"people",choix:["Barbade","Jamaïque","Trinidad","Bahamas"]},
-  {q:"Quel est le vrai nom de Bono (U2) ?",r:"Paul Hewson",cat:"people",choix:["Paul Hewson","David Evans","Adam Clayton","Larry Mullen"]},
-  {q:"Qui est le PDG de Tesla et SpaceX ?",r:"Elon Musk",cat:"people",choix:["Elon Musk","Jeff Bezos","Mark Zuckerberg","Bill Gates"]},
-  {q:"Quel est le vrai prénom de Zidane ?",r:"Zinedine",cat:"people",choix:["Zinedine","Zied","Zakaria","Zaki"]},
-  {q:"Dans quel pays est né Lionel Messi ?",r:"Argentine",cat:"people",choix:["Argentine","Brésil","Uruguay","Espagne"]},
-  {q:"Quel est le vrai nom de Snoop Dogg ?",r:"Calvin Cordozar Broadus Jr.",cat:"people",choix:["Calvin Cordozar Broadus Jr.","Curtis James Jackson","Shawn Corey Carter","Dwayne Michael Carter"]},
-  {q:"Quelle est la fortune estimée d'Elon Musk ?",r:"Plus de 200 milliards de dollars",cat:"people",choix:["Plus de 200 milliards de dollars","100 milliards","150 milliards","80 milliards"]},
-  {q:"Quel est le vrai prénom de Shakespeare ?",r:"William",cat:"people",choix:["William","John","George","Henry"]},
-  {q:"Qui a inventé le téléphone ?",r:"Alexander Graham Bell",cat:"people",choix:["Alexander Graham Bell","Thomas Edison","Nikola Tesla","Elisha Gray"]},
-  {q:"Dans quel pays est né Justin Bieber ?",r:"Canada",cat:"people",choix:["Canada","États-Unis","Australie","Angleterre"]},
-  {q:"Quel est le vrai nom de Maitre Gims ?",r:"Gandhi Djuna",cat:"people",choix:["Gandhi Djuna","Gilles Simon","Gaël Monfils","Guillaume Martin"]},
-  {q:"Qui est la femme la plus puissante du monde selon Forbes ?",r:"Ça change chaque année",cat:"people",choix:["Ça change chaque année","Angela Merkel","Christine Lagarde","Oprah Winfrey"]},
-  // 🤪 INSOLITE
-  {q:"Combien de fois cligne-t-on des yeux par jour en moyenne ?",r:"15 000 fois",cat:"insolite",choix:["15 000 fois","5 000 fois","30 000 fois","1 000 fois"]},
-  {q:"Quelle est la durée de vie d'un globule rouge ?",r:"120 jours",cat:"insolite",choix:["120 jours","30 jours","60 jours","365 jours"]},
-  {q:"Combien de litres de salive produit-on par an ?",r:"700 litres",cat:"insolite",choix:["700 litres","100 litres","1000 litres","50 litres"]},
-  {q:"Quel est le son le plus fort jamais enregistré sur Terre ?",r:"L'éruption du Krakatoa",cat:"insolite",choix:["L'éruption du Krakatoa","Une bombe nucléaire","Le tonnerre","Un concert de rock"]},
-  {q:"Combien de kilomètres marche-t-on en moyenne dans une vie ?",r:"160 000 km",cat:"insolite",choix:["160 000 km","50 000 km","300 000 km","80 000 km"]},
-  {q:"Quelle est la vitesse d'un éternuement ?",r:"160 km/h",cat:"insolite",choix:["160 km/h","50 km/h","300 km/h","100 km/h"]},
-  {q:"Combien de secondes le record du monde d'apnée dure-t-il ?",r:"24 minutes",cat:"insolite",choix:["24 minutes","10 minutes","15 minutes","5 minutes"]},
-  {q:"Quelle est la peur des barbes ?",r:"La pogonophobie",cat:"insolite",choix:["La pogonophobie","La trichophobie","La pélophobie","La dendrophobie"]},
-  {q:"Combien de fois le cœur bat-il par jour en moyenne ?",r:"100 000 fois",cat:"insolite",choix:["100 000 fois","50 000 fois","200 000 fois","30 000 fois"]},
-  {q:"Quel est le pays qui consomme le plus de bière par habitant ?",r:"La République Tchèque",cat:"insolite",choix:["La République Tchèque","L'Allemagne","La Belgique","L'Irlande"]},
-  {q:"Combien de langues sont parlées dans le monde ?",r:"Plus de 7000",cat:"insolite",choix:["Plus de 7000","3000","5000","1000"]},
-  {q:"Quel est le mot le plus long de la langue française ?",r:"Anticonstitutionnellement",cat:"insolite",choix:["Anticonstitutionnellement","Intergouvernementales","Incompréhensiblement","Prestidigitateur"]},
-  {q:"Combien de muscles utilise-t-on pour sourire ?",r:"12",cat:"insolite",choix:["12","6","17","4"]},
-  {q:"Quelle est la vitesse maximale d'un escargot ?",r:"0,05 km/h",cat:"insolite",choix:["0,05 km/h","0,5 km/h","1 km/h","0,01 km/h"]},
-  {q:"Combien de fois peut-on plier une feuille de papier en deux ?",r:"7 fois maximum",cat:"insolite",choix:["7 fois maximum","5 fois","10 fois","3 fois"]},
-  {q:"Quel est le bruit de fond le plus silencieux jamais enregistré ?",r:"-20 dB dans une chambre anéchoïque",cat:"insolite",choix:["-20 dB dans une chambre anéchoïque","0 dB","10 dB","5 dB"]},
-  {q:"Combien d'œufs une poule pond-elle par an en moyenne ?",r:"280 œufs",cat:"insolite",choix:["280 œufs","100 œufs","365 œufs","52 œufs"]},
-  {q:"Quelle couleur les yeux des bébés ont-ils à la naissance ?",r:"Bleu-gris",cat:"insolite",choix:["Bleu-gris","Marron","Vert","Noirs"]},
-  {q:"Quel pays a le plus grand nombre de lacs au monde ?",r:"Canada",cat:"insolite",choix:["Canada","Finlande","Russie","Suède"]},
-  {q:"Combien de fois un humain est-il censé rire par jour ?",r:"15 à 20 fois",cat:"insolite",choix:["15 à 20 fois","5 fois","50 fois","100 fois"]},
-];
-
-// ═══════════════════════════════════════
-// ÉTAT QUIZ
-// ═══════════════════════════════════════
-var allQuizQuestions=[], quizPlaylist=[], quizIndex=0;
-var quizTimeLeft=20, quizTotalTime=20, quizTimerInterval;
-var selectedQuizCats=new Set();
-var quizTracksWritten=false;
-
-// ═══════════════════════════════════════
-// CHARGEMENT QUIZ FIREBASE
-// ═══════════════════════════════════════
-function loadQuizQuestions() {
-  db.ref('quiz').on('value', function(snap){
-    var data=snap.val();
-    if(!data || Object.keys(data).length===0) {
-      if(quizTracksWritten) return;
-      quizTracksWritten=true;
-      var batch={};
-      DEFAULT_QUIZ.forEach(function(q){
-        var k=db.ref('quiz').push().key;
-        batch[k]=q;
-      });
-      db.ref('quiz').set(batch);
-      return;
-    }
-    quizTracksWritten=true;
-    allQuizQuestions=Object.entries(data).map(function(e){ return Object.assign({},e[1],{_key:e[0]}); });
-    buildQuizCatSelector();
-  });
-}
-
-function buildQuizCatSelector() {
-  var counts={};
-  allQuizQuestions.forEach(function(q){ counts[q.cat]=(counts[q.cat]||0)+1; });
-  var html='';
-  QUIZ_CATS.forEach(function(c){
-    var n=counts[c.id]||0; if(!n) return;
-    var sel=selectedQuizCats.has(c.id)?'selected':'';
-    html+='<div class="cat-chip '+sel+'" onclick="toggleQuizCat(\''+c.id+'\',this)">'
-        +'<span class="ci">'+c.icon+'</span><span>'+c.label+'</span>'
-        +'<span class="cc">'+n+' questions</span></div>';
-  });
-  var el=document.getElementById('quiz-cat-selector');
-  if(el) el.innerHTML=html||'<p style="color:var(--muted)">Aucune question.</p>';
-  updateQuizPool();
-}
-
-function toggleQuizCat(id,el) {
-  if(selectedQuizCats.has(id)){ selectedQuizCats.delete(id); el.classList.remove('selected'); }
-  else { selectedQuizCats.add(id); el.classList.add('selected'); }
-  updateQuizPool();
-}
-
-function updateQuizPool() {
-  var n=selectedQuizCats.size===0?allQuizQuestions.length:allQuizQuestions.filter(function(q){return selectedQuizCats.has(q.cat);}).length;
-  var el=document.getElementById('quiz-pool-count');
-  if(el) el.textContent=n;
-  updateQuizTimeEstimate();
-}
-
-function updateQuizTimeEstimate() {
-  var nb=parseInt((document.getElementById('quiz-nb-questions')||{}).value)||10;
-  var totalSec=nb*30;
-  var h=Math.floor(totalSec/3600), m=Math.floor((totalSec%3600)/60);
-  var label=h>0?'⏱️ ~'+h+'h'+String(m).padStart(2,'0'):'⏱️ ~'+m+' min';
-  var el=document.getElementById('quiz-time-estimate');
-  if(el) el.textContent=label;
-}
-
-// ═══════════════════════════════════════
-// JOUEURS (synchronisé avec le blind test)
-// ═══════════════════════════════════════
-// Les joueurs utilisent le même lobby Firebase — on réutilise playersCache
-function updateQuizPlayerList() {
-  var keys=Object.keys(playersCache);
-  var countEl=document.getElementById('quiz-player-count');
-  if(countEl) countEl.textContent=keys.length;
-  var listEl=document.getElementById('quiz-player-list');
-  if(!listEl) return;
-  if(keys.length===0){
-    listEl.innerHTML='<li class="no-players">En attente de joueurs…</li>';
-    var opts=document.getElementById('quiz-options');
-    if(opts) opts.classList.add('hidden');
-  } else {
-    var opts=document.getElementById('quiz-options');
-    if(opts) opts.classList.remove('hidden');
-    listEl.innerHTML=keys.map(function(id){
-      var p=playersCache[id];
-      return '<li>'+(p.avatar||'👤')+' '+p.name+'</li>';
-    }).join('');
-  }
-  updateQuizLeaderboard();
-}
-
-function updateQuizLeaderboard() {
-  var arr=Object.keys(playersCache).map(function(id){return Object.assign({id:id},playersCache[id]);});
-  arr.sort(function(a,b){return(b.score||0)-(a.score||0);});
-  var M=['🥇','🥈','🥉'],R=['rank-1','rank-2','rank-3'];
-  var el=document.getElementById('quiz-leaderboard-list');
-  if(el) el.innerHTML=arr.map(function(p,i){
-    return '<li class="lb-item '+(R[i]||'')+'"><span class="lb-rank">'+(M[i]||(i+1))+'</span>'
-          +'<span class="lb-name">'+(p.avatar||'👤')+' '+p.name+'</span>'
-          +'<span class="lb-score">'+(p.score||0)+' pts</span></li>';
-  }).join('');
-}
-
-// ═══════════════════════════════════════
-// DÉMARRER LE QUIZ
-// ═══════════════════════════════════════
-function startQuiz() {
-  var pool=selectedQuizCats.size===0?allQuizQuestions.slice():allQuizQuestions.filter(function(q){return selectedQuizCats.has(q.cat);});
-  if(!pool.length){ alert('Aucune question disponible !'); return; }
-  var nb=Math.min(parseInt(document.getElementById('quiz-nb-questions').value)||10, pool.length);
-  quizPlaylist=pool.sort(function(){return .5-Math.random();}).slice(0,nb);
-  quizIndex=0;
-  // Remettre les scores à 0
-  Object.keys(playersCache).forEach(function(id){
-    db.ref('players/'+id+'/score').set(0);
-  });
-  document.getElementById('quiz-setup-area').classList.add('hidden');
-  document.getElementById('quiz-game-area').classList.remove('hidden');
-  document.getElementById('main-nav').classList.add('hidden');
-  loadQuizQuestion();
-}
-
-function loadQuizQuestion() {
-  var q=quizPlaylist[quizIndex];
-  quizTotalTime=20; quizTimeLeft=quizTotalTime;
-
-  var timerEl=document.getElementById('quiz-timer-display');
-  var barEl=document.getElementById('quiz-timer-bar');
-  timerEl.textContent=quizTimeLeft;
-  timerEl.classList.remove('danger');
-  barEl.style.width='100%';
-  barEl.classList.remove('danger');
-
-  // Compteur
-  document.getElementById('quiz-counter-label').textContent='Question '+(quizIndex+1)+' / '+quizPlaylist.length;
-  var dots='';
-  for(var i=0;i<quizPlaylist.length;i++){
-    var cls='counter-dot'; if(i<quizIndex) cls+=' done'; if(i===quizIndex) cls+=' active';
-    dots+='<div class="'+cls+'"></div>';
-  }
-  document.getElementById('quiz-counter-dots').innerHTML=dots;
-
-  // Badge catégorie
-  var cat=QUIZ_CATS.find(function(c){return c.id===q.cat;});
-  document.getElementById('quiz-cat-badge').textContent=cat?cat.icon+' '+cat.label:'';
-
-  // La question
-  document.getElementById('quiz-question-text').textContent=q.q;
-
-  // Reset UI
-  document.getElementById('quiz-answer-display').classList.add('hidden');
-  document.getElementById('quiz-reveal-wrap').classList.add('hidden');
-  document.getElementById('quiz-next-wrap').classList.add('hidden');
-
-  db.ref('answers').remove();
-  db.ref('gameState').set({
-    accepting:true,
-    choix:q.choix,
-    solution:q.r,
-    mode:'quiz'
-  });
-
-  clearInterval(quizTimerInterval);
-  quizTimerInterval=setInterval(function(){
-    quizTimeLeft--;
-    timerEl.textContent=quizTimeLeft;
-    barEl.style.width=((quizTimeLeft/quizTotalTime)*100)+'%';
-    if(quizTimeLeft<=5){ timerEl.classList.add('danger'); barEl.classList.add('danger'); }
-    if(quizTimeLeft<=0){ clearInterval(quizTimerInterval); stopQuizAnswering(); }
-  },1000);
-}
-
-function stopQuizAnswering() {
-  db.ref('gameState').update({accepting:false});
-  document.getElementById('quiz-timer-display').textContent='⏰';
-  renderQuizAnswers();
-  setTimeout(function(){ revealQuizResult(); }, 1500);
-}
-
-function renderQuizAnswers() {
-  var feed=document.getElementById('quiz-answers-feed');
-  var title=document.getElementById('quiz-answers-title');
-  var done=(quizTimeLeft<=0);
-  var entries=Object.entries(currentAnswers);
-  var nbP=Object.keys(playersCache).length;
-  title.textContent=done?'✅ '+entries.length+' réponse(s)':'⏳ '+entries.length+' / '+nbP+' ont répondu';
-  feed.innerHTML=entries.map(function(e){
-    var id=e[0],ans=e[1];
-    var isQCM=ans.text&&ans.text.includes('(QCM)');
-    var isAuto=ans.text&&ans.text.includes('(AUTO ✅)');
-    var auto=ans.autoChecked||isQCM||isAuto;
-    var dText=done?'<span class="atext">"'+ans.text+'"</span>':'<span class="pending">📩 Envoyée…</span>';
-    var action='';
-    if(done){ action=auto?'<span class="badge-auto">'+(isQCM?'QCM +1 ✔':'Auto +3 ✔')+'</span>'
-                         :'<button class="btn-point" onclick="givePoints(\''+id+'\',3)">+3 ✅</button>'; }
-    var bc=isAuto?'var(--green)':isQCM?'var(--purple)':'var(--accent)';
-    return '<div class="answer-card" style="border-left-color:'+bc+'"><div>'
-          +'<div class="pname">'+(ans.avatar||'👤')+' '+ans.name+'</div>'+dText+'</div>'+action+'</div>';
-  }).join('');
-}
-
-function revealQuizResult() {
-  var q=quizPlaylist[quizIndex];
-  var cat=QUIZ_CATS.find(function(c){return c.id===q.cat;});
-  document.getElementById('quiz-reveal-answer-text').innerHTML=
-    q.r+(cat?'<br><small style="font-size:1rem;color:var(--muted)">'+cat.icon+' '+cat.label+'</small>':'');
-  document.getElementById('quiz-answer-display').classList.remove('hidden');
-  document.getElementById('quiz-reveal-wrap').classList.add('hidden');
-  document.getElementById('quiz-next-wrap').classList.remove('hidden');
-}
-
-function nextQuizRound() {
-  quizIndex++;
-  if(quizIndex<quizPlaylist.length) loadQuizQuestion(); else showQuizPodium();
-}
-
-function showQuizPodium() {
-  document.getElementById('quiz-game-area').classList.add('hidden');
-  document.getElementById('quiz-podium-area').classList.remove('hidden');
-  db.ref('gameState').set({accepting:false, gameOver:true});
-  var arr=Object.keys(playersCache).map(function(id){return Object.assign({id:id},playersCache[id]);});
-  arr.sort(function(a,b){return(b.score||0)-(a.score||0);});
-  var po=[1,0,2],bc=['p2','p1','p3'],pm=['🥈','🥇','🥉'];
-  document.getElementById('quiz-podium-grid').innerHTML=po.map(function(r,pos){
-    var p=arr[r]; if(!p) return '';
-    return '<div class="podium-step"><div style="font-size:2.5rem">'+(p.avatar||'👤')+'</div>'
-          +'<div style="font-weight:800;font-size:.95rem">'+p.name+'</div>'
-          +'<div style="font-family:Bangers,cursive;font-size:1.4rem;color:var(--accent3)">'+(p.score||0)+' pts</div>'
-          +'<div class="podium-block '+bc[pos]+'">'+pm[pos]+'</div></div>';
-  }).join('');
-  var M=['🥇','🥈','🥉'],R=['rank-1','rank-2','rank-3'];
-  document.getElementById('quiz-final-leaderboard').innerHTML=arr.map(function(p,i){
-    return '<li class="lb-item '+(R[i]||'')+'"><span class="lb-rank">'+(M[i]||(i+1))+'</span>'
-          +'<span class="lb-name">'+(p.avatar||'👤')+' '+p.name+'</span>'
-          +'<span class="lb-score">'+(p.score||0)+' pts</span></li>';
-  }).join('');
-}
-
-// Écouter les réponses Quiz aussi (réutilise currentAnswers via le listener global)
-// Mettre à jour le leaderboard Quiz quand les scores changent
-var _origPlayersListener = null;
+loadTracks();
+loadQuizQuestions();
 </script>
 </body>
 </html>
