@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head> 
+<head>
 <meta charset="UTF-8">
 <title>Blind Test — Salon</title>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
@@ -444,6 +444,8 @@ var CATS = [
 // ═══════════════════════════════════════
 var allTracks=[], gamePlaylist=[], currentIndex=0;
 var player, playerReady=false;
+var allQuizQuestions=[], quizTracksWritten=false;
+var selectedInterlaceCats=new Set();
 var timeLeft=12, totalTime=12, timerInterval;
 var currentAnswers={}, playersCache={};
 var selectedCats=new Set();
@@ -684,10 +686,129 @@ function givePoints(pid,pts) {
 // ═══════════════════════════════════════
 // JEU
 // ═══════════════════════════════════════
-// ── Quiz intercalé ──
+// ── Variables quiz intercalé ──
 var quizInterlaceEnabled = false;
 var selectedInterlaceCats = new Set();
 var currentItemIsQuiz = false;
+
+// ── Questions quiz par défaut ──
+var DEFAULT_QUIZ = [
+  {q:"Comment s'appelle la moissonneuse-batteuse dans Cars ?",r:"Frank",cat:"cinema",choix:["Frank","Buck","Mack","Chick"]},
+  {q:"Quel est le vrai nom de Batman ?",r:"Bruce Wayne",cat:"cinema",choix:["Bruce Wayne","Clark Kent","Peter Parker","Tony Stark"]},
+  {q:"Dans Titanic, quel objet Rose jette-t-elle à la fin ?",r:"Le collier",cat:"cinema",choix:["Le collier","La bague","Le bracelet","La montre"]},
+  {q:"Dans Shrek, quel est le prénom de la princesse ?",r:"Fiona",cat:"cinema",choix:["Fiona","Aurora","Cendrillon","Belle"]},
+  {q:"Quel est le nom du jouet cowboy dans Toy Story ?",r:"Woody",cat:"cinema",choix:["Woody","Buzz","Rex","Ham"]},
+  {q:"Dans Le Roi Lion, qui tue Mufasa ?",r:"Scar",cat:"cinema",choix:["Scar","Simba","Ed","Shenzi"]},
+  {q:"Combien y a-t-il de Horcruxes dans Harry Potter ?",r:"7",cat:"cinema",choix:["7","6","8","5"]},
+  {q:"Dans Jurassic Park, quel dinosaure crache du venin ?",r:"Dilophosaure",cat:"cinema",choix:["Dilophosaure","Vélociraptor","T-Rex","Triceratops"]},
+  {q:"Quel acteur joue Iron Man ?",r:"Robert Downey Jr.",cat:"cinema",choix:["Robert Downey Jr.","Chris Evans","Chris Hemsworth","Mark Ruffalo"]},
+  {q:"Dans Vaiana, comment s'appelle le demi-dieu ?",r:"Maui",cat:"cinema",choix:["Maui","Tamatoa","Te Kā","Te Fiti"]},
+  {q:"Dans Frozen, quelle est la sœur ainée d'Elsa ?",r:"Anna",cat:"cinema",choix:["Anna","Kristoff","Olaf","Sven"]},
+  {q:"Quel réalisateur a fait La Liste de Schindler ?",r:"Steven Spielberg",cat:"cinema",choix:["Steven Spielberg","Martin Scorsese","Christopher Nolan","Ridley Scott"]},
+  {q:"Dans Pulp Fiction, quel est le nom du personnage de John Travolta ?",r:"Vincent Vega",cat:"cinema",choix:["Vincent Vega","Jules Winnfield","Butch Coolidge","The Gimp"]},
+  {q:"Dans Spirited Away, en quoi la mère de Chihiro est-elle transformée ?",r:"Un cochon",cat:"cinema",choix:["Un cochon","Une grenouille","Un cheval","Un poulet"]},
+  {q:"Dans Coco, quel musicien Miguel admire-t-il ?",r:"Ernesto de la Cruz",cat:"cinema",choix:["Ernesto de la Cruz","Héctor","Chicharrón","Dante"]},
+  {q:"Quelle est la capitale de l'Australie ?",r:"Canberra",cat:"geographie",choix:["Canberra","Sydney","Melbourne","Brisbane"]},
+  {q:"Quel est le plus grand pays du monde ?",r:"La Russie",cat:"geographie",choix:["La Russie","Le Canada","Les États-Unis","La Chine"]},
+  {q:"Quel fleuve traverse Paris ?",r:"La Seine",cat:"geographie",choix:["La Seine","La Loire","Le Rhône","La Garonne"]},
+  {q:"Quelle est la plus grande île du monde ?",r:"Le Groenland",cat:"geographie",choix:["Le Groenland","La Nouvelle-Guinée","Bornéo","Madagascar"]},
+  {q:"Quel est le plus petit pays du monde ?",r:"Le Vatican",cat:"geographie",choix:["Le Vatican","Monaco","Saint-Marin","Liechtenstein"]},
+  {q:"Quelle ville est surnommée 'La ville lumière' ?",r:"Paris",cat:"geographie",choix:["Paris","New York","Milan","Vienne"]},
+  {q:"Combien y a-t-il de continents sur Terre ?",r:"7",cat:"geographie",choix:["7","6","5","8"]},
+  {q:"Dans quel pays se trouve la Tour de Pise ?",r:"Italie",cat:"geographie",choix:["Italie","Espagne","France","Portugal"]},
+  {q:"Quel est le plus long fleuve du monde ?",r:"Le Nil",cat:"geographie",choix:["Le Nil","L'Amazone","Le Yangtsé","Le Mississippi"]},
+  {q:"Quelle est la capitale du Brésil ?",r:"Brasilia",cat:"geographie",choix:["Brasilia","Rio de Janeiro","São Paulo","Salvador"]},
+  {q:"En quelle année a eu lieu la Révolution française ?",r:"1789",cat:"histoire",choix:["1789","1776","1799","1804"]},
+  {q:"Qui était le premier président des États-Unis ?",r:"George Washington",cat:"histoire",choix:["George Washington","Abraham Lincoln","Thomas Jefferson","Benjamin Franklin"]},
+  {q:"En quelle année s'est terminée la Seconde Guerre mondiale ?",r:"1945",cat:"histoire",choix:["1945","1944","1946","1943"]},
+  {q:"En quelle année est tombé le mur de Berlin ?",r:"1989",cat:"histoire",choix:["1989","1991","1987","1990"]},
+  {q:"Qui a peint la Joconde ?",r:"Léonard de Vinci",cat:"histoire",choix:["Léonard de Vinci","Michel-Ange","Raphaël","Botticelli"]},
+  {q:"En quelle année a eu lieu le premier alunissage ?",r:"1969",cat:"histoire",choix:["1969","1968","1971","1972"]},
+  {q:"Quel est le symbole chimique de l'or ?",r:"Au",cat:"science",choix:["Au","Or","Ag","Gd"]},
+  {q:"Combien y a-t-il d'os dans le corps humain adulte ?",r:"206",cat:"science",choix:["206","208","212","198"]},
+  {q:"Quelle planète est la plus proche du Soleil ?",r:"Mercure",cat:"science",choix:["Mercure","Vénus","Mars","Terre"]},
+  {q:"Quelle est la formule chimique de l'eau ?",r:"H2O",cat:"science",choix:["H2O","CO2","NaCl","O2"]},
+  {q:"Combien de planètes y a-t-il dans le système solaire ?",r:"8",cat:"science",choix:["8","9","7","10"]},
+  {q:"Quel gaz représente environ 78% de l'atmosphère ?",r:"L'azote",cat:"science",choix:["L'azote","L'oxygène","Le CO2","L'argon"]},
+  {q:"Combien de joueurs y a-t-il dans une équipe de football ?",r:"11",cat:"sport_q",choix:["11","10","12","9"]},
+  {q:"Quel pays a remporté le plus de Coupes du Monde ?",r:"Brésil",cat:"sport_q",choix:["Brésil","Allemagne","Italie","Argentine"]},
+  {q:"Quel est le surnom de Michael Jordan ?",r:"Air Jordan",cat:"sport_q",choix:["Air Jordan","Magic","The Dream","The Answer"]},
+  {q:"Quel athlète a remporté 9 médailles d'or aux JO 2008 et 2012 ?",r:"Usain Bolt",cat:"sport_q",choix:["Usain Bolt","Michael Phelps","Carl Lewis","Asafa Powell"]},
+  {q:"Quelle équipe a remporté le plus de Champions League ?",r:"Real Madrid",cat:"sport_q",choix:["Real Madrid","FC Barcelone","AC Milan","Liverpool"]},
+  {q:"Quel est l'animal terrestre le plus lourd ?",r:"L'éléphant",cat:"animaux_q",choix:["L'éléphant","Le rhinocéros","L'hippopotame","La girafe"]},
+  {q:"Combien de pattes a une araignée ?",r:"8",cat:"animaux_q",choix:["8","6","10","4"]},
+  {q:"Combien de cœurs a un poulpe ?",r:"3",cat:"animaux_q",choix:["3","1","2","4"]},
+  {q:"Quel est le seul mammifère qui peut voler ?",r:"La chauve-souris",cat:"animaux_q",choix:["La chauve-souris","L'écureuil volant","Le galago","Le draco"]},
+  {q:"Quel est le nom du bébé kangourou ?",r:"Joey",cat:"animaux_q",choix:["Joey","Kit","Pup","Cub"]},
+  {q:"Quelle est la principale épice du curry ?",r:"Le curcuma",cat:"gastronomie",choix:["Le curcuma","Le cumin","Le paprika","Le safran"]},
+  {q:"Dans quel pays est né le croissant ?",r:"Autriche",cat:"gastronomie",choix:["Autriche","France","Hongrie","Allemagne"]},
+  {q:"Quel est le premier producteur mondial de café ?",r:"Le Brésil",cat:"gastronomie",choix:["Le Brésil","La Colombie","L'Éthiopie","Le Vietnam"]},
+  {q:"Quel est le plat national de l'Espagne ?",r:"La paella",cat:"gastronomie",choix:["La paella","La tortilla","Le gazpacho","Le cocido"]},
+  {q:"Comment s'appelle la princesse dans Super Mario ?",r:"Peach",cat:"jv_q",choix:["Peach","Zelda","Samus","Rosalina"]},
+  {q:"Quel est le premier jeu vidéo de l'histoire ?",r:"Pong",cat:"jv_q",choix:["Pong","Space Invaders","Pac-Man","Tennis for Two"]},
+  {q:"Combien de Pokémon y a-t-il dans la 1ère génération ?",r:"151",cat:"jv_q",choix:["151","150","152","149"]},
+  {q:"Dans Minecraft, quel est le boss final ?",r:"L'Ender Dragon",cat:"jv_q",choix:["L'Ender Dragon","Le Wither","L'Elder Guardian","Le Warden"]},
+  {q:"Quel est le nom du cheval de Link dans Zelda ?",r:"Epona",cat:"jv_q",choix:["Epona","Aragon","Shadowmere","Roach"]},
+  {q:"Quel groupe a chanté 'Bohemian Rhapsody' ?",r:"Queen",cat:"musique_q",choix:["Queen","Led Zeppelin","The Beatles","David Bowie"]},
+  {q:"Quel est le vrai nom d'Eminem ?",r:"Marshall Mathers",cat:"musique_q",choix:["Marshall Mathers","Curtis Jackson","Shawn Carter","Calvin Broadus"]},
+  {q:"Dans quel pays est né le reggae ?",r:"Jamaïque",cat:"musique_q",choix:["Jamaïque","Cuba","Trinidad","Barbade"]},
+  {q:"Combien de membres compte le groupe BTS ?",r:"7",cat:"musique_q",choix:["7","5","6","8"]},
+  {q:"Quel groupe français a popularisé la French Touch ?",r:"Daft Punk",cat:"musique_q",choix:["Daft Punk","Justice","Cassius","Air"]},
+  {q:"Quel est le batteur des Beatles ?",r:"Ringo Starr",cat:"musique_q",choix:["Ringo Starr","John Lennon","Paul McCartney","George Harrison"]},
+  {q:"Dans Game of Thrones, qui dit 'Winter is coming' ?",r:"Les Stark",cat:"serie_q",choix:["Les Stark","Les Lannister","Les Baratheon","Les Targaryen"]},
+  {q:"Dans Friends, quel est le métier de Ross ?",r:"Paléontologue",cat:"serie_q",choix:["Paléontologue","Acteur","Chef cuisinier","Architecte"]},
+  {q:"Dans Breaking Bad, comment s'appelle l'alter ego de Walter White ?",r:"Heisenberg",cat:"serie_q",choix:["Heisenberg","Walt Jr.","Saul","Mike"]},
+  {q:"Dans Squid Game, quel est le numéro du personnage principal ?",r:"456",cat:"serie_q",choix:["456","001","067","218"]},
+  {q:"Dans The Mandalorian, comment s'appelle le bébé Yoda ?",r:"Grogu",cat:"serie_q",choix:["Grogu","Din Djarin","Cara Dune","Kuiil"]},
+  {q:"Quel acteur joue Walter White dans Breaking Bad ?",r:"Bryan Cranston",cat:"serie_q",choix:["Bryan Cranston","Aaron Paul","Bob Odenkirk","Dean Norris"]},
+  {q:"Quel acteur joue Lupin dans la série Netflix ?",r:"Omar Sy",cat:"serie_q",choix:["Omar Sy","Tahar Rahim","Roschdy Zem","Ramzy Bedia"]},
+  {q:"Quel est le vrai prénom de Coluche ?",r:"Michel",cat:"people",choix:["Michel","Jean","Pierre","François"]},
+  {q:"Quel est le pays d'origine de Zlatan Ibrahimovic ?",r:"Suède",cat:"people",choix:["Suède","Bosnie","Croatie","Serbie"]},
+  {q:"Qui est le PDG de Tesla et SpaceX ?",r:"Elon Musk",cat:"people",choix:["Elon Musk","Jeff Bezos","Mark Zuckerberg","Bill Gates"]},
+  {q:"Dans quel pays est né Cristiano Ronaldo ?",r:"Portugal",cat:"people",choix:["Portugal","Espagne","Brésil","Argentine"]},
+  {q:"Quel est le vrai prénom de Zidane ?",r:"Zinedine",cat:"people",choix:["Zinedine","Zied","Zakaria","Zaki"]},
+  {q:"Combien de fois cligne-t-on des yeux par jour en moyenne ?",r:"15 000 fois",cat:"insolite",choix:["15 000 fois","5 000 fois","30 000 fois","1 000 fois"]},
+  {q:"Quelle est la vitesse d'un éternuement ?",r:"160 km/h",cat:"insolite",choix:["160 km/h","50 km/h","300 km/h","100 km/h"]},
+  {q:"Quel est le mot le plus long de la langue française ?",r:"Anticonstitutionnellement",cat:"insolite",choix:["Anticonstitutionnellement","Intergouvernementales","Incompréhensiblement","Prestidigitateur"]},
+  {q:"Combien de fois peut-on plier une feuille de papier en deux ?",r:"7 fois maximum",cat:"insolite",choix:["7 fois maximum","5 fois","10 fois","3 fois"]},
+  {q:"Quel pays a le plus grand nombre de lacs au monde ?",r:"Canada",cat:"insolite",choix:["Canada","Finlande","Russie","Suède"]},
+];
+
+var QUIZ_CATS = [
+  {id:"cinema",     label:"Cinéma",            icon:"🎬"},
+  {id:"geographie", label:"Géographie",        icon:"🌍"},
+  {id:"histoire",   label:"Histoire",          icon:"📜"},
+  {id:"science",    label:"Sciences",          icon:"🔬"},
+  {id:"sport_q",    label:"Sport",             icon:"⚽"},
+  {id:"animaux_q",  label:"Animaux",           icon:"🦁"},
+  {id:"gastronomie",label:"Gastronomie",       icon:"🍽️"},
+  {id:"jv_q",       label:"Jeux Vidéo",        icon:"🎮"},
+  {id:"musique_q",  label:"Musique",           icon:"🎵"},
+  {id:"serie_q",    label:"Séries & Films",    icon:"📺"},
+  {id:"people",     label:"People",            icon:"⭐"},
+  {id:"insolite",   label:"Insolite",          icon:"🤪"},
+];
+
+function loadQuizQuestions() {
+  db.ref('quiz').on('value', function(snap){
+    var data = snap.val();
+    if(!data || Object.keys(data).length === 0) {
+      if(quizTracksWritten) return;
+      quizTracksWritten = true;
+      var batch = {};
+      DEFAULT_QUIZ.forEach(function(q){
+        var k = db.ref('quiz').push().key;
+        batch[k] = q;
+      });
+      db.ref('quiz').set(batch);
+      return;
+    }
+    quizTracksWritten = true;
+    allQuizQuestions = Object.entries(data).map(function(e){ return Object.assign({}, e[1], {_key:e[0]}); });
+    // Mettre à jour le sélecteur si déjà affiché
+    buildInterlaceCatSelector();
+  });
+}
 
 function toggleQuizInterlude() {
   quizInterlaceEnabled = document.getElementById('quiz-interlude-toggle').checked;
