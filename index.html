@@ -204,6 +204,15 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .toggle-label input:checked + .toggle-track .toggle-thumb{ transform:translateX(20px); }
 .quiz-interlude-options{ border-top:1px solid rgba(168,85,247,.2); padding-top:14px; margin-top:14px; }
 
+/* ── Décors ── */
+.dscore-chip{background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);border-radius:50px;padding:6px 14px;font-size:.85rem;color:var(--text)}
+.dscore-chip b{color:var(--accent3)}
+.d-img-wrap{position:relative;border-radius:14px;overflow:hidden;background:#000;border:2px solid var(--border);min-height:220px}
+.d-img-wrap img{width:100%;max-height:440px;object-fit:cover;display:block;border-radius:12px}
+#d-pts-overlay{position:absolute;top:0;right:0;background:rgba(168,85,247,.85);border-radius:0 0 0 14px;padding:10px 18px;text-align:center;backdrop-filter:blur(4px)}
+.d-img-dot{width:14px;height:14px;border-radius:50%;background:var(--border);transition:all .3s}
+.d-img-dot.active{background:var(--accent3);box-shadow:0 0 8px rgba(255,217,61,.6);transform:scale(1.3)}
+.d-img-dot.used{background:var(--muted)}
 .hidden{display:none!important}
 @media(max-width:700px){.game-layout{grid-template-columns:1fr}.score-sidebar{position:static}}
 </style>
@@ -228,7 +237,8 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 
   <!-- NAV -->
   <div class="nav-tabs" id="main-nav">
-    <button class="nav-tab active" onclick="switchTab('lobby')">🎮 Salon</button>
+    <button class="nav-tab active" onclick="switchTab('lobby')">🎵 Blind Test</button>
+    <button class="nav-tab" onclick="switchTab('decors')">🖼️ Décors</button>
     <button class="nav-tab" onclick="switchTab('editor')">✏️ Éditeur</button>
   </div>
 
@@ -349,6 +359,102 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
     </div>
   </div>
 
+  <!-- ══ TAB DÉCORS ══ -->
+  <div id="tab-decors" class="hidden">
+
+    <div id="decors-setup">
+      <div class="card">
+        <div class="card-title">📱 Scanner pour rejoindre</div>
+        <div class="qr-wrap"><div id="qrcode-d"></div><span class="qr-url">tbamox.github.io/Blindtest/manette.html</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">👥 Joueurs (<span id="decors-player-count">0</span>)</div>
+        <ul id="decors-player-list"><li class="no-players">En attente de joueurs…</li></ul>
+      </div>
+      <div id="decors-options" class="card hidden">
+        <div class="card-title">🖼️ Mode Décors — Devine le jeu !</div>
+        <p style="color:var(--muted);font-size:.9rem;margin-bottom:14px">Des captures d'écrans de décors s'affichent une par une — sans personnages. Plus tu trouves vite, plus tu gagnes de points !</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+          <span class="dscore-chip">🥇 1ère image = <b>+3 pts</b></span>
+          <span class="dscore-chip">🥈 2ème image = <b>+2 pts</b></span>
+          <span class="dscore-chip">🥉 3ème image = <b>+1 pt</b></span>
+        </div>
+        <div class="options-row">
+          <label>Jeux :</label>
+          <input type="number" id="decors-nb" value="10" min="1" max="50" class="num-input">
+          <span class="pool-info">Pool : <b id="decors-pool">0</b> jeux</span>
+        </div>
+        <div class="controls">
+          <button class="btn btn-danger" onclick="resetLobby()">🗑️ Vider</button>
+          <button class="btn btn-launch" onclick="startDecors()">🚀 Lancer !</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Jeu Décors -->
+    <div id="decors-game" class="hidden">
+      <div class="game-layout">
+        <aside class="score-sidebar">
+          <div class="card">
+            <div class="card-title">🏆 Classement</div>
+            <ul id="decors-lb"></ul>
+          </div>
+          <div class="card" style="text-align:center;padding:14px;margin-top:0">
+            <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Indices révélés</div>
+            <div style="display:flex;gap:8px;justify-content:center;margin-bottom:10px">
+              <div class="d-img-dot" id="d-dot-0"></div>
+              <div class="d-img-dot" id="d-dot-1"></div>
+              <div class="d-img-dot" id="d-dot-2"></div>
+            </div>
+            <div id="d-pts-now" style="font-family:'Bangers',cursive;font-size:2rem;color:var(--accent3);letter-spacing:1px">+3 pts</div>
+            <div style="font-size:.75rem;color:var(--muted)">si trouvé maintenant</div>
+          </div>
+        </aside>
+        <div class="game-main">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div class="counter-label" id="decors-counter">Jeu 1 / 10</div>
+            <div class="cat-badge">🎮 Devine le jeu !</div>
+          </div>
+          <!-- Image principale -->
+          <div class="d-img-wrap">
+            <img id="d-main-img" src="" alt="Décor" onerror="this.src='https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg'">
+            <div id="d-pts-overlay">
+              <div id="d-pts-overlay-text" style="font-family:'Bangers',cursive;font-size:2.5rem;letter-spacing:2px;color:var(--accent3)">+3 PTS</div>
+              <div style="font-size:.9rem;color:rgba(255,255,255,.7)">si tu trouves maintenant !</div>
+            </div>
+          </div>
+          <!-- Bouton image suivante -->
+          <div class="controls" style="margin-top:10px">
+            <button class="btn btn-next hidden" id="d-next-img-btn" onclick="showNextDecorImage()">🖼️ Image suivante <span style="font-size:.8rem;opacity:.7">(-1 pt possible)</span></button>
+          </div>
+          <!-- Réponses -->
+          <div class="card" style="margin-top:12px">
+            <div class="section-title" id="decors-answers-title">⏳ En attente…</div>
+            <div id="decors-answers-feed"></div>
+          </div>
+          <!-- Révélation -->
+          <div id="decors-reveal" class="hidden">
+            <div class="reveal-label">Le jeu était…</div>
+            <div class="reveal-answer" id="decors-reveal-text"></div>
+          </div>
+          <!-- Suivant -->
+          <div id="decors-next-wrap" class="hidden">
+            <button class="btn-next-big" onclick="nextDecorRound()">Suivant ➡️</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Podium Décors -->
+    <div id="decors-podium" class="hidden">
+      <h2 style="font-family:'Bangers',cursive;font-size:3rem;letter-spacing:3px;text-align:center;background:linear-gradient(135deg,gold,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:20px">🏆 FIN DES DÉCORS !</h2>
+      <div class="podium-grid" id="decors-podium-grid"></div>
+      <div class="card" style="margin-top:20px"><div class="card-title">Classement final</div><ul id="decors-final-lb"></ul></div>
+      <div class="controls" style="margin-top:24px"><button class="btn btn-launch" onclick="location.reload()">🔄 Rejouer</button></div>
+    </div>
+
+  </div><!-- /tab-decors -->
+
   <!-- ══ TAB EDITEUR ══ -->
   <div id="tab-editor" class="hidden">
     <div class="card">
@@ -444,8 +550,6 @@ var CATS = [
 // ═══════════════════════════════════════
 var allTracks=[], gamePlaylist=[], currentIndex=0;
 var player, playerReady=false;
-var allQuizQuestions=[], quizTracksWritten=false;
-var selectedInterlaceCats=new Set();
 var timeLeft=12, totalTime=12, timerInterval;
 var currentAnswers={}, playersCache={};
 var selectedCats=new Set();
@@ -537,11 +641,14 @@ function initQR() {
 // ═══════════════════════════════════════
 function switchTab(tab) {
   document.getElementById('tab-lobby').classList.toggle('hidden', tab!=='lobby');
+  document.getElementById('tab-decors').classList.toggle('hidden', tab!=='decors');
   document.getElementById('tab-editor').classList.toggle('hidden', tab!=='editor');
   document.querySelectorAll('.nav-tab').forEach(function(t,i){
-    t.classList.toggle('active',(i===0&&tab==='lobby')||(i===1&&tab==='editor'));
+    t.classList.toggle('active',
+      (i===0&&tab==='lobby')||(i===1&&tab==='decors')||(i===2&&tab==='editor'));
   });
   if(tab==='editor') renderEditor();
+  if(tab==='decors'){ initQRDecors(); updateDecorsPlayerList(); }
 }
 
 // ═══════════════════════════════════════
@@ -686,129 +793,10 @@ function givePoints(pid,pts) {
 // ═══════════════════════════════════════
 // JEU
 // ═══════════════════════════════════════
-// ── Variables quiz intercalé ──
+// ── Quiz intercalé ──
 var quizInterlaceEnabled = false;
 var selectedInterlaceCats = new Set();
 var currentItemIsQuiz = false;
-
-// ── Questions quiz par défaut ──
-var DEFAULT_QUIZ = [
-  {q:"Comment s'appelle la moissonneuse-batteuse dans Cars ?",r:"Frank",cat:"cinema",choix:["Frank","Buck","Mack","Chick"]},
-  {q:"Quel est le vrai nom de Batman ?",r:"Bruce Wayne",cat:"cinema",choix:["Bruce Wayne","Clark Kent","Peter Parker","Tony Stark"]},
-  {q:"Dans Titanic, quel objet Rose jette-t-elle à la fin ?",r:"Le collier",cat:"cinema",choix:["Le collier","La bague","Le bracelet","La montre"]},
-  {q:"Dans Shrek, quel est le prénom de la princesse ?",r:"Fiona",cat:"cinema",choix:["Fiona","Aurora","Cendrillon","Belle"]},
-  {q:"Quel est le nom du jouet cowboy dans Toy Story ?",r:"Woody",cat:"cinema",choix:["Woody","Buzz","Rex","Ham"]},
-  {q:"Dans Le Roi Lion, qui tue Mufasa ?",r:"Scar",cat:"cinema",choix:["Scar","Simba","Ed","Shenzi"]},
-  {q:"Combien y a-t-il de Horcruxes dans Harry Potter ?",r:"7",cat:"cinema",choix:["7","6","8","5"]},
-  {q:"Dans Jurassic Park, quel dinosaure crache du venin ?",r:"Dilophosaure",cat:"cinema",choix:["Dilophosaure","Vélociraptor","T-Rex","Triceratops"]},
-  {q:"Quel acteur joue Iron Man ?",r:"Robert Downey Jr.",cat:"cinema",choix:["Robert Downey Jr.","Chris Evans","Chris Hemsworth","Mark Ruffalo"]},
-  {q:"Dans Vaiana, comment s'appelle le demi-dieu ?",r:"Maui",cat:"cinema",choix:["Maui","Tamatoa","Te Kā","Te Fiti"]},
-  {q:"Dans Frozen, quelle est la sœur ainée d'Elsa ?",r:"Anna",cat:"cinema",choix:["Anna","Kristoff","Olaf","Sven"]},
-  {q:"Quel réalisateur a fait La Liste de Schindler ?",r:"Steven Spielberg",cat:"cinema",choix:["Steven Spielberg","Martin Scorsese","Christopher Nolan","Ridley Scott"]},
-  {q:"Dans Pulp Fiction, quel est le nom du personnage de John Travolta ?",r:"Vincent Vega",cat:"cinema",choix:["Vincent Vega","Jules Winnfield","Butch Coolidge","The Gimp"]},
-  {q:"Dans Spirited Away, en quoi la mère de Chihiro est-elle transformée ?",r:"Un cochon",cat:"cinema",choix:["Un cochon","Une grenouille","Un cheval","Un poulet"]},
-  {q:"Dans Coco, quel musicien Miguel admire-t-il ?",r:"Ernesto de la Cruz",cat:"cinema",choix:["Ernesto de la Cruz","Héctor","Chicharrón","Dante"]},
-  {q:"Quelle est la capitale de l'Australie ?",r:"Canberra",cat:"geographie",choix:["Canberra","Sydney","Melbourne","Brisbane"]},
-  {q:"Quel est le plus grand pays du monde ?",r:"La Russie",cat:"geographie",choix:["La Russie","Le Canada","Les États-Unis","La Chine"]},
-  {q:"Quel fleuve traverse Paris ?",r:"La Seine",cat:"geographie",choix:["La Seine","La Loire","Le Rhône","La Garonne"]},
-  {q:"Quelle est la plus grande île du monde ?",r:"Le Groenland",cat:"geographie",choix:["Le Groenland","La Nouvelle-Guinée","Bornéo","Madagascar"]},
-  {q:"Quel est le plus petit pays du monde ?",r:"Le Vatican",cat:"geographie",choix:["Le Vatican","Monaco","Saint-Marin","Liechtenstein"]},
-  {q:"Quelle ville est surnommée 'La ville lumière' ?",r:"Paris",cat:"geographie",choix:["Paris","New York","Milan","Vienne"]},
-  {q:"Combien y a-t-il de continents sur Terre ?",r:"7",cat:"geographie",choix:["7","6","5","8"]},
-  {q:"Dans quel pays se trouve la Tour de Pise ?",r:"Italie",cat:"geographie",choix:["Italie","Espagne","France","Portugal"]},
-  {q:"Quel est le plus long fleuve du monde ?",r:"Le Nil",cat:"geographie",choix:["Le Nil","L'Amazone","Le Yangtsé","Le Mississippi"]},
-  {q:"Quelle est la capitale du Brésil ?",r:"Brasilia",cat:"geographie",choix:["Brasilia","Rio de Janeiro","São Paulo","Salvador"]},
-  {q:"En quelle année a eu lieu la Révolution française ?",r:"1789",cat:"histoire",choix:["1789","1776","1799","1804"]},
-  {q:"Qui était le premier président des États-Unis ?",r:"George Washington",cat:"histoire",choix:["George Washington","Abraham Lincoln","Thomas Jefferson","Benjamin Franklin"]},
-  {q:"En quelle année s'est terminée la Seconde Guerre mondiale ?",r:"1945",cat:"histoire",choix:["1945","1944","1946","1943"]},
-  {q:"En quelle année est tombé le mur de Berlin ?",r:"1989",cat:"histoire",choix:["1989","1991","1987","1990"]},
-  {q:"Qui a peint la Joconde ?",r:"Léonard de Vinci",cat:"histoire",choix:["Léonard de Vinci","Michel-Ange","Raphaël","Botticelli"]},
-  {q:"En quelle année a eu lieu le premier alunissage ?",r:"1969",cat:"histoire",choix:["1969","1968","1971","1972"]},
-  {q:"Quel est le symbole chimique de l'or ?",r:"Au",cat:"science",choix:["Au","Or","Ag","Gd"]},
-  {q:"Combien y a-t-il d'os dans le corps humain adulte ?",r:"206",cat:"science",choix:["206","208","212","198"]},
-  {q:"Quelle planète est la plus proche du Soleil ?",r:"Mercure",cat:"science",choix:["Mercure","Vénus","Mars","Terre"]},
-  {q:"Quelle est la formule chimique de l'eau ?",r:"H2O",cat:"science",choix:["H2O","CO2","NaCl","O2"]},
-  {q:"Combien de planètes y a-t-il dans le système solaire ?",r:"8",cat:"science",choix:["8","9","7","10"]},
-  {q:"Quel gaz représente environ 78% de l'atmosphère ?",r:"L'azote",cat:"science",choix:["L'azote","L'oxygène","Le CO2","L'argon"]},
-  {q:"Combien de joueurs y a-t-il dans une équipe de football ?",r:"11",cat:"sport_q",choix:["11","10","12","9"]},
-  {q:"Quel pays a remporté le plus de Coupes du Monde ?",r:"Brésil",cat:"sport_q",choix:["Brésil","Allemagne","Italie","Argentine"]},
-  {q:"Quel est le surnom de Michael Jordan ?",r:"Air Jordan",cat:"sport_q",choix:["Air Jordan","Magic","The Dream","The Answer"]},
-  {q:"Quel athlète a remporté 9 médailles d'or aux JO 2008 et 2012 ?",r:"Usain Bolt",cat:"sport_q",choix:["Usain Bolt","Michael Phelps","Carl Lewis","Asafa Powell"]},
-  {q:"Quelle équipe a remporté le plus de Champions League ?",r:"Real Madrid",cat:"sport_q",choix:["Real Madrid","FC Barcelone","AC Milan","Liverpool"]},
-  {q:"Quel est l'animal terrestre le plus lourd ?",r:"L'éléphant",cat:"animaux_q",choix:["L'éléphant","Le rhinocéros","L'hippopotame","La girafe"]},
-  {q:"Combien de pattes a une araignée ?",r:"8",cat:"animaux_q",choix:["8","6","10","4"]},
-  {q:"Combien de cœurs a un poulpe ?",r:"3",cat:"animaux_q",choix:["3","1","2","4"]},
-  {q:"Quel est le seul mammifère qui peut voler ?",r:"La chauve-souris",cat:"animaux_q",choix:["La chauve-souris","L'écureuil volant","Le galago","Le draco"]},
-  {q:"Quel est le nom du bébé kangourou ?",r:"Joey",cat:"animaux_q",choix:["Joey","Kit","Pup","Cub"]},
-  {q:"Quelle est la principale épice du curry ?",r:"Le curcuma",cat:"gastronomie",choix:["Le curcuma","Le cumin","Le paprika","Le safran"]},
-  {q:"Dans quel pays est né le croissant ?",r:"Autriche",cat:"gastronomie",choix:["Autriche","France","Hongrie","Allemagne"]},
-  {q:"Quel est le premier producteur mondial de café ?",r:"Le Brésil",cat:"gastronomie",choix:["Le Brésil","La Colombie","L'Éthiopie","Le Vietnam"]},
-  {q:"Quel est le plat national de l'Espagne ?",r:"La paella",cat:"gastronomie",choix:["La paella","La tortilla","Le gazpacho","Le cocido"]},
-  {q:"Comment s'appelle la princesse dans Super Mario ?",r:"Peach",cat:"jv_q",choix:["Peach","Zelda","Samus","Rosalina"]},
-  {q:"Quel est le premier jeu vidéo de l'histoire ?",r:"Pong",cat:"jv_q",choix:["Pong","Space Invaders","Pac-Man","Tennis for Two"]},
-  {q:"Combien de Pokémon y a-t-il dans la 1ère génération ?",r:"151",cat:"jv_q",choix:["151","150","152","149"]},
-  {q:"Dans Minecraft, quel est le boss final ?",r:"L'Ender Dragon",cat:"jv_q",choix:["L'Ender Dragon","Le Wither","L'Elder Guardian","Le Warden"]},
-  {q:"Quel est le nom du cheval de Link dans Zelda ?",r:"Epona",cat:"jv_q",choix:["Epona","Aragon","Shadowmere","Roach"]},
-  {q:"Quel groupe a chanté 'Bohemian Rhapsody' ?",r:"Queen",cat:"musique_q",choix:["Queen","Led Zeppelin","The Beatles","David Bowie"]},
-  {q:"Quel est le vrai nom d'Eminem ?",r:"Marshall Mathers",cat:"musique_q",choix:["Marshall Mathers","Curtis Jackson","Shawn Carter","Calvin Broadus"]},
-  {q:"Dans quel pays est né le reggae ?",r:"Jamaïque",cat:"musique_q",choix:["Jamaïque","Cuba","Trinidad","Barbade"]},
-  {q:"Combien de membres compte le groupe BTS ?",r:"7",cat:"musique_q",choix:["7","5","6","8"]},
-  {q:"Quel groupe français a popularisé la French Touch ?",r:"Daft Punk",cat:"musique_q",choix:["Daft Punk","Justice","Cassius","Air"]},
-  {q:"Quel est le batteur des Beatles ?",r:"Ringo Starr",cat:"musique_q",choix:["Ringo Starr","John Lennon","Paul McCartney","George Harrison"]},
-  {q:"Dans Game of Thrones, qui dit 'Winter is coming' ?",r:"Les Stark",cat:"serie_q",choix:["Les Stark","Les Lannister","Les Baratheon","Les Targaryen"]},
-  {q:"Dans Friends, quel est le métier de Ross ?",r:"Paléontologue",cat:"serie_q",choix:["Paléontologue","Acteur","Chef cuisinier","Architecte"]},
-  {q:"Dans Breaking Bad, comment s'appelle l'alter ego de Walter White ?",r:"Heisenberg",cat:"serie_q",choix:["Heisenberg","Walt Jr.","Saul","Mike"]},
-  {q:"Dans Squid Game, quel est le numéro du personnage principal ?",r:"456",cat:"serie_q",choix:["456","001","067","218"]},
-  {q:"Dans The Mandalorian, comment s'appelle le bébé Yoda ?",r:"Grogu",cat:"serie_q",choix:["Grogu","Din Djarin","Cara Dune","Kuiil"]},
-  {q:"Quel acteur joue Walter White dans Breaking Bad ?",r:"Bryan Cranston",cat:"serie_q",choix:["Bryan Cranston","Aaron Paul","Bob Odenkirk","Dean Norris"]},
-  {q:"Quel acteur joue Lupin dans la série Netflix ?",r:"Omar Sy",cat:"serie_q",choix:["Omar Sy","Tahar Rahim","Roschdy Zem","Ramzy Bedia"]},
-  {q:"Quel est le vrai prénom de Coluche ?",r:"Michel",cat:"people",choix:["Michel","Jean","Pierre","François"]},
-  {q:"Quel est le pays d'origine de Zlatan Ibrahimovic ?",r:"Suède",cat:"people",choix:["Suède","Bosnie","Croatie","Serbie"]},
-  {q:"Qui est le PDG de Tesla et SpaceX ?",r:"Elon Musk",cat:"people",choix:["Elon Musk","Jeff Bezos","Mark Zuckerberg","Bill Gates"]},
-  {q:"Dans quel pays est né Cristiano Ronaldo ?",r:"Portugal",cat:"people",choix:["Portugal","Espagne","Brésil","Argentine"]},
-  {q:"Quel est le vrai prénom de Zidane ?",r:"Zinedine",cat:"people",choix:["Zinedine","Zied","Zakaria","Zaki"]},
-  {q:"Combien de fois cligne-t-on des yeux par jour en moyenne ?",r:"15 000 fois",cat:"insolite",choix:["15 000 fois","5 000 fois","30 000 fois","1 000 fois"]},
-  {q:"Quelle est la vitesse d'un éternuement ?",r:"160 km/h",cat:"insolite",choix:["160 km/h","50 km/h","300 km/h","100 km/h"]},
-  {q:"Quel est le mot le plus long de la langue française ?",r:"Anticonstitutionnellement",cat:"insolite",choix:["Anticonstitutionnellement","Intergouvernementales","Incompréhensiblement","Prestidigitateur"]},
-  {q:"Combien de fois peut-on plier une feuille de papier en deux ?",r:"7 fois maximum",cat:"insolite",choix:["7 fois maximum","5 fois","10 fois","3 fois"]},
-  {q:"Quel pays a le plus grand nombre de lacs au monde ?",r:"Canada",cat:"insolite",choix:["Canada","Finlande","Russie","Suède"]},
-];
-
-var QUIZ_CATS = [
-  {id:"cinema",     label:"Cinéma",            icon:"🎬"},
-  {id:"geographie", label:"Géographie",        icon:"🌍"},
-  {id:"histoire",   label:"Histoire",          icon:"📜"},
-  {id:"science",    label:"Sciences",          icon:"🔬"},
-  {id:"sport_q",    label:"Sport",             icon:"⚽"},
-  {id:"animaux_q",  label:"Animaux",           icon:"🦁"},
-  {id:"gastronomie",label:"Gastronomie",       icon:"🍽️"},
-  {id:"jv_q",       label:"Jeux Vidéo",        icon:"🎮"},
-  {id:"musique_q",  label:"Musique",           icon:"🎵"},
-  {id:"serie_q",    label:"Séries & Films",    icon:"📺"},
-  {id:"people",     label:"People",            icon:"⭐"},
-  {id:"insolite",   label:"Insolite",          icon:"🤪"},
-];
-
-function loadQuizQuestions() {
-  db.ref('quiz').on('value', function(snap){
-    var data = snap.val();
-    if(!data || Object.keys(data).length === 0) {
-      if(quizTracksWritten) return;
-      quizTracksWritten = true;
-      var batch = {};
-      DEFAULT_QUIZ.forEach(function(q){
-        var k = db.ref('quiz').push().key;
-        batch[k] = q;
-      });
-      db.ref('quiz').set(batch);
-      return;
-    }
-    quizTracksWritten = true;
-    allQuizQuestions = Object.entries(data).map(function(e){ return Object.assign({}, e[1], {_key:e[0]}); });
-    // Mettre à jour le sélecteur si déjà affiché
-    buildInterlaceCatSelector();
-  });
-}
 
 function toggleQuizInterlude() {
   quizInterlaceEnabled = document.getElementById('quiz-interlude-toggle').checked;
@@ -1479,6 +1467,260 @@ var DEFAULT_TRACKS=[
   {titre:"Dirty Harry",categorie:"replique",id:"tBxNoOkqPMo",start:0,choix:["Dirty Harry","Bullitt","The French Connection","Serpico"]},
   {titre:"Spider-Man",categorie:"replique",id:"A4qPFhj8v7E",start:0,choix:["Spider-Man","Superman","Batman","Iron Man"]},
 ];
+
+// ═══════════════════════════════════════
+// MODE DÉCORS — Devine le jeu
+// ═══════════════════════════════════════
+
+var DEFAULT_DECORS=[
+  {titre:"Minecraft",images:["https://img.youtube.com/vi/MmB9b5njVbA/maxresdefault.jpg","https://img.youtube.com/vi/Dg0IjOX0Nbc/maxresdefault.jpg","https://img.youtube.com/vi/0gyk9Hm2xKk/maxresdefault.jpg"],choix:["Minecraft","Terraria","Roblox","Stardew Valley"]},
+  {titre:"The Legend of Zelda: Breath of the Wild",images:["https://img.youtube.com/vi/zw47_q9wbBE/maxresdefault.jpg","https://img.youtube.com/vi/1rPxiXXxftE/maxresdefault.jpg","https://img.youtube.com/vi/vDFZIUdo764/maxresdefault.jpg"],choix:["Zelda: Breath of the Wild","Genshin Impact","Horizon Zero Dawn","Elden Ring"]},
+  {titre:"Skyrim",images:["https://img.youtube.com/vi/JSRtYpNBRMg/maxresdefault.jpg","https://img.youtube.com/vi/9MwMF2so7hs/maxresdefault.jpg","https://img.youtube.com/vi/Fl0y6tRl6Q4/maxresdefault.jpg"],choix:["Skyrim","Dragon Age","The Witcher 3","Morrowind"]},
+  {titre:"The Witcher 3",images:["https://img.youtube.com/vi/XHrskkHf958/maxresdefault.jpg","https://img.youtube.com/vi/c0i88t0Kacs/maxresdefault.jpg","https://img.youtube.com/vi/FsLMpCMFrSA/maxresdefault.jpg"],choix:["The Witcher 3","Skyrim","Dragon Age","Kingdom Come"]},
+  {titre:"Red Dead Redemption 2",images:["https://img.youtube.com/vi/eaW0tYpxyp0/maxresdefault.jpg","https://img.youtube.com/vi/pFaE_MHZRTU/maxresdefault.jpg","https://img.youtube.com/vi/Skx_6d0MFJA/maxresdefault.jpg"],choix:["Red Dead Redemption 2","Outlaws of the Old West","Call of Juarez","Hunt: Showdown"]},
+  {titre:"Cyberpunk 2077",images:["https://img.youtube.com/vi/OsQEuEgKRSI/maxresdefault.jpg","https://img.youtube.com/vi/BO8lX3hDU30/maxresdefault.jpg","https://img.youtube.com/vi/FknHjl7eQ6o/maxresdefault.jpg"],choix:["Cyberpunk 2077","Deus Ex","Watch Dogs","Observer"]},
+  {titre:"Grand Theft Auto V",images:["https://img.youtube.com/vi/QkkvZSMvNqk/maxresdefault.jpg","https://img.youtube.com/vi/RD4e9yPxKNQ/maxresdefault.jpg","https://img.youtube.com/vi/dJEY3KSzqF8/maxresdefault.jpg"],choix:["Grand Theft Auto V","Saints Row","Watch Dogs","Sleeping Dogs"]},
+  {titre:"Animal Crossing",images:["https://img.youtube.com/vi/ZMzXmLMSWbk/maxresdefault.jpg","https://img.youtube.com/vi/5LAKjL3p6V4/maxresdefault.jpg","https://img.youtube.com/vi/mGT0zMowV_I/maxresdefault.jpg"],choix:["Animal Crossing","Stardew Valley","Story of Seasons","My Time at Portia"]},
+  {titre:"Stardew Valley",images:["https://img.youtube.com/vi/ot7uXNQskhs/maxresdefault.jpg","https://img.youtube.com/vi/Y3Rs1z7it5M/maxresdefault.jpg","https://img.youtube.com/vi/8A7A1X1TVNc/maxresdefault.jpg"],choix:["Stardew Valley","Animal Crossing","Harvest Moon","Story of Seasons"]},
+  {titre:"Dark Souls",images:["https://img.youtube.com/vi/PCnHYi0Y2F0/maxresdefault.jpg","https://img.youtube.com/vi/zFKk3uJzVEk/maxresdefault.jpg","https://img.youtube.com/vi/KfDf7A3kR5A/maxresdefault.jpg"],choix:["Dark Souls","Elden Ring","Bloodborne","Demon's Souls"]},
+  {titre:"Elden Ring",images:["https://img.youtube.com/vi/E3Huy2cdih0/maxresdefault.jpg","https://img.youtube.com/vi/eV3MkRUGK6M/maxresdefault.jpg","https://img.youtube.com/vi/y5GHd3PKBJA/maxresdefault.jpg"],choix:["Elden Ring","Dark Souls","Bloodborne","Sekiro"]},
+  {titre:"No Man's Sky",images:["https://img.youtube.com/vi/BsuQnt4YQNE/maxresdefault.jpg","https://img.youtube.com/vi/nLtmEjqzg7M/maxresdefault.jpg","https://img.youtube.com/vi/iJdCgRpIMSM/maxresdefault.jpg"],choix:["No Man's Sky","Subnautica","Astroneer","The Planet Crafter"]},
+  {titre:"Subnautica",images:["https://img.youtube.com/vi/7fOlhkBXFHk/maxresdefault.jpg","https://img.youtube.com/vi/Z7M1R2zq3gU/maxresdefault.jpg","https://img.youtube.com/vi/OHFhQi3Z_C0/maxresdefault.jpg"],choix:["Subnautica","No Man's Sky","Abzû","SOMA"]},
+  {titre:"Hollow Knight",images:["https://img.youtube.com/vi/UAO2urG23S4/maxresdefault.jpg","https://img.youtube.com/vi/axsqlYRervo/maxresdefault.jpg","https://img.youtube.com/vi/iK5rVTSELo0/maxresdefault.jpg"],choix:["Hollow Knight","Ori and the Blind Forest","Celeste","Dead Cells"]},
+  {titre:"Ori and the Blind Forest",images:["https://img.youtube.com/vi/tCCX4JQkv84/maxresdefault.jpg","https://img.youtube.com/vi/rq-EcCIXHCE/maxresdefault.jpg","https://img.youtube.com/vi/gbI2ge_BFGE/maxresdefault.jpg"],choix:["Ori and the Blind Forest","Hollow Knight","Celeste","Cuphead"]},
+  {titre:"Fortnite",images:["https://img.youtube.com/vi/bZz0QLWG5LU/maxresdefault.jpg","https://img.youtube.com/vi/D5RA7XLZB5A/maxresdefault.jpg","https://img.youtube.com/vi/cTthkSE02Oc/maxresdefault.jpg"],choix:["Fortnite","Apex Legends","PUBG","Warzone"]},
+  {titre:"God of War",images:["https://img.youtube.com/vi/r3mE-4JrQO8/maxresdefault.jpg","https://img.youtube.com/vi/NQ6cWA1hjcY/maxresdefault.jpg","https://img.youtube.com/vi/a5X4fhUAQhs/maxresdefault.jpg"],choix:["God of War","Assassin's Creed Valhalla","Hellblade","Viking: Battle for Asgard"]},
+  {titre:"Ghost of Tsushima",images:["https://img.youtube.com/vi/ZCfEBsFKxnU/maxresdefault.jpg","https://img.youtube.com/vi/4BjO6XMRJTQ/maxresdefault.jpg","https://img.youtube.com/vi/sNbf2TGy4pU/maxresdefault.jpg"],choix:["Ghost of Tsushima","Sekiro","Nioh","Trek to Yomi"]},
+  {titre:"Genshin Impact",images:["https://img.youtube.com/vi/oNeAKxHgkW0/maxresdefault.jpg","https://img.youtube.com/vi/iNDXvJjSniI/maxresdefault.jpg","https://img.youtube.com/vi/kRBiM5PfVJg/maxresdefault.jpg"],choix:["Genshin Impact","Zelda: Breath of the Wild","Immortals Fenyx Rising","Tower of Fantasy"]},
+  {titre:"Horizon Zero Dawn",images:["https://img.youtube.com/vi/u4-FCsiF5x4/maxresdefault.jpg","https://img.youtube.com/vi/FG0OaVgZqak/maxresdefault.jpg","https://img.youtube.com/vi/wzx96gGPvYQ/maxresdefault.jpg"],choix:["Horizon Zero Dawn","Far Cry Primal","ARK: Survival Evolved","Turok"]},
+  {titre:"The Last of Us",images:["https://img.youtube.com/vi/RMIBL_rGP-Y/maxresdefault.jpg","https://img.youtube.com/vi/XczBHgkR5iA/maxresdefault.jpg","https://img.youtube.com/vi/W5HLvMgdGkk/maxresdefault.jpg"],choix:["The Last of Us","Days Gone","Death Stranding","Dying Light"]},
+  {titre:"Death Stranding",images:["https://img.youtube.com/vi/N5vNF_BjBpk/maxresdefault.jpg","https://img.youtube.com/vi/a4NiMnqChYg/maxresdefault.jpg","https://img.youtube.com/vi/tCI396HyhbQ/maxresdefault.jpg"],choix:["Death Stranding","Days Gone","The Long Dark","Kena: Bridge of Spirits"]},
+  {titre:"Celeste",images:["https://img.youtube.com/vi/70d8UmBwkVo/maxresdefault.jpg","https://img.youtube.com/vi/jMUgGAz5rSM/maxresdefault.jpg","https://img.youtube.com/vi/azy2mas0E6c/maxresdefault.jpg"],choix:["Celeste","Hollow Knight","Ori","Super Meat Boy"]},
+  {titre:"Sekiro",images:["https://img.youtube.com/vi/rXMX4YJ7Lks/maxresdefault.jpg","https://img.youtube.com/vi/kHgcQPAilmg/maxresdefault.jpg","https://img.youtube.com/vi/bVqJMWnMHf0/maxresdefault.jpg"],choix:["Sekiro","Nioh","Ghost of Tsushima","Trek to Yomi"]},
+  {titre:"Terraria",images:["https://img.youtube.com/vi/w7uOhFTrrq0/maxresdefault.jpg","https://img.youtube.com/vi/9iqkMMLXrk4/maxresdefault.jpg","https://img.youtube.com/vi/DR23Vm5MvJ4/maxresdefault.jpg"],choix:["Terraria","Minecraft","Starbound","Core Keeper"]},
+  {titre:"Outer Wilds",images:["https://img.youtube.com/vi/d6GtGbI-now/maxresdefault.jpg","https://img.youtube.com/vi/LbY0mBXwNIs/maxresdefault.jpg","https://img.youtube.com/vi/IdYaIGe7CIs/maxresdefault.jpg"],choix:["Outer Wilds","No Man's Sky","Astroneer","The Witness"]},
+  {titre:"Firewatch",images:["https://img.youtube.com/vi/HdUYYnfRdl8/maxresdefault.jpg","https://img.youtube.com/vi/YkjGGjZCavA/maxresdefault.jpg","https://img.youtube.com/vi/GidMV1MJgx0/maxresdefault.jpg"],choix:["Firewatch","Everybody's Gone to the Rapture","What Remains of Edith Finch","A Short Hike"]},
+  {titre:"Portal 2",images:["https://img.youtube.com/vi/tax4e4hBBZc/maxresdefault.jpg","https://img.youtube.com/vi/id9GQ92CFKU/maxresdefault.jpg","https://img.youtube.com/vi/IOFfOkCYDf8/maxresdefault.jpg"],choix:["Portal 2","The Talos Principle","Q.U.B.E.","The Turing Test"]},
+  {titre:"Assassin's Creed Origins",images:["https://img.youtube.com/vi/F-RxA9x_YBE/maxresdefault.jpg","https://img.youtube.com/vi/sSMWk-RMoMM/maxresdefault.jpg","https://img.youtube.com/vi/8PEPu9rNYcQ/maxresdefault.jpg"],choix:["Assassin's Creed Origins","Prince of Persia","Ghost of Tsushima","A Plague Tale"]},
+  {titre:"Mario Kart",images:["https://img.youtube.com/vi/9ggeBZKlzp4/maxresdefault.jpg","https://img.youtube.com/vi/BNUD5-dGg1g/maxresdefault.jpg","https://img.youtube.com/vi/FEqbHAI9_HA/maxresdefault.jpg"],choix:["Mario Kart","Crash Team Racing","Sonic Racing","Fall Guys"]},
+];
+
+var allDecors=[], decorsPlaylist=[], decorsIndex=0;
+var currentDecorImgIdx=0, decorsRoundDone=false;
+var decorsWritten=false;
+var decorsAnswerListener=null;
+
+function loadDecors() {
+  db.ref('decors').on('value', function(snap){
+    var data=snap.val();
+    if(!data||Object.keys(data).length===0){
+      if(decorsWritten) return;
+      decorsWritten=true;
+      var batch={};
+      DEFAULT_DECORS.forEach(function(d){ var k=db.ref('decors').push().key; batch[k]=d; });
+      db.ref('decors').set(batch);
+      return;
+    }
+    decorsWritten=true;
+    allDecors=Object.entries(data).map(function(e){return Object.assign({},e[1],{_key:e[0]});});
+    var el=document.getElementById('decors-pool'); if(el) el.textContent=allDecors.length;
+  });
+}
+
+function initQRDecors() {
+  var el=document.getElementById('qrcode-d'); if(!el) return;
+  if(typeof QRCode==='undefined'){ setTimeout(initQRDecors,200); return; }
+  el.innerHTML='';
+  try{ new QRCode(el,{text:MANETTE_URL,width:160,height:160}); }catch(e){}
+}
+
+function updateDecorsPlayerList() {
+  var keys=Object.keys(playersCache);
+  var c=document.getElementById('decors-player-count'); if(c) c.textContent=keys.length;
+  var list=document.getElementById('decors-player-list'); if(!list) return;
+  if(keys.length===0){
+    list.innerHTML='<li class="no-players">En attente de joueurs…</li>';
+    var o=document.getElementById('decors-options'); if(o) o.classList.add('hidden');
+  } else {
+    var o=document.getElementById('decors-options'); if(o) o.classList.remove('hidden');
+    list.innerHTML=keys.map(function(id){ var p=playersCache[id]; return '<li>'+(p.avatar||'👤')+' '+p.name+'</li>'; }).join('');
+  }
+  updateDecorsLB();
+}
+
+function updateDecorsLB() {
+  var arr=Object.keys(playersCache).map(function(id){return Object.assign({id:id},playersCache[id]);});
+  arr.sort(function(a,b){return(b.score||0)-(a.score||0);});
+  var M=['🥇','🥈','🥉'],R=['rank-1','rank-2','rank-3'];
+  var el=document.getElementById('decors-lb');
+  if(el) el.innerHTML=arr.map(function(p,i){
+    return '<li class="lb-item '+(R[i]||'')+'"><span class="lb-rank">'+(M[i]||(i+1))+'</span>'
+          +'<span class="lb-name">'+(p.avatar||'👤')+' '+p.name+'</span>'
+          +'<span class="lb-score">'+(p.score||0)+' pts</span></li>';
+  }).join('');
+}
+
+function startDecors() {
+  if(!allDecors.length){ alert('Aucun jeu disponible !'); return; }
+  var nb=Math.min(parseInt(document.getElementById('decors-nb').value)||10, allDecors.length);
+  decorsPlaylist=allDecors.slice().sort(function(){return .5-Math.random();}).slice(0,nb);
+  decorsIndex=0;
+  Object.keys(playersCache).forEach(function(id){ db.ref('players/'+id+'/score').set(0); });
+  document.getElementById('decors-setup').classList.add('hidden');
+  document.getElementById('decors-game').classList.remove('hidden');
+  document.getElementById('main-nav').classList.add('hidden');
+  loadDecorRound();
+}
+
+var PTS_BY_IMG=[3,2,1];
+
+function loadDecorRound() {
+  var d=decorsPlaylist[decorsIndex];
+  currentDecorImgIdx=0;
+  decorsRoundDone=false;
+
+  // Compteur
+  document.getElementById('decors-counter').textContent='Jeu '+(decorsIndex+1)+' / '+decorsPlaylist.length;
+
+  // Dots images
+  var nb=(d.images||[]).length;
+  for(var i=0;i<3;i++){
+    var dot=document.getElementById('d-dot-'+i);
+    if(dot){ dot.className='d-img-dot'+(i<nb?'':' hidden'); if(i===0) dot.classList.add('active'); }
+  }
+
+  // Afficher première image
+  setDecorImage(0);
+
+  // Reset UI
+  document.getElementById('decors-reveal').classList.add('hidden');
+  document.getElementById('decors-next-wrap').classList.add('hidden');
+  document.getElementById('d-next-img-btn').classList.add('hidden');
+  document.getElementById('decors-answers-feed').innerHTML='';
+  document.getElementById('decors-answers-title').textContent='⏳ En attente…';
+
+  // Firebase
+  db.ref('answers').remove();
+  db.ref('gameState').set({
+    accepting:true, choix:d.choix, solution:d.titre,
+    mode:'decors', imgIndex:0, pointsAvailable:3
+  });
+
+  // Écouter les réponses
+  if(decorsAnswerListener) db.ref('answers').off('value', decorsAnswerListener);
+  decorsAnswerListener=function(snap){ renderDecorsAnswers(snap ? snap.val()||{} : {}); };
+  db.ref('answers').on('value', decorsAnswerListener);
+}
+
+function setDecorImage(idx) {
+  var d=decorsPlaylist[decorsIndex];
+  var images=d.images||[];
+  if(idx>=images.length) return;
+  currentDecorImgIdx=idx;
+  var img=document.getElementById('d-main-img');
+  img.style.opacity='0';
+  setTimeout(function(){ img.src=images[idx]; img.style.opacity='1'; },200);
+
+  // Dots
+  for(var i=0;i<3;i++){
+    var dot=document.getElementById('d-dot-'+i);
+    if(dot) dot.className='d-img-dot'+(i>=(images.length)?' hidden':i<idx?' used':i===idx?' active':'');
+  }
+
+  // Points
+  var pts=PTS_BY_IMG[idx]||1;
+  document.getElementById('d-pts-now').textContent='+'+ pts+' pts';
+  document.getElementById('d-pts-overlay-text').textContent='+'+pts+' PTS';
+}
+
+function showNextDecorImage() {
+  var d=decorsPlaylist[decorsIndex];
+  var next=currentDecorImgIdx+1;
+  if(next>=(d.images||[]).length) return;
+  setDecorImage(next);
+  document.getElementById('d-next-img-btn').classList.add('hidden');
+  // Mettre à jour Firebase
+  var pts=PTS_BY_IMG[next]||1;
+  db.ref('gameState').update({ imgIndex:next, pointsAvailable:pts, accepting:true });
+}
+
+function renderDecorsAnswers(answers) {
+  var feed=document.getElementById('decors-answers-feed');
+  var title=document.getElementById('decors-answers-title');
+  if(!feed) return;
+  var entries=Object.entries(answers);
+  var nbP=Object.keys(playersCache).length;
+  title.textContent='⏳ '+entries.length+' / '+nbP+' ont répondu';
+
+  feed.innerHTML=entries.map(function(e){
+    var id=e[0],ans=e[1];
+    var isQCM=ans.text&&ans.text.includes('(QCM)');
+    var isAuto=ans.text&&ans.text.includes('(AUTO ✅)');
+    var auto=ans.autoChecked||isQCM||isAuto;
+    var bc=isAuto?'var(--green)':isQCM?'var(--purple)':'var(--accent)';
+    var action=auto?'<span class="badge-auto">'+(isQCM?'QCM ✔':'Auto ✔')+'</span>'
+                   :'<button class="btn-point" onclick="givePoints(\''+id+'\','+(PTS_BY_IMG[currentDecorImgIdx]||1)+')">+'+( PTS_BY_IMG[currentDecorImgIdx]||1)+' ✅</button>';
+    return '<div class="answer-card" style="border-left-color:'+bc+'"><div>'
+          +'<div class="pname">'+(ans.avatar||'👤')+' '+ans.name+'</div>'
+          +'<span class="atext">"'+ans.text+'"</span></div>'+action+'</div>';
+  }).join('');
+
+  // Si tous ont répondu → proposer image suivante ou révéler
+  if(entries.length>=nbP && nbP>0 && !decorsRoundDone){
+    var d=decorsPlaylist[decorsIndex];
+    var hasMore=currentDecorImgIdx<(d.images||[]).length-1;
+    if(hasMore){
+      document.getElementById('d-next-img-btn').classList.remove('hidden');
+    } else {
+      revealDecorResult();
+    }
+  }
+}
+
+function revealDecorResult() {
+  if(decorsRoundDone) return;
+  decorsRoundDone=true;
+  if(decorsAnswerListener) db.ref('answers').off('value', decorsAnswerListener);
+  db.ref('gameState').update({accepting:false});
+  var d=decorsPlaylist[decorsIndex];
+  document.getElementById('decors-reveal-text').textContent=d.titre;
+  document.getElementById('decors-reveal').classList.remove('hidden');
+  document.getElementById('d-next-img-btn').classList.add('hidden');
+  document.getElementById('decors-next-wrap').classList.remove('hidden');
+  // Afficher la dernière image
+  var images=d.images||[];
+  setDecorImage(images.length-1);
+}
+
+function nextDecorRound() {
+  decorsIndex++;
+  if(decorsIndex<decorsPlaylist.length) loadDecorRound(); else showDecorsPodium();
+}
+
+function showDecorsPodium() {
+  document.getElementById('decors-game').classList.add('hidden');
+  document.getElementById('decors-podium').classList.remove('hidden');
+  db.ref('gameState').set({accepting:false,gameOver:true});
+  var arr=Object.keys(playersCache).map(function(id){return Object.assign({id:id},playersCache[id]);});
+  arr.sort(function(a,b){return(b.score||0)-(a.score||0);});
+  var po=[1,0,2],bc=['p2','p1','p3'],pm=['🥈','🥇','🥉'];
+  document.getElementById('decors-podium-grid').innerHTML=po.map(function(r,pos){
+    var p=arr[r]; if(!p) return '';
+    return '<div class="podium-step"><div style="font-size:2.5rem">'+(p.avatar||'👤')+'</div>'
+          +'<div style="font-weight:800">'+ p.name+'</div>'
+          +'<div style="font-family:Bangers,cursive;font-size:1.3rem;color:var(--accent3)">'+(p.score||0)+' pts</div>'
+          +'<div class="podium-block '+bc[pos]+'">'+pm[pos]+'</div></div>';
+  }).join('');
+  var M=['🥇','🥈','🥉'],R=['rank-1','rank-2','rank-3'];
+  document.getElementById('decors-final-lb').innerHTML=arr.map(function(p,i){
+    return '<li class="lb-item '+(R[i]||'')+'"><span class="lb-rank">'+(M[i]||(i+1))+'</span>'
+          +'<span class="lb-name">'+(p.avatar||'👤')+' '+p.name+'</span>'
+          +'<span class="lb-score">'+(p.score||0)+' pts</span></li>';
+  }).join('');
+}
+
+// Aussi mettre à jour la liste joueurs Décors quand playersCache change
+var _origPlayersUpdate=updateDecorsPlayerList;
 
 // ═══════════════════════════════════════
 // INIT
