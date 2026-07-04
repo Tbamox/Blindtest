@@ -204,15 +204,6 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .toggle-label input:checked + .toggle-track .toggle-thumb{ transform:translateX(20px); }
 .quiz-interlude-options{ border-top:1px solid rgba(168,85,247,.2); padding-top:14px; margin-top:14px; }
 
-/* ── Décors ── */
-.dscore-chip{background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);border-radius:50px;padding:6px 14px;font-size:.85rem;color:var(--text)}
-.dscore-chip b{color:var(--accent3)}
-.d-img-wrap{position:relative;border-radius:14px;overflow:hidden;background:#000;border:2px solid var(--border);min-height:220px}
-.d-img-wrap img{width:100%;max-height:440px;object-fit:cover;display:block;border-radius:12px}
-#d-pts-overlay{position:absolute;top:0;right:0;background:rgba(168,85,247,.85);border-radius:0 0 0 14px;padding:10px 18px;text-align:center;backdrop-filter:blur(4px)}
-.d-img-dot{width:14px;height:14px;border-radius:50%;background:var(--border);transition:all .3s}
-.d-img-dot.active{background:var(--accent3);box-shadow:0 0 8px rgba(255,217,61,.6);transform:scale(1.3)}
-.d-img-dot.used{background:var(--muted)}
 .hidden{display:none!important}
 @media(max-width:700px){.game-layout{grid-template-columns:1fr}.score-sidebar{position:static}}
 </style>
@@ -237,8 +228,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 
   <!-- NAV -->
   <div class="nav-tabs" id="main-nav">
-    <button class="nav-tab active" onclick="switchTab('lobby')">🎵 Blind Test</button>
-    <button class="nav-tab" onclick="switchTab('decors')">🖼️ Décors</button>
+    <button class="nav-tab active" onclick="switchTab('lobby')">🎮 Salon</button>
     <button class="nav-tab" onclick="switchTab('editor')">✏️ Éditeur</button>
   </div>
 
@@ -358,102 +348,6 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       </div>
     </div>
   </div>
-
-  <!-- ══ TAB DÉCORS ══ -->
-  <div id="tab-decors" class="hidden">
-
-    <div id="decors-setup">
-      <div class="card">
-        <div class="card-title">📱 Scanner pour rejoindre</div>
-        <div class="qr-wrap"><div id="qrcode-d"></div><span class="qr-url">tbamox.github.io/Blindtest/manette.html</span></div>
-      </div>
-      <div class="card">
-        <div class="card-title">👥 Joueurs (<span id="decors-player-count">0</span>)</div>
-        <ul id="decors-player-list"><li class="no-players">En attente de joueurs…</li></ul>
-      </div>
-      <div id="decors-options" class="card hidden">
-        <div class="card-title">🖼️ Mode Décors — Devine le jeu !</div>
-        <p style="color:var(--muted);font-size:.9rem;margin-bottom:14px">Des captures d'écrans de décors s'affichent une par une — sans personnages. Plus tu trouves vite, plus tu gagnes de points !</p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
-          <span class="dscore-chip">🥇 1ère image = <b>+3 pts</b></span>
-          <span class="dscore-chip">🥈 2ème image = <b>+2 pts</b></span>
-          <span class="dscore-chip">🥉 3ème image = <b>+1 pt</b></span>
-        </div>
-        <div class="options-row">
-          <label>Jeux :</label>
-          <input type="number" id="decors-nb" value="10" min="1" max="50" class="num-input">
-          <span class="pool-info">Pool : <b id="decors-pool">0</b> jeux</span>
-        </div>
-        <div class="controls">
-          <button class="btn btn-danger" onclick="resetLobby()">🗑️ Vider</button>
-          <button class="btn btn-launch" onclick="startDecors()">🚀 Lancer !</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Jeu Décors -->
-    <div id="decors-game" class="hidden">
-      <div class="game-layout">
-        <aside class="score-sidebar">
-          <div class="card">
-            <div class="card-title">🏆 Classement</div>
-            <ul id="decors-lb"></ul>
-          </div>
-          <div class="card" style="text-align:center;padding:14px;margin-top:0">
-            <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Indices révélés</div>
-            <div style="display:flex;gap:8px;justify-content:center;margin-bottom:10px">
-              <div class="d-img-dot" id="d-dot-0"></div>
-              <div class="d-img-dot" id="d-dot-1"></div>
-              <div class="d-img-dot" id="d-dot-2"></div>
-            </div>
-            <div id="d-pts-now" style="font-family:'Bangers',cursive;font-size:2rem;color:var(--accent3);letter-spacing:1px">+3 pts</div>
-            <div style="font-size:.75rem;color:var(--muted)">si trouvé maintenant</div>
-          </div>
-        </aside>
-        <div class="game-main">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div class="counter-label" id="decors-counter">Jeu 1 / 10</div>
-            <div class="cat-badge">🎮 Devine le jeu !</div>
-          </div>
-          <!-- Image principale -->
-          <div class="d-img-wrap">
-            <img id="d-main-img" src="" alt="Décor" onerror="this.src='https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg'">
-            <div id="d-pts-overlay">
-              <div id="d-pts-overlay-text" style="font-family:'Bangers',cursive;font-size:2.5rem;letter-spacing:2px;color:var(--accent3)">+3 PTS</div>
-              <div style="font-size:.9rem;color:rgba(255,255,255,.7)">si tu trouves maintenant !</div>
-            </div>
-          </div>
-          <!-- Bouton image suivante -->
-          <div class="controls" style="margin-top:10px">
-            <button class="btn btn-next hidden" id="d-next-img-btn" onclick="showNextDecorImage()">🖼️ Image suivante <span style="font-size:.8rem;opacity:.7">(-1 pt possible)</span></button>
-          </div>
-          <!-- Réponses -->
-          <div class="card" style="margin-top:12px">
-            <div class="section-title" id="decors-answers-title">⏳ En attente…</div>
-            <div id="decors-answers-feed"></div>
-          </div>
-          <!-- Révélation -->
-          <div id="decors-reveal" class="hidden">
-            <div class="reveal-label">Le jeu était…</div>
-            <div class="reveal-answer" id="decors-reveal-text"></div>
-          </div>
-          <!-- Suivant -->
-          <div id="decors-next-wrap" class="hidden">
-            <button class="btn-next-big" onclick="nextDecorRound()">Suivant ➡️</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Podium Décors -->
-    <div id="decors-podium" class="hidden">
-      <h2 style="font-family:'Bangers',cursive;font-size:3rem;letter-spacing:3px;text-align:center;background:linear-gradient(135deg,gold,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:20px">🏆 FIN DES DÉCORS !</h2>
-      <div class="podium-grid" id="decors-podium-grid"></div>
-      <div class="card" style="margin-top:20px"><div class="card-title">Classement final</div><ul id="decors-final-lb"></ul></div>
-      <div class="controls" style="margin-top:24px"><button class="btn btn-launch" onclick="location.reload()">🔄 Rejouer</button></div>
-    </div>
-
-  </div><!-- /tab-decors -->
 
   <!-- ══ TAB EDITEUR ══ -->
   <div id="tab-editor" class="hidden">
@@ -641,14 +535,11 @@ function initQR() {
 // ═══════════════════════════════════════
 function switchTab(tab) {
   document.getElementById('tab-lobby').classList.toggle('hidden', tab!=='lobby');
-  document.getElementById('tab-decors').classList.toggle('hidden', tab!=='decors');
   document.getElementById('tab-editor').classList.toggle('hidden', tab!=='editor');
   document.querySelectorAll('.nav-tab').forEach(function(t,i){
-    t.classList.toggle('active',
-      (i===0&&tab==='lobby')||(i===1&&tab==='decors')||(i===2&&tab==='editor'));
+    t.classList.toggle('active',(i===0&&tab==='lobby')||(i===1&&tab==='editor'));
   });
   if(tab==='editor') renderEditor();
-  if(tab==='decors'){ initQRDecors(); updateDecorsPlayerList(); }
 }
 
 // ═══════════════════════════════════════
@@ -1469,13 +1360,10 @@ var DEFAULT_TRACKS=[
 ];
 
 // ═══════════════════════════════════════
-// MODE DÉCORS — Devine le jeu
+// MODE DÉCORS — Devine le jeu vidéo
 // ═══════════════════════════════════════
-
 var DEFAULT_DECORS=[
   {titre:"Minecraft",images:["https://img.youtube.com/vi/MmB9b5njVbA/maxresdefault.jpg","https://img.youtube.com/vi/Dg0IjOX0Nbc/maxresdefault.jpg","https://img.youtube.com/vi/0gyk9Hm2xKk/maxresdefault.jpg"],choix:["Minecraft","Terraria","Roblox","Stardew Valley"]},
-  {titre:"The Legend of Zelda: Breath of the Wild",images:["https://img.youtube.com/vi/zw47_q9wbBE/maxresdefault.jpg","https://img.youtube.com/vi/1rPxiXXxftE/maxresdefault.jpg","https://img.youtube.com/vi/vDFZIUdo764/maxresdefault.jpg"],choix:["Zelda: Breath of the Wild","Genshin Impact","Horizon Zero Dawn","Elden Ring"]},
-  {titre:"Skyrim",images:["https://img.youtube.com/vi/JSRtYpNBRMg/maxresdefault.jpg","https://img.youtube.com/vi/9MwMF2so7hs/maxresdefault.jpg","https://img.youtube.com/vi/Fl0y6tRl6Q4/maxresdefault.jpg"],choix:["Skyrim","Dragon Age","The Witcher 3","Morrowind"]},
   {titre:"The Witcher 3",images:["https://img.youtube.com/vi/XHrskkHf958/maxresdefault.jpg","https://img.youtube.com/vi/c0i88t0Kacs/maxresdefault.jpg","https://img.youtube.com/vi/FsLMpCMFrSA/maxresdefault.jpg"],choix:["The Witcher 3","Skyrim","Dragon Age","Kingdom Come"]},
   {titre:"Red Dead Redemption 2",images:["https://img.youtube.com/vi/eaW0tYpxyp0/maxresdefault.jpg","https://img.youtube.com/vi/pFaE_MHZRTU/maxresdefault.jpg","https://img.youtube.com/vi/Skx_6d0MFJA/maxresdefault.jpg"],choix:["Red Dead Redemption 2","Outlaws of the Old West","Call of Juarez","Hunt: Showdown"]},
   {titre:"Cyberpunk 2077",images:["https://img.youtube.com/vi/OsQEuEgKRSI/maxresdefault.jpg","https://img.youtube.com/vi/BO8lX3hDU30/maxresdefault.jpg","https://img.youtube.com/vi/FknHjl7eQ6o/maxresdefault.jpg"],choix:["Cyberpunk 2077","Deus Ex","Watch Dogs","Observer"]},
@@ -1488,7 +1376,6 @@ var DEFAULT_DECORS=[
   {titre:"Subnautica",images:["https://img.youtube.com/vi/7fOlhkBXFHk/maxresdefault.jpg","https://img.youtube.com/vi/Z7M1R2zq3gU/maxresdefault.jpg","https://img.youtube.com/vi/OHFhQi3Z_C0/maxresdefault.jpg"],choix:["Subnautica","No Man's Sky","Abzû","SOMA"]},
   {titre:"Hollow Knight",images:["https://img.youtube.com/vi/UAO2urG23S4/maxresdefault.jpg","https://img.youtube.com/vi/axsqlYRervo/maxresdefault.jpg","https://img.youtube.com/vi/iK5rVTSELo0/maxresdefault.jpg"],choix:["Hollow Knight","Ori and the Blind Forest","Celeste","Dead Cells"]},
   {titre:"Ori and the Blind Forest",images:["https://img.youtube.com/vi/tCCX4JQkv84/maxresdefault.jpg","https://img.youtube.com/vi/rq-EcCIXHCE/maxresdefault.jpg","https://img.youtube.com/vi/gbI2ge_BFGE/maxresdefault.jpg"],choix:["Ori and the Blind Forest","Hollow Knight","Celeste","Cuphead"]},
-  {titre:"Fortnite",images:["https://img.youtube.com/vi/bZz0QLWG5LU/maxresdefault.jpg","https://img.youtube.com/vi/D5RA7XLZB5A/maxresdefault.jpg","https://img.youtube.com/vi/cTthkSE02Oc/maxresdefault.jpg"],choix:["Fortnite","Apex Legends","PUBG","Warzone"]},
   {titre:"God of War",images:["https://img.youtube.com/vi/r3mE-4JrQO8/maxresdefault.jpg","https://img.youtube.com/vi/NQ6cWA1hjcY/maxresdefault.jpg","https://img.youtube.com/vi/a5X4fhUAQhs/maxresdefault.jpg"],choix:["God of War","Assassin's Creed Valhalla","Hellblade","Viking: Battle for Asgard"]},
   {titre:"Ghost of Tsushima",images:["https://img.youtube.com/vi/ZCfEBsFKxnU/maxresdefault.jpg","https://img.youtube.com/vi/4BjO6XMRJTQ/maxresdefault.jpg","https://img.youtube.com/vi/sNbf2TGy4pU/maxresdefault.jpg"],choix:["Ghost of Tsushima","Sekiro","Nioh","Trek to Yomi"]},
   {titre:"Genshin Impact",images:["https://img.youtube.com/vi/oNeAKxHgkW0/maxresdefault.jpg","https://img.youtube.com/vi/iNDXvJjSniI/maxresdefault.jpg","https://img.youtube.com/vi/kRBiM5PfVJg/maxresdefault.jpg"],choix:["Genshin Impact","Zelda: Breath of the Wild","Immortals Fenyx Rising","Tower of Fantasy"]},
@@ -1501,203 +1388,198 @@ var DEFAULT_DECORS=[
   {titre:"Outer Wilds",images:["https://img.youtube.com/vi/d6GtGbI-now/maxresdefault.jpg","https://img.youtube.com/vi/LbY0mBXwNIs/maxresdefault.jpg","https://img.youtube.com/vi/IdYaIGe7CIs/maxresdefault.jpg"],choix:["Outer Wilds","No Man's Sky","Astroneer","The Witness"]},
   {titre:"Firewatch",images:["https://img.youtube.com/vi/HdUYYnfRdl8/maxresdefault.jpg","https://img.youtube.com/vi/YkjGGjZCavA/maxresdefault.jpg","https://img.youtube.com/vi/GidMV1MJgx0/maxresdefault.jpg"],choix:["Firewatch","Everybody's Gone to the Rapture","What Remains of Edith Finch","A Short Hike"]},
   {titre:"Portal 2",images:["https://img.youtube.com/vi/tax4e4hBBZc/maxresdefault.jpg","https://img.youtube.com/vi/id9GQ92CFKU/maxresdefault.jpg","https://img.youtube.com/vi/IOFfOkCYDf8/maxresdefault.jpg"],choix:["Portal 2","The Talos Principle","Q.U.B.E.","The Turing Test"]},
+  {titre:"Skyrim",images:["https://img.youtube.com/vi/JSRtYpNBRMg/maxresdefault.jpg","https://img.youtube.com/vi/9MwMF2so7hs/maxresdefault.jpg","https://img.youtube.com/vi/Fl0y6tRl6Q4/maxresdefault.jpg"],choix:["Skyrim","Dragon Age","The Witcher 3","Morrowind"]},
   {titre:"Assassin's Creed Origins",images:["https://img.youtube.com/vi/F-RxA9x_YBE/maxresdefault.jpg","https://img.youtube.com/vi/sSMWk-RMoMM/maxresdefault.jpg","https://img.youtube.com/vi/8PEPu9rNYcQ/maxresdefault.jpg"],choix:["Assassin's Creed Origins","Prince of Persia","Ghost of Tsushima","A Plague Tale"]},
+  {titre:"Assassin's Creed Valhalla",images:["https://img.youtube.com/vi/ssrNcwxALS4/maxresdefault.jpg","https://img.youtube.com/vi/pE9mTRi4OVo/maxresdefault.jpg","https://img.youtube.com/vi/7HiV5HxjEX8/maxresdefault.jpg"],choix:["Assassin's Creed Valhalla","God of War","Hellblade","Viking: Battle for Asgard"]},
   {titre:"Mario Kart",images:["https://img.youtube.com/vi/9ggeBZKlzp4/maxresdefault.jpg","https://img.youtube.com/vi/BNUD5-dGg1g/maxresdefault.jpg","https://img.youtube.com/vi/FEqbHAI9_HA/maxresdefault.jpg"],choix:["Mario Kart","Crash Team Racing","Sonic Racing","Fall Guys"]},
+  {titre:"Fortnite",images:["https://img.youtube.com/vi/bZz0QLWG5LU/maxresdefault.jpg","https://img.youtube.com/vi/D5RA7XLZB5A/maxresdefault.jpg","https://img.youtube.com/vi/cTthkSE02Oc/maxresdefault.jpg"],choix:["Fortnite","Apex Legends","PUBG","Warzone"]},
+  {titre:"A Plague Tale",images:["https://img.youtube.com/vi/GCDj8aT09bU/maxresdefault.jpg","https://img.youtube.com/vi/VOqb4vOzpnU/maxresdefault.jpg","https://img.youtube.com/vi/KRpxJMvsLjA/maxresdefault.jpg"],choix:["A Plague Tale","Hellblade","The Witcher 3","Kingdom Come"]},
+  {titre:"Hades",images:["https://img.youtube.com/vi/lc3tF0PV8OM/maxresdefault.jpg","https://img.youtube.com/vi/91t0ha9x0AE/maxresdefault.jpg","https://img.youtube.com/vi/qT6FMjCqSLk/maxresdefault.jpg"],choix:["Hades","Dead Cells","Curse of the Dead Gods","Rogue Legacy"]},
+  {titre:"It Takes Two",images:["https://img.youtube.com/vi/XiEHHbmgOzg/maxresdefault.jpg","https://img.youtube.com/vi/HNjFkiqLchM/maxresdefault.jpg","https://img.youtube.com/vi/pblmBlhCwmo/maxresdefault.jpg"],choix:["It Takes Two","A Way Out","Unravel Two","Brothers: A Tale of Two Sons"]},
+  {titre:"Spider-Man",images:["https://img.youtube.com/vi/UAVL1oYB7oA/maxresdefault.jpg","https://img.youtube.com/vi/LZPFCfCMJmI/maxresdefault.jpg","https://img.youtube.com/vi/dMl6DNKJL-c/maxresdefault.jpg"],choix:["Spider-Man","Batman: Arkham","Infamous","Prototype"]},
+  {titre:"Forza Horizon 5",images:["https://img.youtube.com/vi/fg4_gLSbFRM/maxresdefault.jpg","https://img.youtube.com/vi/k0YFN6r3DyU/maxresdefault.jpg","https://img.youtube.com/vi/EYkYnTn5lWk/maxresdefault.jpg"],choix:["Forza Horizon 5","Need for Speed","Gran Turismo","The Crew"]},
+  {titre:"Doom Eternal",images:["https://img.youtube.com/vi/_dn1B74P8bA/maxresdefault.jpg","https://img.youtube.com/vi/nqFsXAlhPn8/maxresdefault.jpg","https://img.youtube.com/vi/4K5CBbA2RHQ/maxresdefault.jpg"],choix:["Doom Eternal","Quake","Wolfenstein","Dusk"]},
+  {titre:"Control",images:["https://img.youtube.com/vi/PT5yMfC9LQM/maxresdefault.jpg","https://img.youtube.com/vi/7zOlF_8Pz0U/maxresdefault.jpg","https://img.youtube.com/vi/aSfXhD0m63E/maxresdefault.jpg"],choix:["Control","Alan Wake","Quantum Break","Observer"]},
+  {titre:"Among Us",images:["https://img.youtube.com/vi/vRUiLN4f9iA/maxresdefault.jpg","https://img.youtube.com/vi/8kDeVLEtbY0/maxresdefault.jpg","https://img.youtube.com/vi/dMRiNGCvEPE/maxresdefault.jpg"],choix:["Among Us","Fall Guys","Unfortunate Spacemen","Project Winter"]},
+  {titre:"Overwatch",images:["https://img.youtube.com/vi/FqnKB22pOC0/maxresdefault.jpg","https://img.youtube.com/vi/qhKE3SRBmhM/maxresdefault.jpg","https://img.youtube.com/vi/5HhfAl3gCiM/maxresdefault.jpg"],choix:["Overwatch","Paladins","Valorant","Team Fortress 2"]},
+  {titre:"League of Legends",images:["https://img.youtube.com/vi/Vvz5_B0nFJI/maxresdefault.jpg","https://img.youtube.com/vi/pWrO5tGGhwI/maxresdefault.jpg","https://img.youtube.com/vi/Z0G_S7DJhkM/maxresdefault.jpg"],choix:["League of Legends","Dota 2","Heroes of the Storm","Smite"]},
+  {titre:"Resident Evil Village",images:["https://img.youtube.com/vi/SbrGqHxXdXM/maxresdefault.jpg","https://img.youtube.com/vi/LMqC3XnmXTU/maxresdefault.jpg","https://img.youtube.com/vi/IVnJ-GlNGLc/maxresdefault.jpg"],choix:["Resident Evil Village","Outlast","Amnesia","Silent Hill"]},
+  {titre:"Far Cry 5",images:["https://img.youtube.com/vi/lJJ93iFAE2M/maxresdefault.jpg","https://img.youtube.com/vi/gJOzlWIhCFI/maxresdefault.jpg","https://img.youtube.com/vi/HWNkFLhJj8o/maxresdefault.jpg"],choix:["Far Cry 5","Far Cry 6","Just Cause","Rage 2"]},
+  {titre:"Sea of Thieves",images:["https://img.youtube.com/vi/VLnEZAMEPAc/maxresdefault.jpg","https://img.youtube.com/vi/r4LBF3U7RVM/maxresdefault.jpg","https://img.youtube.com/vi/P8yPhJIUBns/maxresdefault.jpg"],choix:["Sea of Thieves","Assassin's Creed Black Flag","Skull and Bones","Caribbean!"]},
+  {titre:"Disney Dreamlight Valley",images:["https://img.youtube.com/vi/1DqRzNFo-40/maxresdefault.jpg","https://img.youtube.com/vi/i4e6V7UuUTQ/maxresdefault.jpg","https://img.youtube.com/vi/VvV5rjVoFM8/maxresdefault.jpg"],choix:["Disney Dreamlight Valley","Stardew Valley","My Time at Sandrock","Coral Island"]},
 ];
 
-var allDecors=[], decorsPlaylist=[], decorsIndex=0;
-var currentDecorImgIdx=0, decorsRoundDone=false;
-var decorsWritten=false;
+var allDecors=[],decorsPlaylist=[],decorsIndex=0;
+var currentDecorImgIdx=0,decorsRoundDone=false,decorsWritten=false;
 var decorsAnswerListener=null;
+var PTS_BY_IMG=[3,2,1];
 
-function loadDecors() {
-  db.ref('decors').on('value', function(snap){
+function loadDecors(){
+  db.ref('decors').on('value',function(snap){
     var data=snap.val();
     if(!data||Object.keys(data).length===0){
-      if(decorsWritten) return;
+      if(decorsWritten)return;
       decorsWritten=true;
       var batch={};
-      DEFAULT_DECORS.forEach(function(d){ var k=db.ref('decors').push().key; batch[k]=d; });
+      DEFAULT_DECORS.forEach(function(d){var k=db.ref('decors').push().key;batch[k]=d;});
       db.ref('decors').set(batch);
       return;
     }
     decorsWritten=true;
     allDecors=Object.entries(data).map(function(e){return Object.assign({},e[1],{_key:e[0]});});
-    var el=document.getElementById('decors-pool'); if(el) el.textContent=allDecors.length;
+    var el=document.getElementById('decors-pool');
+    if(el) el.textContent=allDecors.length;
   });
 }
 
-function initQRDecors() {
-  var el=document.getElementById('qrcode-d'); if(!el) return;
-  if(typeof QRCode==='undefined'){ setTimeout(initQRDecors,200); return; }
+function initQRDecors(){
+  var el=document.getElementById('qrcode-d');if(!el)return;
+  if(typeof QRCode==='undefined'){setTimeout(initQRDecors,200);return;}
   el.innerHTML='';
-  try{ new QRCode(el,{text:MANETTE_URL,width:160,height:160}); }catch(e){}
+  try{new QRCode(el,{text:MANETTE_URL,width:160,height:160});}catch(e){}
 }
 
-function updateDecorsPlayerList() {
+function updateDecorsPlayerList(){
   var keys=Object.keys(playersCache);
-  var c=document.getElementById('decors-player-count'); if(c) c.textContent=keys.length;
-  var list=document.getElementById('decors-player-list'); if(!list) return;
+  var c=document.getElementById('decors-player-count');if(c)c.textContent=keys.length;
+  var list=document.getElementById('decors-player-list');if(!list)return;
   if(keys.length===0){
     list.innerHTML='<li class="no-players">En attente de joueurs…</li>';
-    var o=document.getElementById('decors-options'); if(o) o.classList.add('hidden');
-  } else {
-    var o=document.getElementById('decors-options'); if(o) o.classList.remove('hidden');
-    list.innerHTML=keys.map(function(id){ var p=playersCache[id]; return '<li>'+(p.avatar||'👤')+' '+p.name+'</li>'; }).join('');
+    var o=document.getElementById('decors-options');if(o)o.classList.add('hidden');
+  }else{
+    var o=document.getElementById('decors-options');if(o)o.classList.remove('hidden');
+    list.innerHTML=keys.map(function(id){var p=playersCache[id];return '<li>'+(p.avatar||'👤')+' '+p.name+'</li>';}).join('');
   }
   updateDecorsLB();
 }
 
-function updateDecorsLB() {
+function updateDecorsLB(){
   var arr=Object.keys(playersCache).map(function(id){return Object.assign({id:id},playersCache[id]);});
   arr.sort(function(a,b){return(b.score||0)-(a.score||0);});
   var M=['🥇','🥈','🥉'],R=['rank-1','rank-2','rank-3'];
   var el=document.getElementById('decors-lb');
-  if(el) el.innerHTML=arr.map(function(p,i){
+  if(el)el.innerHTML=arr.map(function(p,i){
     return '<li class="lb-item '+(R[i]||'')+'"><span class="lb-rank">'+(M[i]||(i+1))+'</span>'
           +'<span class="lb-name">'+(p.avatar||'👤')+' '+p.name+'</span>'
           +'<span class="lb-score">'+(p.score||0)+' pts</span></li>';
   }).join('');
 }
 
-function startDecors() {
-  if(!allDecors.length){ alert('Aucun jeu disponible !'); return; }
-  var nb=Math.min(parseInt(document.getElementById('decors-nb').value)||10, allDecors.length);
+function startDecors(){
+  if(!allDecors.length){alert('Aucun jeu disponible !');return;}
+  var nb=Math.min(parseInt(document.getElementById('decors-nb').value)||10,allDecors.length);
   decorsPlaylist=allDecors.slice().sort(function(){return .5-Math.random();}).slice(0,nb);
   decorsIndex=0;
-  Object.keys(playersCache).forEach(function(id){ db.ref('players/'+id+'/score').set(0); });
+  Object.keys(playersCache).forEach(function(id){db.ref('players/'+id+'/score').set(0);});
   document.getElementById('decors-setup').classList.add('hidden');
   document.getElementById('decors-game').classList.remove('hidden');
   document.getElementById('main-nav').classList.add('hidden');
   loadDecorRound();
 }
 
-var PTS_BY_IMG=[3,2,1];
-
-function loadDecorRound() {
+function loadDecorRound(){
   var d=decorsPlaylist[decorsIndex];
-  currentDecorImgIdx=0;
-  decorsRoundDone=false;
-
-  // Compteur
+  currentDecorImgIdx=0;decorsRoundDone=false;
   document.getElementById('decors-counter').textContent='Jeu '+(decorsIndex+1)+' / '+decorsPlaylist.length;
-
-  // Dots images
   var nb=(d.images||[]).length;
   for(var i=0;i<3;i++){
     var dot=document.getElementById('d-dot-'+i);
-    if(dot){ dot.className='d-img-dot'+(i<nb?'':' hidden'); if(i===0) dot.classList.add('active'); }
+    if(dot){dot.className='d-img-dot'+(i>=nb?' hidden':'');if(i===0)dot.classList.add('active');}
   }
-
-  // Afficher première image
   setDecorImage(0);
-
-  // Reset UI
   document.getElementById('decors-reveal').classList.add('hidden');
   document.getElementById('decors-next-wrap').classList.add('hidden');
   document.getElementById('d-next-img-btn').classList.add('hidden');
   document.getElementById('decors-answers-feed').innerHTML='';
   document.getElementById('decors-answers-title').textContent='⏳ En attente…';
-
-  // Firebase
   db.ref('answers').remove();
-  db.ref('gameState').set({
-    accepting:true, choix:d.choix, solution:d.titre,
-    mode:'decors', imgIndex:0, pointsAvailable:3
-  });
-
-  // Écouter les réponses
-  if(decorsAnswerListener) db.ref('answers').off('value', decorsAnswerListener);
-  decorsAnswerListener=function(snap){ renderDecorsAnswers(snap ? snap.val()||{} : {}); };
-  db.ref('answers').on('value', decorsAnswerListener);
+  db.ref('gameState').set({accepting:true,choix:d.choix,solution:d.titre,mode:'decors',imgIndex:0,pointsAvailable:3});
+  if(decorsAnswerListener)db.ref('answers').off('value',decorsAnswerListener);
+  decorsAnswerListener=function(snap){renderDecorsAnswers(snap?snap.val()||{}:{});};
+  db.ref('answers').on('value',decorsAnswerListener);
 }
 
-function setDecorImage(idx) {
+function setDecorImage(idx){
   var d=decorsPlaylist[decorsIndex];
   var images=d.images||[];
-  if(idx>=images.length) return;
+  if(idx>=images.length)return;
   currentDecorImgIdx=idx;
   var img=document.getElementById('d-main-img');
-  img.style.opacity='0';
-  setTimeout(function(){ img.src=images[idx]; img.style.opacity='1'; },200);
-
-  // Dots
+  img.style.opacity='0.3';
+  img.src=images[idx];
+  img.onload=function(){img.style.opacity='1';};
+  img.onerror=function(){img.src='https://placehold.co/800x450/0f1624/64748b?text=Image+non+disponible';img.style.opacity='1';};
   for(var i=0;i<3;i++){
     var dot=document.getElementById('d-dot-'+i);
-    if(dot) dot.className='d-img-dot'+(i>=(images.length)?' hidden':i<idx?' used':i===idx?' active':'');
+    if(dot&&!dot.classList.contains('hidden'))
+      dot.className='d-img-dot'+(i<idx?' used':i===idx?' active':'');
   }
-
-  // Points
   var pts=PTS_BY_IMG[idx]||1;
-  document.getElementById('d-pts-now').textContent='+'+ pts+' pts';
-  document.getElementById('d-pts-overlay-text').textContent='+'+pts+' PTS';
+  var el=document.getElementById('d-pts-now');if(el)el.textContent='+'+pts+' pts';
+  var ov=document.getElementById('d-pts-overlay-text');if(ov)ov.textContent='+'+pts+' PTS';
 }
 
-function showNextDecorImage() {
+function showNextDecorImage(){
   var d=decorsPlaylist[decorsIndex];
   var next=currentDecorImgIdx+1;
-  if(next>=(d.images||[]).length) return;
+  if(next>=(d.images||[]).length)return;
   setDecorImage(next);
   document.getElementById('d-next-img-btn').classList.add('hidden');
-  // Mettre à jour Firebase
   var pts=PTS_BY_IMG[next]||1;
-  db.ref('gameState').update({ imgIndex:next, pointsAvailable:pts, accepting:true });
+  db.ref('gameState').update({imgIndex:next,pointsAvailable:pts,accepting:true});
 }
 
-function renderDecorsAnswers(answers) {
+function renderDecorsAnswers(answers){
   var feed=document.getElementById('decors-answers-feed');
   var title=document.getElementById('decors-answers-title');
-  if(!feed) return;
+  if(!feed)return;
   var entries=Object.entries(answers);
   var nbP=Object.keys(playersCache).length;
   title.textContent='⏳ '+entries.length+' / '+nbP+' ont répondu';
-
+  var pts=PTS_BY_IMG[currentDecorImgIdx]||1;
   feed.innerHTML=entries.map(function(e){
     var id=e[0],ans=e[1];
     var isQCM=ans.text&&ans.text.includes('(QCM)');
     var isAuto=ans.text&&ans.text.includes('(AUTO ✅)');
     var auto=ans.autoChecked||isQCM||isAuto;
     var bc=isAuto?'var(--green)':isQCM?'var(--purple)':'var(--accent)';
-    var action=auto?'<span class="badge-auto">'+(isQCM?'QCM ✔':'Auto ✔')+'</span>'
-                   :'<button class="btn-point" onclick="givePoints(\''+id+'\','+(PTS_BY_IMG[currentDecorImgIdx]||1)+')">+'+( PTS_BY_IMG[currentDecorImgIdx]||1)+' ✅</button>';
+    var action=auto?'<span class="badge-auto">'+(isQCM?'QCM +1 ✔':'Auto +3 ✔')+'</span>'
+                   :'<button class="btn-point" onclick="givePoints(\''+id+'\','+pts+')">+'+pts+' ✅</button>';
     return '<div class="answer-card" style="border-left-color:'+bc+'"><div>'
           +'<div class="pname">'+(ans.avatar||'👤')+' '+ans.name+'</div>'
           +'<span class="atext">"'+ans.text+'"</span></div>'+action+'</div>';
   }).join('');
-
-  // Si tous ont répondu → proposer image suivante ou révéler
-  if(entries.length>=nbP && nbP>0 && !decorsRoundDone){
+  if(entries.length>=nbP&&nbP>0&&!decorsRoundDone){
     var d=decorsPlaylist[decorsIndex];
-    var hasMore=currentDecorImgIdx<(d.images||[]).length-1;
-    if(hasMore){
+    if(currentDecorImgIdx<(d.images||[]).length-1){
       document.getElementById('d-next-img-btn').classList.remove('hidden');
-    } else {
+    }else{
       revealDecorResult();
     }
   }
 }
 
-function revealDecorResult() {
-  if(decorsRoundDone) return;
+function revealDecorResult(){
+  if(decorsRoundDone)return;
   decorsRoundDone=true;
-  if(decorsAnswerListener) db.ref('answers').off('value', decorsAnswerListener);
+  if(decorsAnswerListener)db.ref('answers').off('value',decorsAnswerListener);
   db.ref('gameState').update({accepting:false});
   var d=decorsPlaylist[decorsIndex];
   document.getElementById('decors-reveal-text').textContent=d.titre;
   document.getElementById('decors-reveal').classList.remove('hidden');
   document.getElementById('d-next-img-btn').classList.add('hidden');
   document.getElementById('decors-next-wrap').classList.remove('hidden');
-  // Afficher la dernière image
   var images=d.images||[];
   setDecorImage(images.length-1);
 }
 
-function nextDecorRound() {
+function nextDecorRound(){
+  if(decorsAnswerListener)db.ref('answers').off('value',decorsAnswerListener);
   decorsIndex++;
-  if(decorsIndex<decorsPlaylist.length) loadDecorRound(); else showDecorsPodium();
+  if(decorsIndex<decorsPlaylist.length)loadDecorRound();else showDecorsPodium();
 }
 
-function showDecorsPodium() {
+function showDecorsPodium(){
   document.getElementById('decors-game').classList.add('hidden');
   document.getElementById('decors-podium').classList.remove('hidden');
   db.ref('gameState').set({accepting:false,gameOver:true});
@@ -1705,9 +1587,9 @@ function showDecorsPodium() {
   arr.sort(function(a,b){return(b.score||0)-(a.score||0);});
   var po=[1,0,2],bc=['p2','p1','p3'],pm=['🥈','🥇','🥉'];
   document.getElementById('decors-podium-grid').innerHTML=po.map(function(r,pos){
-    var p=arr[r]; if(!p) return '';
+    var p=arr[r];if(!p)return'';
     return '<div class="podium-step"><div style="font-size:2.5rem">'+(p.avatar||'👤')+'</div>'
-          +'<div style="font-weight:800">'+ p.name+'</div>'
+          +'<div style="font-weight:800">'+p.name+'</div>'
           +'<div style="font-family:Bangers,cursive;font-size:1.3rem;color:var(--accent3)">'+(p.score||0)+' pts</div>'
           +'<div class="podium-block '+bc[pos]+'">'+pm[pos]+'</div></div>';
   }).join('');
@@ -1719,14 +1601,12 @@ function showDecorsPodium() {
   }).join('');
 }
 
-// Aussi mettre à jour la liste joueurs Décors quand playersCache change
-var _origPlayersUpdate=updateDecorsPlayerList;
-
 // ═══════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════
 loadTracks();
 loadQuizQuestions();
+loadDecors();
 </script>
 </body>
 </html>
