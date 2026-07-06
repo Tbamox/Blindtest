@@ -348,6 +348,37 @@
   <div id="feedback" class="hidden"></div>
 </div>
 
+<!-- ══ DÉCORS ══ -->
+<div class="screen hidden" id="screen-decors">
+  <div class="player-header">
+    <div class="player-avatar" id="decors-avatar">🐱</div>
+    <div class="player-name"  id="decors-name">Joueur</div>
+    <div class="score-badge"  id="decors-score">0 pt</div>
+  </div>
+
+  <!-- Badge points disponibles -->
+  <div id="decors-pts-badge" style="font-family:'Bangers',cursive;font-size:1.5rem;letter-spacing:2px;color:var(--yellow);background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:50px;padding:6px 20px;margin-bottom:14px">
+    +3 pts si tu trouves !
+  </div>
+
+  <!-- Zone réponse libre -->
+  <div id="decors-free-zone" style="width:100%;max-width:360px;display:flex;flex-direction:column;align-items:center">
+    <input class="field" type="text" id="decors-answer-input" placeholder="Quel est ce jeu ?" autocomplete="off" maxlength="60">
+    <button class="btn btn-send" id="decors-send-btn" onclick="sendDecorsAnswer(false)">🚀 VALIDER</button>
+    <div class="divider">ou</div>
+    <button class="btn btn-qcm" onclick="showDecorsQCM()">🤔 Je ne sais pas…</button>
+  </div>
+
+  <!-- Zone QCM -->
+  <div id="decors-qcm-zone" style="width:100%;max-width:360px;display:none;flex-direction:column;align-items:center">
+    <p style="font-weight:800;font-size:1.05rem;margin-bottom:16px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Choisis le jeu</p>
+    <div id="decors-qcm-buttons" style="width:100%"></div>
+    <button class="btn btn-back" id="decors-btn-back" onclick="hideDecorsQCM()" style="margin-top:8px">← Retour</button>
+  </div>
+
+  <div id="decors-feedback" class="hidden"></div>
+</div>
+
 <!-- ══ TEMPS ÉCOULÉ ══ -->
 <div class="screen hidden" id="screen-timeup">
   <div class="status-card pop">
@@ -504,7 +535,7 @@ function setFeedback(msg, type) {
 }
 
 function updateDisplayNames() {
-  ['wait','game','end'].forEach(prefix => {
+  ['wait','game','end','decors'].forEach(prefix => {
     const av = document.getElementById(prefix + '-avatar');
     const nm = document.getElementById(prefix + '-name');
     if (av) av.textContent = myAvatar;
@@ -550,9 +581,10 @@ function listenToMyScore() {
   scoreListener = db.ref('players/' + myId + '/score').on('value', snap => {
     myScore = snap.val() || 0;
     const label = myScore <= 1 ? 'pt' : 'pts';
-    document.getElementById('game-score').textContent    = myScore + ' ' + label;
-    document.getElementById('timeup-score').textContent  = myScore + ' ' + label;
-    document.getElementById('end-score').textContent     = myScore + ' ' + label;
+    ['game-score','timeup-score','end-score','decors-score'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = myScore + ' ' + label;
+    });
   });
 }
 
@@ -566,20 +598,30 @@ function listenToGameState() {
     if (!state) return;
 
     if (state.gameOver) {
-      clearSession(); // Fin de partie → on efface la session
+      clearSession();
       showScreen('screen-gameover');
       return;
     }
 
     if (state.accepting === true) {
       hasAnswered = false;
+
+      // Mode Décors
+      if (state.mode === 'decors') {
+        resetDecorsUI(state);
+        showScreen('screen-decors');
+        return;
+      }
+
+      // Mode Blind Test ou Quiz intercalé
       resetAnswerUI();
       showScreen('screen-game');
       return;
     }
 
-    if (state.accepting === false && currentScreen === 'screen-game') {
-      showScreen('screen-timeup');
+    if (state.accepting === false) {
+      if (currentScreen === 'screen-game') showScreen('screen-timeup');
+      if (currentScreen === 'screen-decors') showScreen('screen-timeup');
     }
   });
 }
@@ -751,6 +793,107 @@ document.addEventListener('keydown', e => {
 
 /* ─────────────────────────────────────────
    INIT — tentative de reconnexion d'abord
+───────────────────────────────────────── */
+/* ─────────────────────────────────────────
+   MODE DÉCORS
+───────────────────────────────────────── */
+let decorsQcmViewed = false;
+let decorsHasAnswered = false;
+
+function resetDecorsUI(state) {
+  decorsQcmViewed = false;
+  decorsHasAnswered = false;
+  document.getElementById('decors-btn-back').style.display = 'block';
+  hideDecorsQCM();
+  document.getElementById('decors-answer-input').value = '';
+  document.getElementById('decors-send-btn').disabled = false;
+  document.getElementById('decors-feedback').className = 'hidden';
+  document.getElementById('decors-feedback').textContent = '';
+  document.querySelectorAll('#decors-qcm-buttons .btn-choice').forEach(b => {
+    b.classList.remove('correct','wrong'); b.disabled = false;
+  });
+  // Mettre à jour le badge de points
+  const pts = state.pointsAvailable || 3;
+  const badge = document.getElementById('decors-pts-badge');
+  if (badge) badge.textContent = '+' + pts + ' pts si tu trouves !';
+}
+
+function showDecorsQCM() {
+  db.ref('gameState').once('value', snap => {
+    const state = snap.val();
+    if (!state || !state.choix || !state.accepting) {
+      setDecorsFeedback("Attends le signal de l'hôte !", 'err'); return;
+    }
+    decorsQcmViewed = true;
+    document.getElementById('decors-btn-back').style.display = 'none';
+    const container = document.getElementById('decors-qcm-buttons');
+    container.innerHTML = '';
+    state.choix.forEach(option => {
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-choice'; btn.style.width = '100%';
+      btn.textContent = option;
+      btn.onclick = () => sendDecorsAnswer(true, option, btn, state.solution, state.pointsAvailable || 1);
+      container.appendChild(btn);
+    });
+    document.getElementById('decors-free-zone').style.display = 'none';
+    document.getElementById('decors-qcm-zone').style.display = 'flex';
+  });
+}
+
+function hideDecorsQCM() {
+  if (decorsQcmViewed) return;
+  document.getElementById('decors-qcm-zone').style.display = 'none';
+  document.getElementById('decors-free-zone').style.display = 'flex';
+}
+
+function setDecorsFeedback(msg, type) {
+  const el = document.getElementById('decors-feedback');
+  el.textContent = msg; el.className = 'fb-' + type;
+  if (msg) setTimeout(() => { el.className = 'hidden'; el.textContent = ''; }, 3500);
+}
+
+function sendDecorsAnswer(isQcm, qcmText, qcmBtn, solution, ptsAvailable) {
+  if (decorsHasAnswered) return;
+  const text = isQcm ? qcmText : document.getElementById('decors-answer-input').value.trim();
+  if (!text) { setDecorsFeedback("Tape une réponse !", 'err'); return; }
+
+  db.ref('gameState').once('value', snap => {
+    const state = snap.val();
+    if (!state || state.accepting !== true) {
+      setDecorsFeedback("⏳ Trop tard !", 'err'); return;
+    }
+
+    decorsHasAnswered = true;
+    document.getElementById('decors-send-btn').disabled = true;
+    const pts = state.pointsAvailable || (isQcm ? 1 : 3);
+
+    if (isQcm) {
+      const isCorrect = text === state.solution;
+      if (qcmBtn) qcmBtn.classList.add(isCorrect ? 'correct' : 'wrong');
+      document.querySelectorAll('#decors-qcm-buttons .btn-choice').forEach(b => b.disabled = true);
+      db.ref('answers/' + myId).set({ text: text + ' (QCM)', name: myName, avatar: myAvatar, autoChecked: true });
+      if (isCorrect) {
+        db.ref('players/' + myId + '/score').transaction(s => (s || 0) + 1);
+        setDecorsFeedback('🎯 Bonne réponse ! +1 pt', 'ok');
+      } else {
+        setDecorsFeedback("❌ Faux ! C'était : " + state.solution, 'err');
+      }
+    } else {
+      const correct = isSimilarEnough(text, state.solution);
+      if (correct) {
+        db.ref('players/' + myId + '/score').transaction(s => (s || 0) + pts);
+        db.ref('answers/' + myId).set({ text: text + ' (AUTO ✅)', name: myName, avatar: myAvatar, autoChecked: true });
+        setDecorsFeedback('🎯 Bonne réponse ! +' + pts + ' pts', 'ok');
+      } else {
+        db.ref('answers/' + myId).set({ text: text, name: myName, avatar: myAvatar, autoChecked: false });
+        setDecorsFeedback('✅ Réponse envoyée !', 'sent');
+      }
+    }
+  });
+}
+
+/* ─────────────────────────────────────────
+   INIT
 ───────────────────────────────────────── */
 (async () => {
   const reconnected = await tryReconnect();
