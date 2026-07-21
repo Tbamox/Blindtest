@@ -1527,7 +1527,16 @@ function loadDecors(){
       decorsWritten=true;
       var batch={};
       DEFAULT_DECORS.forEach(function(d){var k=db.ref('decors').push().key;batch[k]=d;});
-      db.ref('decors').set(batch);
+      db.ref('decors').set(batch,function(err){
+        if(!err){
+          db.ref('decors').once('value',function(s){
+            var d2=s.val()||{};
+            allDecors=Object.entries(d2).map(function(e){return Object.assign({},e[1],{_key:e[0]});});
+            var el=document.getElementById('decors-pool');
+            if(el) el.textContent=allDecors.length;
+          });
+        }
+      });
       return;
     }
     decorsWritten=true;
@@ -1571,6 +1580,10 @@ function updateDecorsLB(){
 }
 
 function startDecors(){
+  if(!allDecors.length){
+    allDecors=DEFAULT_DECORS.map(function(d,i){return Object.assign({},d,{_key:'local_'+i});});
+    var ep=document.getElementById('decors-pool');if(ep)ep.textContent=allDecors.length;
+  }
   if(!allDecors.length){alert('Aucun jeu disponible !');return;}
   var nb=Math.min(parseInt(document.getElementById('decors-nb').value)||10,allDecors.length);
   decorsPlaylist=allDecors.slice().sort(function(){return .5-Math.random();}).slice(0,nb);
