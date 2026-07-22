@@ -551,6 +551,8 @@ var selectedCats=new Set();
 var editorCat=CATS[0].id;
 var editingKey=null;
 var tracksWritten=false;
+var allQuizQuestions=[], quizTracksWritten=false;
+var selectedInterlaceCats=new Set();
 
 // ═══════════════════════════════════════
 // AUDIO GATE + YOUTUBE
@@ -1653,26 +1655,34 @@ function renderDecorsAnswers(answers){
   if(!feed)return;
   var entries=Object.entries(answers);
   var nbP=Object.keys(playersCache).length;
-  title.textContent='⏳ '+entries.length+' / '+nbP+' ont répondu';
   var pts=PTS_BY_IMG[currentDecorImgIdx]||1;
+  var nbAnswered=entries.length;
+  title.textContent='⏳ '+nbAnswered+' / '+nbP+' ont répondu';
+
   feed.innerHTML=entries.map(function(e){
     var id=e[0],ans=e[1];
     var isQCM=ans.text&&ans.text.includes('(QCM)');
     var isAuto=ans.text&&ans.text.includes('(AUTO ✅)');
     var auto=ans.autoChecked||isQCM||isAuto;
     var bc=isAuto?'var(--green)':isQCM?'var(--purple)':'var(--accent)';
-    var action=auto?'<span class="badge-auto">'+(isQCM?'QCM +1 ✔':'Auto +3 ✔')+'</span>'
-                   :'<button class="btn-point" onclick="givePoints(\''+id+'\','+pts+')">+'+pts+' ✅</button>';
+    var ptsLabel=isQCM?1:pts;
+    var action=auto
+      ?'<span class="badge-auto">'+(isQCM?'QCM +1 ✔':'Auto +'+pts+' ✔')+'</span>'
+      :'<button class="btn-point" onclick="givePoints(\''+id+'\','+pts+')">+'+pts+' ✅</button>';
     return '<div class="answer-card" style="border-left-color:'+bc+'"><div>'
           +'<div class="pname">'+(ans.avatar||'👤')+' '+ans.name+'</div>'
           +'<span class="atext">"'+ans.text+'"</span></div>'+action+'</div>';
   }).join('');
-  if(entries.length>=nbP&&nbP>0&&!decorsRoundDone){
+
+  // Quand tous ont répondu → proposer image suivante ou révéler
+  if(nbAnswered>=nbP&&nbP>0&&!decorsRoundDone){
     var d=decorsPlaylist[decorsIndex];
-    if(currentDecorImgIdx<(d.images||[]).length-1){
+    var hasMore=currentDecorImgIdx<(d.images||[]).length-1;
+    if(hasMore){
       document.getElementById('d-next-img-btn').classList.remove('hidden');
-    }else{
-      revealDecorResult();
+    } else {
+      // Révélation automatique après 1.5s
+      setTimeout(revealDecorResult, 1500);
     }
   }
 }
